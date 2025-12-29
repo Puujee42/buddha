@@ -32,6 +32,11 @@ const CONTENT = {
       name: { mn: "Зурхайчид", en: "Astrologers" }, 
       href: "/monks",
     },
+    {
+      id: "services",
+      name: { mn: "Үйлчилгээ", en: "Services" }, 
+      href: "/services",
+    },
     { 
       id: "about",
       name: { mn: "Бидний тухай", en: "Our Path" }, 

@@ -39,6 +39,26 @@ export interface Monk {
     mn: string;
     en: string;
   };
+  
+  // New Fields
+  yearsOfExperience: number;
+  education: {
+    mn: string;
+    en: string;
+  };
+  philosophy: {
+    mn: string;
+    en: string;
+  };
+  services: {
+    id: string;
+    name: {
+      mn: string;
+      en: string;
+    };
+    price: number; // in local currency
+    duration: string; // e.g., "30 min", "1 hour"
+  }[];
 }
 
 export interface Booking {
@@ -62,4 +82,32 @@ export interface Comment {
   karma: number; // Likes/Upvotes
   element: "gold" | "saffron" | "ochre" | "light"; // Visual theme
   createdAt: Date;
+}
+export interface Service{
+  _id?: ObjectId;
+  id: string;
+  name: {
+    mn: string;
+    en: string;
+  };
+  price: number
+  duration: string; // e.g., "30 min", "1 hour"
+  type: "teaching" | "divination"; // Aesthetic theme
+  desc: {
+    mn: string;
+    en: string;
+  }
+  subtitle: {
+    mn: string;
+    en: string;
+  };
+  title: {
+    mn: string;
+    en: string;
+  };
+  image?: string;
+  quote?: {
+    mn: string;
+    en: string;
+  };
 }

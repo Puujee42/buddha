@@ -1,152 +1,209 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useMotionValue,
-  useMotionTemplate
+import Image from "next/image";
+import { 
+  motion, 
+  useScroll, 
+  useTransform, 
+  useSpring, 
+  useMotionTemplate, 
+  useMotionValue 
 } from "framer-motion";
-import {
-  Sun,
-  Sparkles,
-  HandHeart,
-  Eye,
-  Infinity as InfinityIcon,
-  MoveRight,
-  Flower
-} from "lucide-react";
+import { Sparkles, ArrowUpRight, Sun, Flower, Cloud } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { Monk } from "@/database/types";
 
-export default function DivineMonkSection() {
+// --- ETHEREAL ASSETS ---
+
+// 1. Rotating Sacred Geometry (Light Mode)
+const DharmaMandala = () => (
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] pointer-events-none opacity-[0.05] z-0">
+    <motion.svg
+      viewBox="0 0 100 100"
+      className="w-full h-full fill-amber-900"
+      animate={{ rotate: 360 }}
+      transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
+    >
+        {/* Simplified Mandala Paths */}
+        <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.2" strokeDasharray="1 2" />
+        <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" strokeWidth="0.5" />
+        <path d="M50 10 L60 30 L90 50 L60 70 L50 90 L40 70 L10 50 L40 30 Z" fill="none" stroke="currentColor" strokeWidth="0.2" />
+        <path d="M50 0 L50 100 M0 50 L100 50" stroke="currentColor" strokeWidth="0.1" />
+    </motion.svg>
+  </div>
+);
+
+// 2. Ascending Lotus Petals (Particles)
+const LotusPetal = ({ delay }: { delay: number }) => (
+  <motion.div
+    initial={{ y: "110%", opacity: 0, rotate: 0 }}
+    animate={{ 
+      y: "-20%", 
+      opacity: [0, 0.6, 0],
+      rotate: [0, 90, 180],
+      x: Math.random() * 40 - 20 
+    }}
+    transition={{
+      duration: Math.random() * 10 + 15,
+      repeat: Infinity,
+      delay: delay,
+      ease: "linear",
+    }}
+    className="absolute bottom-0 w-2 h-2 bg-gradient-to-tr from-rose-200 to-amber-100 rounded-tr-[50%] rounded-bl-[10%] blur-[0.5px] shadow-sm z-[1]"
+    style={{ left: `${Math.random() * 100}%` }}
+  />
+);
+
+// --- MOCK DATA ---
+const MONKS_DATA = [
+  {
+    id: 1,
+    name: { mn: "Данзанравжаа", en: "Danzanravjaa" },
+    title: { mn: "Говийн Догшин Ноён Хутагт", en: "The Terrible Noble Saint of the Gobi" },
+    image: "https://images.unsplash.com/photo-1570228811808-144d151c706d?q=80&w=2545&auto=format&fit=crop", 
+  },
+  {
+    id: 2,
+    name: { mn: "Занабазар", en: "Zanabazar" },
+    title: { mn: "Өндөр Гэгээн", en: "The High Saint" },
+    image: "https://images.unsplash.com/photo-1606132442436-b5fa53f317b9?q=80&w=2670&auto=format&fit=crop", 
+  },
+  {
+    id: 3,
+    name: { mn: "Богд Жавзандамба", en: "Bogd Jebtsundamba" },
+    title: { mn: "Монголын Шашны Тэргүүн", en: "Head of Mongolian Buddhism" },
+    image: "https://images.unsplash.com/photo-1526715694247-f671b5632eb7?q=80&w=2670&auto=format&fit=crop", 
+  },
+];
+
+export default function HeavenlyMonkSection() {
+  const { language, t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  const { t, language } = useLanguage();
   
-  const [monks, setMonks] = useState<Monk[]>([]);
+  // Parallax Background
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const cloudsY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+  
+  // Mouse "Divine Light" Spotlight
+  const mouseX = useSpring(0, { stiffness: 40, damping: 20 });
+  const mouseY = useSpring(0, { stiffness: 40, damping: 20 });
 
   useEffect(() => {
-    async function fetchMonks() {
-      try {
-        const response = await fetch('/api/monks');
-        if (response.ok) {
-          const data = await response.json();
-          // Limit to 4 for the home page section if needed, or show all
-          setMonks(data.slice(0, 4));
-        }
-      } catch (error) {
-        console.error("Failed to fetch monks:", error);
-      }
+    const handleMove = (e: MouseEvent) => {
+        // Global mouse tracking for background spotlight
+        mouseX.set(e.clientX);
+        mouseY.set(e.clientY);
+    };
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, [mouseX, mouseY]);
+
+  const content = t({
+    mn: {
+      tag: "Ариун Багш нар",
+      title_l1: "Билэг Оюуны",
+      title_l2: "Хөтөч",
+      desc: "Энэрэл нигүүлслийн гэрлээр таны замыг гийгүүлэх, бурханы сургаалыг дэлгэрүүлэгч их багш нар.",
+      btn: "Дэлгэрэнгүй"
+    },
+    en: {
+      tag: "Sacred Teachers",
+      title_l1: "Guides of",
+      title_l2: "Wisdom",
+      desc: "Masters illuminating your path with the light of compassion and spreading the Buddha's teachings.",
+      btn: "Learn More"
     }
-    fetchMonks();
-  }, []);
-  
-  // Parallax background movements
-  const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const rotateWheel = useTransform(scrollYProgress, [0, 1], [0, 360]);
-
-  // Interactive Mouse Gradient
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
-    const { left, top, width, height } = currentTarget.getBoundingClientRect();
-    mouseX.set((clientX - left) / width);
-    mouseY.set((clientY - top) / height);
-  }
-
-  const backgroundGradient = useMotionTemplate`radial-gradient(
-    600px circle at ${useTransform(mouseX, x => x * 100)}% ${useTransform(mouseY, y => y * 100)}%,
-    rgba(255, 220, 150, 0.4),
-    transparent 80%
-  )`;
-
-  // --- CONTENT TRANSLATIONS ---
-  const content = {
-    tag: t({ mn: "Гэгээрэгсэд", en: "The Awakened Ones" }),
-    title: t({ mn: "Ариун Уламжлал", en: "Sacred Lineage" }),
-    desc: t({
-      mn: "Шавраас урган гарч, уснаа дэлгэрэх бадамлянхуа мэт, эдгээр сахиусууд таны замыг гийгүүлэхээр ариун тунгалаг оршмуй.",
-      en: "\"Like a lotus flower that grows out of the mud and blossoms above the water, these guardians stand tall and pure to guide your path.\""
-    }),
-    btn: t({ mn: "Адис авах", en: "Receive Blessing" })
-  };
+  });
 
   return (
     <section 
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      className="relative w-full min-h-[150vh] bg-[#FDFBF7] overflow-hidden py-32 font-sans selection:bg-orange-200"
+      ref={containerRef} 
+      className="relative w-full py-32 overflow-hidden bg-[#FDFBF7]"
     >
-      {/* 1. BACKGROUND ATMOSPHERE */}
       
-      {/* A. Divine Glow (Mouse Follower) */}
-      <motion.div 
-        className="absolute inset-0 z-0 pointer-events-none mix-blend-soft-light"
-        style={{ background: backgroundGradient }}
+      {/* ================= BACKGROUND: THE CLOUD REALM ================= */}
+      
+      {/* 1. Base Cream/Gold Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A]/30 z-0" />
+      
+      {/* 2. Interactive Spotlight (Moving Divine Light) */}
+      <motion.div
+        className="fixed top-0 left-0 w-[1000px] h-[1000px] bg-amber-400/10 blur-[150px] rounded-full pointer-events-none z-0 mix-blend-plus-lighter"
+        style={{ 
+          x: useTransform(mouseX, (v) => v - 500),
+          y: useTransform(mouseY, (v) => v - 500),
+        }}
       />
 
-      {/* B. The Great Dharma Wheel (Background Decoration) */}
+      {/* 3. Moving Clouds Parallax */}
       <motion.div 
-        style={{ rotate: rotateWheel, y: yBg, opacity: 0.1 }}
-        className="absolute top-[-10%] right-[-10%] w-[80vw] h-[80vw] z-0 pointer-events-none"
-      >
-         {/* Simplified Mandala SVG Representation */}
-         <svg viewBox="0 0 100 100" className="w-full h-full text-orange-400 animate-[spin_60s_linear_infinite]">
-            <circle cx="50" cy="50" r="48" stroke="currentColor" strokeWidth="0.5" fill="none" strokeDasharray="2 2"/>
-            <circle cx="50" cy="50" r="35" stroke="currentColor" strokeWidth="0.5" fill="none"/>
-            <path d="M50 2 v96 M2 50 h96 M15 15 l70 70 M85 15 l-70 70" stroke="currentColor" strokeWidth="0.5"/>
-            <circle cx="50" cy="50" r="10" stroke="currentColor" strokeWidth="1" fill="none"/>
-         </svg>
-      </motion.div>
-
-      {/* C. Floating Petals/Clouds */}
-      <div className="absolute inset-0 z-0 opacity-50 pointer-events-none">
-         <motion.div 
-            animate={{ y: [0, -40, 0], x: [0, 20, 0], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[20%] left-[5%] w-64 h-64 bg-gradient-to-tr from-blue-100 to-purple-100 rounded-full blur-3xl mix-blend-multiply" 
-         />
-         <motion.div 
-            animate={{ y: [0, 50, 0], x: [0, -30, 0], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-[20%] right-[10%] w-96 h-96 bg-gradient-to-bl from-yellow-100 to-orange-100 rounded-full blur-3xl mix-blend-multiply" 
-         />
+        style={{ y: cloudsY }}
+        className="absolute inset-0 z-0 opacity-40 mix-blend-soft-light bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" 
+      />
+      <DharmaMandala />
+      
+      {/* 4. Rising Lotus Petals */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        {[...Array(20)].map((_, i) => <LotusPetal key={i} delay={i * 0.3} />)}
       </div>
 
 
-      {/* 2. CONTENT CONTAINER */}
-      <div className="relative z-10 container mx-auto px-4 lg:px-12">
+      {/* ================= CONTENT CONTAINER ================= */}
+      <div className="relative z-10 container mx-auto px-6 lg:px-12">
         
-        {/* Header Block */}
-        <div className="flex flex-col items-center justify-center text-center mb-32 space-y-6">
-           <motion.div 
-             initial={{ opacity: 0, scale: 0.8 }}
+        {/* --- HEADER --- */}
+        <div className="flex flex-col items-center text-center mb-28">
+          
+          <motion.div 
+             initial={{ opacity: 0, y: -20 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             transition={{ duration: 1 }}
+             className="flex items-center gap-3 mb-6"
+          >
+             <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-amber-500" />
+             <span className="text-amber-800/60 text-xs tracking-[0.4em] uppercase font-bold flex items-center gap-2">
+                <Sun size={14} className="text-amber-500 animate-[spin_8s_linear_infinite]" /> {content.tag}
+             </span>
+             <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-amber-500" />
+          </motion.div>
+
+          <motion.h2 
+             initial={{ opacity: 0, scale: 0.95 }}
              whileInView={{ opacity: 1, scale: 1 }}
-             viewport={{ once: true }}
-             className="flex items-center gap-2 px-5 py-2 rounded-full border border-orange-200 bg-white/60 backdrop-blur-sm shadow-sm"
-           >
-              <Eye className="w-4 h-4 text-orange-600" />
-              <span className="text-xs font-bold tracking-[0.25em] text-orange-800 uppercase">
-                {content.tag}
-              </span>
-           </motion.div>
-           
-           <h2 className="text-6xl md:text-8xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 drop-shadow-sm pb-2">
-             {content.title}
-           </h2>
-           
-           <p className="max-w-2xl text-lg text-stone-600 font-light italic">
-             {content.desc}
-           </p>
+             transition={{ duration: 0.8 }}
+             className="text-6xl md:text-8xl leading-none font-serif relative z-10"
+          >
+             <span className="block text-[#451a03] font-medium drop-shadow-sm">
+               {content.title_l1}
+             </span>
+             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600 font-light italic">
+               {content.title_l2}
+             </span>
+             {/* Decorative Halo behind text */}
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-amber-200/30 blur-3xl -z-10 rounded-full" />
+          </motion.h2>
+          
+          <motion.p 
+             initial={{ opacity: 0 }}
+             whileInView={{ opacity: 1 }}
+             transition={{ delay: 0.3, duration: 1 }}
+             className="mt-8 max-w-xl text-[#78350F] font-medium text-lg leading-relaxed"
+          >
+            {content.desc}
+          </motion.p>
         </div>
 
-        {/* 3. THE SHRINE CARDS */}
-        <div className="flex flex-wrap justify-center gap-10 xl:gap-14 pb-20">
-           {monks.map((monk, index) => (
-             <DivineCard key={monk._id?.toString() || index} monk={monk} index={index} btnText={content.btn} language={language} />
+
+        {/* --- THE HALL OF CARDS --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 w-full perspective-[2000px]">
+           {MONKS_DATA.map((monk, index) => (
+              <HeavenlyCard 
+                key={monk.id} 
+                monk={monk} 
+                index={index} 
+                language={language} 
+                btnText={content.btn} 
+              />
            ))}
         </div>
 
@@ -155,127 +212,124 @@ export default function DivineMonkSection() {
   );
 }
 
-// --- SUB-COMPONENT: The Prismatic Stupa Card ---
-function DivineCard({ monk, index, btnText, language }: { monk: Monk, index: number, btnText: string, language: "mn" | "en" }) {
+// =========================================================================
+// SUB-COMPONENT: HEAVENLY LIGHT PORTAL CARD
+// =========================================================================
+function HeavenlyCard({ monk, index, language, btnText }: { monk: any, index: number, language: "mn" | "en", btnText: string }) {
   
-  // Create organic floating offsets
-  const floatDuration = 5 + index; 
-  
-  // Map icons/colors based on specialties or just default for now as we transition to DB
-  // In a real app, you might store these visual preferences in the DB or map them by ID
-  const icon = <Sun className="w-6 h-6" />;
-  const color = "#EA580C"; 
-  const shadow = "shadow-orange-500/30";
-  const bgGradient = "from-orange-400 via-amber-200 to-yellow-50";
-  const textAccent = "text-orange-700";
+  // Hover Physics
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotateX = useSpring(useTransform(y, [-150, 150], [5, -5]), { stiffness: 50, damping: 15 });
+  const rotateY = useSpring(useTransform(x, [-150, 150], [-5, 5]), { stiffness: 50, damping: 15 });
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    x.set(e.clientX - rect.left - centerX);
+    y.set(e.clientY - rect.top - centerY);
+  }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 150, scale: 0.9 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ margin: "-100px", once: true }}
-      transition={{ duration: 0.8, delay: index * 0.15, ease: "easeOut" }}
-      className="group relative w-full sm:w-[320px] lg:w-[340px] h-[580px] perspective-1000"
+      initial={{ opacity: 0, y: 100 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, delay: index * 0.2 }}
+      viewport={{ once: true, margin: "-100px" }}
+      className="group relative h-[620px] w-full cursor-pointer z-10"
+      style={{ perspective: 1000 }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => { x.set(0); y.set(0); }}
     >
-      
-      {/* A. SHADOW AURA (The Grounding) */}
-      <motion.div 
-        animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.2, 0.4, 0.2] }}
-        transition={{ duration: floatDuration, repeat: Infinity }}
-        className={`absolute bottom-[-30px] left-[10%] w-[80%] h-8 rounded-[100%] blur-xl ${shadow}`}
-      />
-
-      {/* B. MAIN CARD BODY (Floating) */}
-      <motion.div 
+      {/* Levitation Animation Container */}
+      <motion.div
         animate={{ y: [-10, 10, -10] }}
-        transition={{ duration: floatDuration, repeat: Infinity, ease: "easeInOut" }}
-        className="relative w-full h-full transform-gpu transition-all duration-500 group-hover:rotate-1"
+        transition={{ duration: 6 + index, repeat: Infinity, ease: "easeInOut" }}
+        style={{ rotateX, rotateY }}
+        className="relative w-full h-full transform-gpu"
       >
-        {/* Card Shape: Stupa Arch */}
-        <div className={`
-          relative w-full h-full overflow-hidden 
-          rounded-t-[1000px] rounded-b-[40px] 
-          bg-gradient-to-br ${bgGradient}
-          border border-white/80
-          shadow-xl
-        `}>
+        {/* 1. GLASS FRAME (The Stupa Shape) */}
+        <div className="absolute inset-0 bg-white/40 backdrop-blur-xl border border-white/60 rounded-t-[200px] rounded-b-[40px] shadow-[0_20px_50px_-10px_rgba(245,158,11,0.2)] overflow-hidden transition-all duration-500 group-hover:shadow-[0_40px_80px_-10px_rgba(245,158,11,0.4)] group-hover:bg-white/60">
             
-            {/* NOISE TEXTURE (For Paper feel) */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay z-0" />
-            
-            {/* TOP SHINE (Glass Effect) */}
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/60 to-transparent z-20 pointer-events-none" />
+            {/* 2. IMAGE CONTAINER (The Portal) */}
+            <div className="absolute top-3 left-3 right-3 bottom-32 rounded-t-[190px] rounded-b-[20px] overflow-hidden bg-gradient-to-b from-amber-50 to-white shadow-inner">
+                {/* Background Glow inside image area */}
+                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-200/40 via-transparent to-transparent z-0 opacity-50 group-hover:opacity-80 transition-opacity" />
+                
+                {/* The Monk Image - Scales slowly (Breathing effect) */}
+                <motion.div 
+                   className="relative w-full h-full"
+                   animate={{ scale: [1, 1.05, 1] }}
+                   transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                >
+                   <img 
+                     src={monk.image} 
+                     alt={monk.name[language]}
+                     className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:opacity-100 transition-all duration-700 contrast-[1.05]"
+                   />
+                </motion.div>
 
-            {/* IMAGE SECTION */}
-            <div className="absolute inset-0 z-10 group-hover:scale-105 transition-transform duration-1000 ease-out">
-                {/* Image Mask Gradient */}
-                <div className="absolute bottom-0 w-full h-[60%] bg-gradient-to-t from-white via-white/90 to-transparent z-10" />
-                <img 
-                  src={monk.image} 
-                  alt={monk.name[language]}
-                  className="w-full h-full object-cover"
-                />
+                {/* Holy Halo (Appears behind head on hover) */}
+                <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-400/30 blur-[60px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000 mix-blend-overlay z-10" />
+            
+                {/* Reflection Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent pointer-events-none z-20" />
             </div>
 
-            {/* C. TEXT & CONTENT */}
-            <div className="absolute bottom-0 inset-x-0 z-30 p-8 flex flex-col items-center text-center">
-                
-                {/* Floating Icon Badge */}
-                <div className={`
-                   relative mb-4 w-14 h-14 rounded-full flex items-center justify-center 
-                   bg-white shadow-lg text-[${color}] group-hover:-translate-y-2 transition-transform duration-300
-                `}>
-                   <div className="text-current" style={{ color: color }}>
-                     {icon}
-                   </div>
-                   {/* Ring Pulse */}
-                   <div className="absolute inset-0 rounded-full border border-current opacity-30 animate-ping" style={{ color: color }} />
-                </div>
-
-                <span className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-2 ${textAccent} opacity-80`}>
-                  {/* Element mapping is tricky without DB field, just showing specialties[0] for now */}
-                  {monk.specialties[0]}
-                </span>
-
-                <h3 className="text-3xl font-serif font-bold text-gray-900 mb-1">
-                   {monk.name[language]}
-                </h3>
-                
-                <p className={`text-sm italic font-medium opacity-70 mb-6 ${textAccent}`}>
-                   {monk.title[language]}
-                </p>
-
-                {/* Call to Action (Reveal) */}
-                <div className="w-full border-t border-black/5 pt-4 opacity-80 group-hover:opacity-100 transition-opacity">
-                   <button className="flex items-center justify-center gap-2 w-full text-xs font-bold uppercase tracking-widest text-gray-800 hover:text-orange-600 transition-colors">
-                     {btnText} <MoveRight className="w-4 h-4" />
-                   </button>
-                </div>
+            {/* 3. VERTICAL SCRIPT (Pillar of Wisdom) */}
+            <div 
+               className="absolute top-24 right-8 z-30 opacity-60 mix-blend-multiply group-hover:opacity-90 transition-opacity duration-700 text-[#451a03] font-serif tracking-widest text-xl h-48 border-r-2 border-amber-900/10 pr-2"
+               style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+            >
+               {monk.name.mn.split(" ")[0]}
             </div>
 
-            {/* D. MONGOLIAN SCRIPT (Cultural Element) */}
-            {/* Positioned absolute on the side like a seal */}
-            <div className="absolute top-24 right-4 z-20 opacity-40 mix-blend-darken group-hover:opacity-80 transition-all duration-700">
-               <span 
-                 style={{
-                   writingMode: 'vertical-rl',
-                   textOrientation: 'upright',
-                 }} 
-                 className={`text-2xl font-serif font-bold ${textAccent} drop-shadow-md`}
+            {/* 4. INFO CONTENT (Bottom) */}
+            <div className="absolute bottom-0 left-0 w-full h-32 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-white via-white/80 to-transparent z-30">
+               
+               {/* Animated Decorator */}
+               <div className="mb-2 opacity-50 group-hover:opacity-100 transition-opacity text-amber-500">
+                  <Flower size={18} className="group-hover:rotate-45 transition-transform duration-700" />
+               </div>
+
+               <h3 className="text-2xl font-serif font-bold text-[#451a03] mb-1 group-hover:text-amber-700 transition-colors">
+                  {monk.name[language]}
+               </h3>
+               
+               <p className="text-[#92400e] text-[10px] uppercase tracking-[0.25em] font-medium opacity-70 group-hover:opacity-100 transition-opacity">
+                  {monk.title[language]}
+               </p>
+
+               {/* Hover Reveal Button */}
+               <motion.div 
+                  initial={{ width: 0, opacity: 0 }}
+                  whileHover={{ width: "auto", opacity: 1 }}
+                  className="absolute bottom-4 flex items-center gap-2 text-xs text-amber-600 font-bold uppercase tracking-widest border-b border-amber-400/50 pb-0.5 overflow-hidden"
                >
-                  {/* Just using name for now as decorative script */}
-                  {monk.name.mn.split(" ")[0]} 
-               </span>
-               <div className="mt-2 w-[2px] h-12 bg-current mx-auto opacity-50" style={{ color: color }} />
+                  {btnText} <ArrowUpRight size={12} />
+               </motion.div>
             </div>
 
-            {/* E. DECORATIVE ELEMENTS */}
-            <div className="absolute top-6 inset-x-0 flex justify-center z-30 opacity-60">
-                <Flower className={`w-6 h-6 text-white drop-shadow-[0_0_8px_${color}]`} />
-            </div>
-
+            {/* 5. Shimmer Overlay on Card Hover */}
+            <div className="absolute inset-0 z-40 bg-gradient-to-tr from-white/0 via-white/40 to-white/0 skew-x-12 opacity-0 group-hover:animate-shine pointer-events-none" />
         </div>
       </motion.div>
+      
+      {/* 6. Shadow Reflection (The Grounding) */}
+      <div className="absolute -bottom-8 left-[15%] right-[15%] h-4 bg-amber-900/10 blur-xl rounded-[100%] transition-all duration-500 group-hover:scale-x-110 group-hover:bg-amber-900/20" />
+
+      {/* Shine Animation */}
+      <style jsx global>{`
+        @keyframes shine {
+          0% { transform: translateX(-100%) skewX(-15deg); opacity: 0; }
+          50% { opacity: 0.5; }
+          100% { transform: translateX(200%) skewX(-15deg); opacity: 0; }
+        }
+        .animate-shine {
+          animation: shine 1.2s ease-in-out;
+        }
+      `}</style>
     </motion.div>
-  )
+  );
 }
