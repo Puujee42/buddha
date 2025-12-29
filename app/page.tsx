@@ -14,7 +14,6 @@ export default function Home() {
       <MonkSection />
       <PhilosophySection />
       <NirvanaComments />
-      <GoldenNirvanaFooter />
     </>
   );
 }
