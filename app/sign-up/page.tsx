@@ -146,7 +146,7 @@ export default function SignUpPage() {
             <div className="space-y-6">
               
               {/* 1. SIGN UP (Golden Button) */}
-              <SignUpButton mode="redirect">
+              <SignUpButton mode="modal">
                 <motion.button 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -187,7 +187,7 @@ export default function SignUpPage() {
           <div className="mt-12 text-center border-t border-[#D97706]/10 pt-6">
              <p className="text-[#78350F]/60 text-xs font-sans">
                 {content.agreeText}
-                <Link href="#" className="font-bold text-[#D97706] hover:underline ml-1">
+                <Link href="/" className="font-bold text-[#D97706] hover:underline ml-1">
                    {content.eightfoldPath}
                 </Link>
              </p>

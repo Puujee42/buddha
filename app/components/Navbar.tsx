@@ -111,12 +111,12 @@ export default function OverlayNavbar() {
           </div>
 
           {/* --- 2. CENTER NAVIGATION --- */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex shadow-2xl items-center gap-2">
             {CONTENT.nav.map((item) => (
-              <div key={item.id} className="relative" onMouseEnter={() => setHoveredNav(item.id)} onMouseLeave={() => setHoveredNav(null)}>
+              <div key={item.id} className="relative shadow-2xl" onMouseEnter={() => setHoveredNav(item.id)} onMouseLeave={() => setHoveredNav(null)}>
                 <Link
                   href={item.href}
-                  className={`relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 z-10 ${
+                  className={`shadow-2xl relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 z-10 ${
                     isScrolled 
                       ? (isDark ? "text-indigo-100 hover:text-amber-300" : "text-amber-900 hover:text-amber-600") 
                       : "text-white hover:text-amber-200"
@@ -125,7 +125,7 @@ export default function OverlayNavbar() {
                   {hoveredNav === item.id && (
                     <motion.div 
                       layoutId="nav-pill" 
-                      className={`absolute inset-0 rounded-full ${isDark ? "bg-indigo-500/20" : "bg-amber-500/10"}`} 
+                      className={` shadow-2xl absolute inset-0 rounded-full ${isDark ? "bg-indigo-500/20" : "bg-amber-500/10"}`} 
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} 
                     />
                   )}

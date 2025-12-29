@@ -188,7 +188,7 @@ export default function SignInPage() {
           <div className="mt-12 text-center border-t border-[#D97706]/10 pt-6">
              <p className="text-[#78350F]/60 text-xs font-sans">
                 {content.agreeText}
-                <Link href="#" className="font-bold text-[#D97706] hover:underline ml-1">
+                <Link href="/" className="font-bold text-[#D97706] hover:underline ml-1">
                    {content.eightfoldPath}
                 </Link>
              </p>
