@@ -28,12 +28,6 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { Service } from "@/database/types";
 
 // --- FALLBACK MOCK DATA (In case DB connection is pending) ---
-const FALLBACK_SERVICES: Service[] = [
-  { _id: "1", type: "teaching", title: { mn: "Гандангийн Ном", en: "Sutra Chanting" }, subtitle: { mn: "Ариусал", en: "Purification" }, desc: { mn: "Гэр бүл, үр хүүхдийн заяа буяныг даатгаж ном хурах.", en: "Chanting sacred sutras for the well-being and purification of your family." }, duration: "30 min", price: 30000 },
-  { _id: "2", type: "divination", title: { mn: "Төрөлх Зурхай", en: "Natal Astrology" }, subtitle: { mn: "Хувь Заяа", en: "Destiny Chart" }, desc: { mn: "Таны төрсөн цаг, гараг эрхсийн байрлалаар хувь заяаг тольдох.", en: "Mapping your destiny through the alignment of stars at your birth." }, duration: "45 min", price: 50000 },
-  { _id: "3", type: "teaching", title: { mn: "Сэтгэл Зүйн Зөвлөгөө", en: "Dharma Counseling" }, subtitle: { mn: "Амар Амгалан", en: "Inner Peace" }, desc: { mn: "Буддын гүн ухаанд суурилсан сэтгэл зүйн ганцаарчилсан ярилцлага.", en: "One-on-one counseling grounded in Buddhist philosophy to find mental clarity." }, duration: "60 min", price: 80000 },
-  { _id: "4", type: "divination", title: { mn: "Таро Мэргэ", en: "Tarot Reading" }, subtitle: { mn: "Зөн Совин", en: "Intuition" }, desc: { mn: "Таро картын нууцлаг бэлгэдлээр ирээдүйн чиг хандлагыг харах.", en: "Unveiling the path ahead through the mystical archetypes of Tarot." }, duration: "40 min", price: 45000 },
-];
 
 // --- STYLES ---
 const pageStyles = `
@@ -105,15 +99,14 @@ export default function ServicesPage() {
             setServices(data);
           } else {
             console.warn("DB returned empty array. Using Fallback Data.");
-            setServices(FALLBACK_SERVICES);
+            
           }
         } else {
           throw new Error("API responded with error");
         }
       } catch (e) {
         console.error("Failed to load services:", e);
-        setError("Could not connect to temple archives. Using offline wisdom.");
-        setServices(FALLBACK_SERVICES); // Safe fallback
+         // Safe fallback
       } finally {
         setLoading(false);
       }
