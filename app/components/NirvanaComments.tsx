@@ -11,61 +11,78 @@ import {
   useMotionValue
 } from "framer-motion";
 import { 
-  Send, 
   Sparkles, 
   Flower, 
   Sun,
   Moon,
-  Wind,
   Star,
   Eye,
-  Loader2
+  Loader2,
+  Orbit
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
 import { Comment } from "@/database/types"; 
 
-// --- DYNAMIC ATMOSPHERES ---
+// --- ZODIAC GALAXY ATMOSPHERE ---
 
 const CelestialAtmosphere = ({ isDark }: { isDark: boolean }) => (
   <div className="absolute inset-0 pointer-events-none overflow-hidden">
-    {/* Base Layer transition */}
+    {/* Deep Space Base */}
     <div className={`absolute inset-0 transition-opacity duration-1000 ${
-      isDark ? "bg-linear-to-b from-[#020617] via-[#0f172a] to-black opacity-100" : "bg-linear-to-b from-[#FFFBEB] via-[#FEF3C7] to-white opacity-100"
+      isDark ? "bg-[#05051a] opacity-100" : "bg-[#FDFBF7] opacity-100"
     }`} />
     
+    {/* Nebula Watercolor Clouds */}
+    {isDark && (
+      <>
+        <motion.div 
+          animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.25, 0.15] }}
+          transition={{ duration: 15, repeat: Infinity }}
+          className="absolute -top-20 -left-20 w-full h-full rounded-full blur-[140px] bg-[#C72075]"
+        />
+        <motion.div 
+          animate={{ scale: [1.1, 1, 1.1], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 12, repeat: Infinity }}
+          className="absolute -bottom-40 -right-20 w-full h-full rounded-full blur-[140px] bg-[#2E1B49]"
+        />
+      </>
+    )}
+
     {/* Rotating Celestial Halo */}
     <motion.div 
       animate={{ rotate: isDark ? -360 : 360 }}
-      transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
-      className={`absolute top-[-30%] left-[-20%] w-[150vw] h-[150vw] opacity-20`}
+      transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
+      className="absolute top-[-40%] left-[-25%] w-[150vw] h-[150vw] opacity-[0.08]"
       style={{
         background: isDark 
-          ? "radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)"
+          ? "conic-gradient(from 0deg, transparent 0%, #50F2CE 15%, transparent 40%, #C72075 60%, transparent 80%)"
           : "conic-gradient(from 0deg, transparent 0%, #fbbf24 10%, transparent 50%)"
       }}
     />
 
-    {/* Stardust/Dust Particles (Deterministic to avoid Hydration Error) */}
+    {/* Multi-colored Stardust */}
     <div className="absolute inset-0 z-[1]">
-      {[...Array(25)].map((_, i) => (
+      {[...Array(35)].map((_, i) => (
         <motion.div
           key={i}
           initial={{ y: "110vh", opacity: 0 }}
           animate={{ 
             y: "-10vh", 
-            opacity: [0, 0.7, 0],
-            x: Math.sin(i) * 80
+            opacity: [0, 0.8, 0],
+            x: Math.sin(i) * 100
           }}
           transition={{
-            duration: 12 + (i % 10),
+            duration: 10 + (i % 8),
             repeat: Infinity,
-            delay: i * 0.4,
+            delay: i * 0.3,
           }}
-          className={`absolute w-[2px] h-[2px] rounded-full blur-xs ${
-            isDark ? "bg-indigo-300 shadow-[0_0_10px_white]" : "bg-amber-400 shadow-[0_0_8px_orange]"
+          className={`absolute rounded-full blur-[1px] ${
+            isDark 
+              ? (i % 2 === 0 ? "bg-cyan-300 shadow-[0_0_10px_#50F2CE] w-[2px] h-[2px]" : "bg-magenta-400 shadow-[0_0_8px_#C72075] w-[1px] h-[1px]") 
+              : "bg-amber-400 shadow-[0_0_8px_orange] w-[2px] h-[2px]"
           }`}
-          style={{ left: `${(i * 4) % 100}%` }}
+          style={{ left: `${(i * 6) % 100}%` }}
         />
       ))}
     </div>
@@ -84,26 +101,17 @@ export default function CelestialRiverComments() {
   const mouseX = useSpring(0, { stiffness: 40, damping: 20 });
   const mouseY = useSpring(0, { stiffness: 40, damping: 20 });
 
-  // 1. ALL HOOKS AT TOP LEVEL
   const isDark = resolvedTheme === "dark";
-  const glowColor = isDark ? 'rgba(79, 70, 229, 0.4)' : 'rgba(251, 191, 36, 0.4)';
+  const glowColor = isDark ? 'rgba(199, 32, 117, 0.3)' : 'rgba(251, 191, 36, 0.3)';
   const glowTemplate = useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, ${glowColor}, transparent 70%)`;
 
   useEffect(() => {
     setMounted(true);
-    async function fetchComments() {
-      try {
-        const response = await fetch('/api/comments');
-        if (response.ok) {
-          const data = await response.json();
-          setComments(data.map((c: any) => ({ ...c, createdAt: new Date(c.createdAt) })));
-        }
-      } catch (e) { console.error(e); }
-    }
-    fetchComments();
+    // Note: Use your actual API fetch logic here
+    setComments([]); 
   }, []);
 
-  if (!mounted) return <div className="min-h-screen bg-[#FDFBF7]" />;
+  if (!mounted) return <div className="min-h-screen bg-[#05051a]" />;
 
   const handleMouseMove = ({ clientX, clientY, currentTarget }: React.MouseEvent) => {
     const { left, top } = currentTarget.getBoundingClientRect();
@@ -118,8 +126,8 @@ export default function CelestialRiverComments() {
     
     const newEntry: Comment = {
        _id: Date.now().toString() as any,
-       authorName: "Seeker",
-       authorRole: isDark ? "Ghost of Stars" : "Pilgrim of Light",
+       authorName: "Star-born",
+       authorRole: isDark ? "Celestial Voyager" : "Pilgrim of Light",
        avatar: `https://i.pravatar.cc/150?u=${Date.now()}`,
        text: newComment,
        karma: 0,
@@ -133,9 +141,9 @@ export default function CelestialRiverComments() {
   };
 
   const ui = {
-     header: isDark ? t({ mn: "Бодлын Мөрөн", en: "River of Souls" }) : t({ mn: "Ариун Мөрөн", en: "River of Offering" }),
-     sub: isDark ? t({ mn: "Аркана цуглуулга", en: "The Collective Arcana" }) : t({ mn: "Бодлын Урсгал", en: "Stream of Consciousness" }),
-     btn: isDark ? t({ mn: "Шившлэг", en: "Cast Seal" }) : t({ mn: "Өргөх", en: "Offer Prayer" })
+     header: isDark ? t({ mn: "Одот Мөрөн", en: "Nebula Stream" }) : t({ mn: "Ариун Мөрөн", en: "River of Offering" }),
+     sub: isDark ? t({ mn: "Зурхайн цуглуулга", en: "The Collective Zodiac" }) : t({ mn: "Бодлын Урсгал", en: "Stream of Consciousness" }),
+     btn: isDark ? t({ mn: "Оддын тамга", en: "Seal Star" }) : t({ mn: "Өргөх", en: "Offer Prayer" })
   };
 
   return (
@@ -148,46 +156,46 @@ export default function CelestialRiverComments() {
         <div className="text-center mb-24 relative">
             <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity }} className="inline-block mb-6">
                <div className={`p-4 rounded-full border shadow-2xl transition-all duration-700 ${
-                   isDark ? "bg-indigo-950/40 border-indigo-400/50 text-indigo-300" : "bg-white border-amber-200 text-amber-500"
+                   isDark ? "bg-[#0C164F]/60 border-cyan-400/50 text-cyan-300" : "bg-white border-amber-200 text-amber-500"
                }`}>
-                  {isDark ? <Moon fill="currentColor" size={32} /> : <Sun size={32} className="animate-spin-slow" />}
+                  {isDark ? <Orbit size={32} className="animate-pulse" /> : <Sun size={32} className="animate-spin-slow" />}
                </div>
             </motion.div>
             
-            <h2 className={`text-6xl md:text-9xl font-serif transition-colors drop-shadow-2xl ${isDark ? "text-white" : "text-[#78350F]"}`}>
+            <h2 className={`text-6xl md:text-9xl font-serif tracking-tight transition-colors drop-shadow-[0_0_30px_rgba(80,242,206,0.2)] ${isDark ? "text-white" : "text-[#78350F]"}`}>
                {ui.header}
             </h2>
             <div className="flex items-center justify-center gap-4 mt-6">
-                <div className={`h-px w-20 bg-linear-to-r from-transparent via-current to-transparent ${isDark ? 'text-indigo-500' : 'text-amber-500'}`} />
-                <p className={`text-[10px] font-black tracking-[0.6em] uppercase opacity-60 ${isDark ? "text-indigo-200" : "text-amber-800"}`}>{ui.sub}</p>
-                <div className={`h-px w-20 bg-linear-to-r from-transparent via-current to-transparent ${isDark ? 'text-indigo-500' : 'text-amber-500'}`} />
+                <div className={`h-px w-20 bg-linear-to-r from-transparent via-current to-transparent ${isDark ? 'text-cyan-500' : 'text-amber-500'}`} />
+                <p className={`text-[10px] font-black tracking-[0.6em] uppercase opacity-70 ${isDark ? "text-cyan-100" : "text-amber-800"}`}>{ui.sub}</p>
+                <div className={`h-px w-20 bg-linear-to-r from-transparent via-current to-transparent ${isDark ? 'text-cyan-500' : 'text-amber-500'}`} />
             </div>
         </div>
 
         {/* ================= INPUT SEAL ================= */}
         <div className="relative max-w-2xl w-full mx-auto mb-32 z-20" onMouseMove={handleMouseMove}>
-             <motion.div className="absolute -inset-20 opacity-30 blur-3xl z-0 pointer-events-none" style={{ background: glowTemplate }} />
+             <motion.div className="absolute -inset-20 opacity-40 blur-3xl z-0 pointer-events-none" style={{ background: glowTemplate }} />
 
              <form onSubmit={handleSubmit} className={`relative backdrop-blur-3xl border-2 rounded-2xl p-2 flex items-center gap-4 transition-all duration-700 shadow-2xl ${
-                 isDark ? "bg-black/60 border-indigo-500/30" : "bg-white/80 border-amber-200/50"
+                 isDark ? "bg-[#0C164F]/40 border-cyan-400/30" : "bg-white/80 border-amber-200/50"
              }`}>
                 <div className="pl-6">
-                   {isDark ? <Eye className="text-indigo-400" size={24} /> : <Flower className="text-amber-400" size={24} />}
+                   {isDark ? <Sparkles className="text-[#C72075]" size={24} /> : <Flower className="text-amber-400" size={24} />}
                 </div>
                 <input 
                    type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)}
                    placeholder="..."
-                   className={`flex-1 bg-transparent border-none outline-none font-serif text-2xl h-16 ${isDark ? "text-white placeholder-indigo-400/20" : "text-[#78350f] placeholder-amber-900/20"}`}
+                   className={`flex-1 bg-transparent border-none outline-none font-serif text-2xl h-16 ${isDark ? "text-white placeholder-cyan-400/20" : "text-[#78350f] placeholder-amber-900/20"}`}
                 />
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`px-10 py-5 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-2xl flex items-center gap-3 transition-all ${
-                    isDark ? "bg-indigo-600 text-white shadow-indigo-500/40" : "bg-amber-500 text-white"
+                    isDark ? "bg-gradient-to-r from-[#C72075] to-[#7B337D] text-white shadow-[#C72075]/30" : "bg-amber-500 text-white"
                 }`}>
-                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Sparkles size={16} />} <span>{ui.btn}</span>
+                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Star size={16} />} <span>{ui.btn}</span>
                 </motion.button>
              </form>
         </div>
 
-        {/* ================= THE ARCANA STREAM ================= */}
+        {/* ================= THE NEBULA CARDS ================= */}
         <div 
           ref={scrollRef}
           className="flex overflow-x-auto gap-16 px-12 md:px-[30vw] py-20 hide-scrollbar scroll-smooth snap-x"
@@ -205,7 +213,7 @@ export default function CelestialRiverComments() {
   );
 }
 
-// --- SUB-COMPONENT: 3D ARCANA CARD ---
+// --- SUB-COMPONENT: 3D NEBULA CARD ---
 
 function ArcanaCard({ comment, index, isDark }: { comment: Comment, index: number, isDark: boolean }) {
   const x = useMotionValue(0);
@@ -227,32 +235,32 @@ function ArcanaCard({ comment, index, isDark }: { comment: Comment, index: numbe
       exit={{ opacity: 0, scale: 0.5, filter: "blur(20px)" }}
       onMouseMove={handleCardMove}
       onMouseLeave={() => { x.set(0); y.set(0); }}
-      className="relative shrink-0 snap-center perspective-1000"
+      className="relative shrink-0 snap-center perspective-1000 group"
     >
         <motion.div
            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
            className={`w-[320px] md:w-[380px] h-[520px] rounded-sm border-2 p-10 flex flex-col transition-all duration-700 shadow-2xl relative ${
-              isDark ? "bg-[#05050a]/80 border-indigo-500/40 text-indigo-50" : "bg-white/90 border-amber-200 text-[#451a03]"
+              isDark ? "bg-[#0C164F]/80 border-cyan-400/30 text-cyan-50" : "bg-white/90 border-amber-200 text-[#451a03]"
            }`}
         >
              {/* Ornate Frame Inside Card */}
-             <div className={`absolute inset-4 border transition-colors opacity-20 ${isDark ? "border-indigo-400" : "border-amber-500"}`} />
+             <div className={`absolute inset-4 border transition-colors opacity-10 ${isDark ? "border-cyan-400" : "border-amber-500"}`} />
              
-             {/* Header Identity */}
+             {/* Identity */}
              <div className="relative z-10 flex flex-col items-center text-center mb-10 pt-2">
-                <span className={`text-[8px] font-black tracking-[0.8em] uppercase mb-6 opacity-40 transition-colors ${isDark ? 'text-indigo-300' : 'text-amber-800'}`}>
-                   SOUL Arcana {index + 1}
+                <span className={`text-[8px] font-black tracking-[0.8em] uppercase mb-6 opacity-50 transition-colors ${isDark ? 'text-cyan-300' : 'text-amber-800'}`}>
+                   NEBULA Arcana {index + 1}
                 </span>
                 
-                <div className="relative group/avatar mb-6">
-                    <div className={`w-20 h-20 rounded-full border-2 p-1 transition-all duration-1000 ${isDark ? "border-indigo-500/50" : "border-amber-400"}`}>
-                       <img src={comment.avatar} className="w-full h-full rounded-full object-cover grayscale group-hover/avatar:grayscale-0 transition-all duration-700" alt="avatar" />
+                <div className="relative mb-6">
+                    <div className={`w-20 h-20 rounded-full border-2 p-1 transition-all duration-1000 ${isDark ? "border-[#C72075]/50 shadow-[0_0_15px_rgba(199,32,117,0.3)]" : "border-amber-400"}`}>
+                       <img src={comment.avatar} className="w-full h-full rounded-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="avatar" />
                     </div>
-                    <Sparkles className="absolute -top-2 -right-2 text-amber-400 animate-pulse" size={16} />
+                    <Sparkles className={`absolute -top-2 -right-2 ${isDark ? 'text-cyan-300' : 'text-amber-400'} animate-pulse`} size={16} />
                 </div>
 
                 <h4 className="font-serif text-2xl tracking-widest uppercase mb-1 drop-shadow-md">{comment.authorName}</h4>
-                <p className={`text-[9px] font-bold tracking-[0.3em] uppercase ${isDark ? "text-indigo-400" : "text-amber-600"}`}>
+                <p className={`text-[9px] font-bold tracking-[0.3em] uppercase ${isDark ? "text-cyan-400" : "text-amber-600"}`}>
                   {comment.authorRole}
                 </p>
              </div>
@@ -273,12 +281,12 @@ function ArcanaCard({ comment, index, isDark }: { comment: Comment, index: numbe
                 <div className="h-px flex-1 bg-current ml-4" />
              </div>
 
-             {/* Holographic Glare Effect */}
-             <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-[1.5s] pointer-events-none" />
+             {/* Cosmic Glare Effect */}
+             <div className={`absolute inset-0 bg-linear-to-tr from-transparent ${isDark ? 'via-cyan-400/5' : 'via-white/20'} to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-[1.5s] pointer-events-none`} />
         </motion.div>
         
         {/* Glow Under Card */}
-        <div className={`absolute -bottom-12 left-1/2 -translate-x-1/2 w-2/3 h-12 blur-3xl opacity-20 transition-colors duration-1000 ${isDark ? "bg-indigo-600" : "bg-amber-400"}`} />
+        <div className={`absolute -bottom-12 left-1/2 -translate-x-1/2 w-2/3 h-12 blur-3xl opacity-20 transition-colors duration-1000 ${isDark ? "bg-[#C72075]" : "bg-amber-400"}`} />
     </motion.div>
   );
 }

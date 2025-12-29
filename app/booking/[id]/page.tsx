@@ -1,31 +1,62 @@
 "use client";
-
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ArrowLeft, Calendar, Clock, CheckCircle2, Loader2, 
-  Sun, Moon, Sparkles, User, Gem 
+import {
+  ArrowLeft, Calendar, Clock, CheckCircle2, Loader2,
+  Sun, Orbit, Star, Users, Sparkles
 } from "lucide-react";
-import { useTheme } from "next-themes"; // Integrated
+import { useTheme } from "next-themes";
 import OverlayNavbar from "../../components/Navbar";
 import GoldenNirvanaFooter from "../../components/Footer";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { Service, Monk } from "@/database/types";
 
-// --- CUSTOM VIKING FRAME FOR THE ALTAR ---
+// --- MAXIMIZED ZODIAC GEOMETRIC FRAME WITH ADVANCED ANIMATIONS ---
 const AltarFrame = ({ color }: { color: string }) => (
   <div className="absolute inset-0 pointer-events-none z-30">
     <svg className="w-full h-full" viewBox="0 0 500 800" fill="none" preserveAspectRatio="none">
-      <path 
-        d="M50 100 L50 50 L100 50 M400 50 L450 50 L450 100 M450 700 L450 750 L400 750 M100 750 L50 750 L50 700" 
-        stroke={color} strokeWidth="2" strokeOpacity="0.4" 
+      <defs>
+        <filter id="zodiac-glow">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+      {/* Animated Geometric Corner Brackets with Dash Effect */}
+      <motion.path
+        initial={{ pathLength: 0, strokeDashoffset: 0 }}
+        animate={{ pathLength: 1, strokeDashoffset: [0, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        d="M60 100 L60 60 L100 60 M400 60 L440 60 L440 100 M440 700 L440 740 L400 740 M100 740 L60 740 L60 700"
+        stroke={color} strokeWidth="1.5" strokeOpacity="0.5" strokeDasharray="5 5"
       />
-      <text x="25" y="400" fill={color} fontSize="14" className="opacity-20 [writing-mode:vertical-rl] font-serif uppercase tracking-[0.5em]">
-        ᚦᛅᛏ᛫ᛋᚴᛅᛚ᛫ᚢᛖᚱᚦᛅ
-      </text>
-      <circle cx="250" cy="50" r="4" fill={color} className="animate-pulse" />
+      {/* Pulsing and Fading Celestial Symbols Side Bar */}
+      <g fill={color} className="opacity-20" style={{ fontSize: '14px' }} filter="url(#zodiac-glow)">
+        <motion.text
+          x="25" y="300" className="[writing-mode:vertical-rl] font-serif tracking-[1em]"
+          animate={{ y: [0, -15, 0], opacity: [0.2, 0.6, 0.2], scale: [1, 1.1, 1] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >♈ ♉ ♊ ♋ ♌ ♍</motion.text>
+        <motion.text
+          x="475" y="300" className="[writing-mode:vertical-rl] font-serif tracking-[1em]"
+          animate={{ y: [0, 15, 0], opacity: [0.2, 0.6, 0.2], scale: [1, 1.1, 1] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        >♎ ♏ ♐ ♑ ♒ ♓</motion.text>
+      </g>
+      {/* Rotating and Pulsing Central Orbit Rings */}
+      <motion.circle
+        cx="250" cy="60" r="30"
+        stroke={color} strokeWidth="0.5" strokeOpacity="0.2"
+        animate={{ rotate: 360, scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+      />
+      <motion.circle
+        cx="250" cy="740" r="40"
+        stroke={color} strokeWidth="0.5" strokeOpacity="0.2"
+        animate={{ rotate: -360, scale: [1, 1.2, 1], opacity: [0.2, 0.5, 0.2] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+      />
     </svg>
   </div>
 );
@@ -34,20 +65,19 @@ export default function RitualBookingPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { t, language } = useLanguage();
-  const { resolvedTheme } = useTheme(); // Use the chosen theme
-  
+  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [service, setService] = useState<Service | null>(null);
+  const [monks, setMonks] = useState<Monk[]>([]);
   const [selectedMonk, setSelectedMonk] = useState<Monk | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBooked, setIsBooked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Form State
   const [selectedDateIndex, setSelectedDateIndex] = useState<number | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
   const [userNote, setUserNote] = useState("");
+  const [showMonkSelector, setShowMonkSelector] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -55,7 +85,7 @@ export default function RitualBookingPage() {
       if (!id) return;
       try {
         setLoading(true);
-        const servicesRes = await fetch('/api/services'); 
+        const servicesRes = await fetch('/api/services');
         if (servicesRes.ok) {
           const services: Service[] = await servicesRes.json();
           const found = services.find((s) => String(s._id) === id);
@@ -63,10 +93,11 @@ export default function RitualBookingPage() {
         }
         const monksRes = await fetch('/api/monks');
         if (monksRes.ok) {
-            const allMonks: Monk[] = await monksRes.json();
-            if (allMonks.length > 0) setSelectedMonk(allMonks[0]);
+          const allMonks: Monk[] = await monksRes.json();
+          setMonks(allMonks);
+          if (allMonks.length > 0) setSelectedMonk(allMonks[0]);
         }
-      } catch (e) { console.error(e); } 
+      } catch (e) { console.error(e); }
       finally { setLoading(false); }
     }
     loadData();
@@ -74,19 +105,23 @@ export default function RitualBookingPage() {
 
   const isDark = resolvedTheme === "dark";
 
-  // DYNAMIC THEME PALETTE
+  // --- MAXIMIZED THEME WITH ADDITIONAL EFFECTS ---
   const theme = isDark ? {
-    accent: "#818cf8", // Indigo
-    bg: "bg-[#020205]",
-    card: "bg-[#0a0a14] border-white/5",
+    accent: "#50F2CE", // Cyan
+    secondary: "#C72075", // Magenta
+    bg: "bg-[#05051a]",
+    card: "bg-[#0C164F]/80 border-cyan-400/10 backdrop-blur-3xl",
     text: "text-white",
-    subText: "text-indigo-400",
-    input: "bg-white/5 border-white/10 text-white placeholder-indigo-300/30",
-    button: "bg-white text-black hover:bg-indigo-400",
-    glow: "shadow-[0_0_50px_-10px_rgba(99,102,241,0.2)]",
-    icon: <Moon className="text-indigo-400 animate-pulse" />
+    subText: "text-[#C72075]",
+    input: "bg-[#05051a]/60 border-cyan-400/20 text-white placeholder-cyan-400/20",
+    button: "bg-gradient-to-r from-[#C72075] to-[#7B337D] text-white",
+    glow: "shadow-[0_0_80px_-20px_rgba(199,32,117,0.3)]",
+    icon: <Orbit className="text-cyan-400 animate-pulse" size={32} />,
+    particle: "bg-cyan-400/20",
+    selectorBg: "bg-cyan-950/50"
   } : {
-    accent: "#d97706", // Amber
+    accent: "#d97706",
+    secondary: "#f59e0b",
     bg: "bg-[#FDFBF7]",
     card: "bg-white border-stone-200",
     text: "text-stone-900",
@@ -94,7 +129,9 @@ export default function RitualBookingPage() {
     input: "bg-stone-50 border-stone-200 text-stone-900 placeholder-stone-400",
     button: "bg-stone-900 text-white hover:bg-amber-700",
     glow: "shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)]",
-    icon: <Sun className="text-amber-600 animate-spin-slow" />
+    icon: <Sun className="text-amber-600 animate-spin-slow" size={32} />,
+    particle: "bg-amber-500/20",
+    selectorBg: "bg-stone-100"
   };
 
   const dates = useMemo(() => {
@@ -103,9 +140,9 @@ export default function RitualBookingPage() {
     for (let i = 0; i < 7; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
-      arr.push({ 
-        day: d.getDate(), 
-        week: d.toLocaleDateString(language==='mn'?'mn':'en',{weekday:'short'}),
+      arr.push({
+        day: d.getDate(),
+        week: d.toLocaleDateString(language === 'mn' ? 'mn' : 'en', { weekday: 'short' }),
         fullDate: d
       });
     }
@@ -115,9 +152,13 @@ export default function RitualBookingPage() {
   const times = ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
 
   const handleBooking = async () => {
-    if (!userName || !selectedTime) return;
+    if (!userName || !selectedTime || !selectedMonk) return;
     setIsSubmitting(true);
-    setTimeout(() => { setIsBooked(true); setIsSubmitting(false); }, 1500);
+    // Simulated API call
+    setTimeout(() => {
+      setIsBooked(true);
+      setIsSubmitting(false);
+    }, 1500);
   };
 
   if (!mounted) return null;
@@ -126,100 +167,217 @@ export default function RitualBookingPage() {
     <>
       <OverlayNavbar />
       <div className={`min-h-screen transition-colors duration-1000 pt-32 pb-20 px-6 overflow-hidden ${theme.bg}`}>
-        
-        {/* TEXTURE & ATMOSPHERE */}
-        <div className={`fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] ${isDark ? 'invert' : ''}`} />
-        <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vw] rounded-full blur-[150px] opacity-[0.08] pointer-events-none ${isDark ? "bg-indigo-500" : "bg-amber-500"}`} />
+        {/* --- MAXIMIZED NEBULA ATMOSPHERE WITH MORE PARTICLES AND ANIMATIONS --- */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          {isDark && (
+            <>
+              <motion.div
+                className="absolute top-1/2 left-1/4 w-[60%] h-[60%] rounded-full bg-[#C72075]/10 blur-[150px]"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4], rotate: [0, 180, 360] }}
+                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div
+                className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#2E1B49]/30 blur-[130px]"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.9, 0.2], rotate: [0, -180, -360] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+              />
+              {/* Enhanced Floating Particles with varied animations */}
+              {[...Array(30)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className={`absolute rounded-full ${theme.particle}`}
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    width: `${Math.random() * 2 + 1}px`,
+                    height: `${Math.random() * 2 + 1}px`,
+                  }}
+                  animate={{
+                    y: [0, -30 + Math.random() * 20, 0],
+                    x: [0, Math.random() * 10 - 5, 0],
+                    opacity: [0, 1, 0],
+                    scale: [1, 1.5 + Math.random(), 1]
+                  }}
+                  transition={{
+                    duration: Math.random() * 4 + 2,
+                    repeat: Infinity,
+                    delay: Math.random() * 6,
+                    ease: "easeInOut"
+                  }}
+                />
+              ))}
+            </>
+          )}
+          <div className={`absolute inset-0 opacity-[0.05] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] ${isDark ? 'invert' : ''}`} />
+        </div>
 
         <main className="container mx-auto max-w-6xl relative z-10">
-          
-          <Link href="/services" className={`inline-flex items-center gap-2 mb-12 text-[10px] font-black uppercase tracking-[0.4em] transition-opacity hover:opacity-100 ${theme.text} opacity-50`}>
-            <ArrowLeft size={14} /> {t({mn: "Буцах", en: "Return to Path"})}
-          </Link>
-
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
+            <Link href="/services" className={`inline-flex items-center gap-2 mb-12 text-[10px] font-black uppercase tracking-[0.4em] transition-opacity hover:opacity-100 ${theme.text} opacity-50`}>
+              <ArrowLeft size={14} /> {t({ mn: "Буцах", en: "Return to Path" })}
+            </Link>
+          </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            
-            {/* LEFT: THE SERVICE ARCANA */}
-            <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}>
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 mb-8 ${isDark ? "border-indigo-500/30 bg-indigo-950/30" : "border-amber-200 bg-white shadow-xl"}`}>
+            {/* LEFT: SERVICE ARCANA WITH MAXIMIZED ANIMATIONS */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1, type: "spring", stiffness: 100 }}
+            >
+              <motion.div
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 mb-8 ${isDark ? "border-cyan-400/30 bg-[#0C164F]" : "border-amber-200 bg-white shadow-xl"}`}
+                animate={{ rotate: 360, scale: [1, 1.1, 1] }}
+                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+              >
                 {theme.icon}
-              </div>
-              <h1 className={`text-6xl md:text-8xl font-serif font-black leading-[0.9] mb-8 tracking-tighter ${theme.text}`}>
+              </motion.div>
+              <motion.h1
+                className={`text-6xl md:text-8xl font-serif font-black leading-[0.9] mb-8 tracking-tighter ${theme.text}`}
+                animate={{ scale: [1, 1.05, 1], opacity: [1, 0.8, 1] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
                 {service?.title[language]}
-              </h1>
-              <p className={`text-lg leading-relaxed mb-10 opacity-70 ${theme.text} max-w-md`}>
+              </motion.h1>
+              <motion.p
+                className={`text-lg leading-relaxed mb-10 opacity-70 ${isDark ? 'text-cyan-50' : theme.text} max-w-md`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.7 }}
+                transition={{ delay: 0.5, duration: 1 }}
+              >
                 {service?.desc[language]}
-              </p>
-              
+              </motion.p>
               <div className="flex gap-10">
-                <div>
+                <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity }}>
                   <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-2 ${theme.subText}`}>Cycle</p>
                   <p className={`text-3xl font-serif ${theme.text}`}>{service?.duration}</p>
-                </div>
+                </motion.div>
                 <div className="w-px h-12 bg-current opacity-10" />
-                <div>
+                <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 1 }}>
                   <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-2 ${theme.subText}`}>Offering</p>
                   <p className={`text-3xl font-serif ${theme.text}`}>{service?.price.toLocaleString()}₮</p>
-                </div>
+                </motion.div>
               </div>
+              
+              {/* Monk Selector Button */}
+              <motion.button
+                onClick={() => setShowMonkSelector(!showMonkSelector)}
+                className={`mt-12 flex items-center gap-3 px-6 py-3 rounded-xl border transition-all ${isDark ? 'border-cyan-400/30 hover:bg-cyan-950/30' : 'border-amber-200 hover:bg-amber-50'}`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Users size={18} className={theme.subText} />
+                <span className={`text-xs font-black uppercase tracking-widest ${theme.text}`}>
+                  {showMonkSelector ? t({mn: "Хаах", en: "Close Selection"}) : t({mn: "Лам сонгох", en: "Select Monk"})}
+                </span>
+              </motion.button>
 
-              {selectedMonk && (
-                <div className={`mt-16 flex items-center gap-5 p-5 rounded-[1.5rem] border transition-all ${isDark ? "border-white/5 bg-white/[0.02]" : "border-amber-900/5 bg-white shadow-sm"}`}>
-                   <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-500/20 grayscale group-hover:grayscale-0 transition-all">
-                      <img src={selectedMonk.image} alt="monk" className="w-full h-full object-cover" />
-                   </div>
-                   <div>
-                      <p className={`text-[10px] uppercase font-black tracking-[0.2em] opacity-40 ${theme.text}`}> Ritual Conductor</p>
-                      <p className={`font-serif text-xl ${theme.text}`}>{selectedMonk.name[language]}</p>
-                   </div>
-                </div>
+              <AnimatePresence>
+                {showMonkSelector && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-6 space-y-3 overflow-hidden"
+                  >
+                    {monks.map((monk: Monk) => (
+                      <motion.div
+                        key={monk._id?.toString()}
+                        className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
+                          selectedMonk?._id === monk._id 
+                            ? isDark ? 'bg-cyan-950/60 border-cyan-400/50' : 'bg-amber-100 border-amber-300'
+                            : isDark ? 'bg-[#0C164F]/50 border-cyan-400/10 hover:border-cyan-400/30' : 'bg-white border-stone-100 hover:border-stone-300'
+                        }`}
+                        onClick={() => setSelectedMonk(monk)}
+                        whileHover={{ x: 5 }}
+                      >
+                        <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${isDark ? 'border-cyan-400/30' : 'border-amber-200'}`}>
+                          {/* Use a placeholder if image is missing, though type says it has image */}
+                          <img src={monk.image} alt={monk.name[language]} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                           <h4 className={`font-serif text-lg ${theme.text}`}>{monk.name[language]}</h4>
+                           <p className={`text-[10px] uppercase tracking-wider opacity-60 ${theme.text}`}>{monk.title?.[language] || "Monk"}</p>
+                        </div>
+                        {selectedMonk?._id === monk._id && (
+                          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="ml-auto">
+                            <CheckCircle2 size={20} className={isDark ? "text-cyan-400" : "text-amber-600"} />
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Selected Monk Display (if selector hidden) */}
+              {!showMonkSelector && selectedMonk && (
+                 <motion.div 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className={`mt-8 flex items-center gap-4 p-4 rounded-xl border ${isDark ? 'border-cyan-400/10 bg-cyan-950/20' : 'border-stone-200 bg-white/50'}`}
+                 >
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                       <img src={selectedMonk.image} alt="selected" className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                       <p className={`text-[10px] uppercase opacity-50 ${theme.text}`}>Conducted by</p>
+                       <p className={`font-serif ${theme.text}`}>{selectedMonk.name[language]}</p>
+                    </div>
+                 </motion.div>
               )}
             </motion.div>
 
-            {/* RIGHT: THE RITUAL ALTAR */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
+            {/* RIGHT: THE RITUAL ALTAR (BOOKING FORM) */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className={`relative rounded-[2.5rem] p-10 overflow-hidden border transition-all duration-1000 ${theme.card} ${theme.glow}`}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+              className={`relative rounded-[3rem] p-8 md:p-12 overflow-hidden border transition-all duration-1000 ${theme.card} ${theme.glow}`}
             >
               <AltarFrame color={theme.accent} />
-
+              
               <AnimatePresence mode="wait">
                 {isBooked ? (
-                  <motion.div 
+                  <motion.div
                     key="success"
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     className="py-20 text-center relative z-40"
                   >
-                    <CheckCircle2 size={64} className="text-emerald-500 mx-auto mb-6" />
-                    <h3 className={`text-3xl font-serif font-black mb-4 ${theme.text}`}>Fate Sealed.</h3>
-                    <p className={`opacity-60 mb-10 ${theme.text}`}>The Ancient Guard has noted your request.</p>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1], rotate: [0, 360, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <CheckCircle2 size={64} className={`${isDark ? "text-cyan-400" : "text-amber-600"} mx-auto mb-6`} />
+                    </motion.div>
+                    <h3 className={`text-3xl font-serif font-black mb-4 ${theme.text}`}>{t({mn: "Захиалга Баталгаажлаа", en: "Fate Aligned"})}</h3>
+                    <p className={`opacity-60 mb-10 ${theme.text}`}>{t({mn: "Таны захиалгыг хүлээн авлаа.", en: "The Celestial Guard has received your signal."})}</p>
                     <Link href="/services" className={`px-10 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest ${theme.button}`}>
-                       Confirm Finality
+                      {t({mn: "Буцах", en: "Return"})}
                     </Link>
                   </motion.div>
                 ) : (
                   <motion.div key="form" className="relative z-40 space-y-10">
-                    
                     {/* STEP 1: DATE */}
                     <div className="space-y-6">
                       <h2 className={`text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2 ${theme.subText}`}>
-                        <Calendar size={14} /> I. Choose Alignment Date
+                        <Calendar size={14} /> I. {t({mn: "Өдөр Сонгох", en: "Choose Date"})}
                       </h2>
                       <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
                         {dates.map((d, i) => (
-                          <button
+                          <motion.button
                             key={i}
                             onClick={() => setSelectedDateIndex(i)}
-                            className={`shrink-0 w-20 h-24 rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-500 
-                              ${selectedDateIndex === i 
-                                ? `scale-105 ${isDark ? 'bg-white text-black border-white' : 'bg-stone-900 text-white border-stone-900 shadow-xl'}` 
-                                : `border-transparent ${isDark ? 'bg-white/5 text-white/30' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'}`
+                            className={`shrink-0 w-20 h-24 rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-300
+                              ${selectedDateIndex === i
+                                ? `scale-105 ${isDark ? 'bg-cyan-500 text-white border-cyan-400 shadow-[0_0_15px_#50F2CE60]' : 'bg-stone-900 text-white border-stone-900 shadow-xl'}`
+                                : `border-transparent ${isDark ? 'bg-cyan-950/40 text-cyan-200/40 hover:bg-cyan-950/60' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'}`
                               }`}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
                           >
                             <span className="text-[10px] uppercase font-black mb-1">{d.week}</span>
                             <span className="text-2xl font-serif font-bold">{d.day}</span>
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
                     </div>
@@ -227,54 +385,73 @@ export default function RitualBookingPage() {
                     {/* STEP 2: TIME */}
                     <AnimatePresence>
                       {selectedDateIndex !== null && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-6">
-                           <h2 className={`text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2 ${theme.subText}`}>
-                             <Clock size={14} /> II. Align the Hour
-                           </h2>
-                           <div className="grid grid-cols-3 gap-3">
-                             {times.map((time) => (
-                               <button
-                                 key={time}
-                                 onClick={() => setSelectedTime(time)}
-                                 className={`py-4 rounded-xl font-black text-[10px] transition-all border-2
-                                   ${selectedTime === time 
-                                     ? `${isDark ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-amber-700 text-white border-amber-700'}` 
-                                     : `border-transparent ${isDark ? 'bg-white/5 text-white/40' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}`}
-                               >
-                                 {time}
-                               </button>
-                             ))}
-                           </div>
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-6"
+                        >
+                          <h2 className={`text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2 ${theme.subText}`}>
+                            <Clock size={14} /> II. {t({mn: "Цаг Сонгох", en: "Choose Time"})}
+                          </h2>
+                          <div className="grid grid-cols-3 gap-3">
+                            {times.map((time, idx) => (
+                              <motion.button
+                                key={time}
+                                onClick={() => setSelectedTime(time)}
+                                className={`py-3 rounded-xl font-black text-[10px] transition-all border-2
+                                  ${selectedTime === time
+                                    ? `${isDark ? 'bg-cyan-400 text-[#05051a] border-cyan-400' : 'bg-amber-700 text-white border-amber-700'}`
+                                    : `border-transparent ${isDark ? 'bg-cyan-950/40 text-cyan-200/40 hover:bg-cyan-950/60' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}`}
+                                whileHover={{ scale: 1.05 }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                              >
+                                {time}
+                              </motion.button>
+                            ))}
+                          </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-                    {/* STEP 3: DATA */}
+                    {/* STEP 3: DETAILS */}
                     <AnimatePresence>
                       {selectedTime && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="space-y-4"
+                        >
                           <h2 className={`text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2 ${theme.subText}`}>
-                            <Gem size={14} /> III. Enter Your Vessel
+                            <Star size={14} /> III. {t({mn: "Мэдээлэл", en: "Your Details"})}
                           </h2>
-                          <input 
-                            className={`w-full p-5 rounded-2xl border-2 outline-none transition-all font-serif text-lg ${theme.input} focus:border-current`} 
-                            placeholder="Identify yourself..."
+                          <motion.input
+                            className={`w-full p-4 rounded-2xl border-2 outline-none transition-all font-serif text-lg ${theme.input} focus:border-opacity-100`}
+                            placeholder={t({mn: "Таны нэр", en: "Your Name"})}
                             value={userName}
                             onChange={(e) => setUserName(e.target.value)}
+                            whileFocus={{ scale: 1.01 }}
                           />
-                          <textarea 
-                            className={`w-full p-5 rounded-2xl border-2 outline-none h-28 resize-none transition-all font-serif text-lg ${theme.input} focus:border-current`} 
-                            placeholder="State your intention..."
+                          <motion.textarea
+                            className={`w-full p-4 rounded-2xl border-2 outline-none h-24 resize-none transition-all font-serif text-lg ${theme.input} focus:border-opacity-100`}
+                            placeholder={t({mn: "Тэмдэглэл (заавал биш)", en: "Notes (Optional)"})}
                             value={userNote}
                             onChange={(e) => setUserNote(e.target.value)}
+                            whileFocus={{ scale: 1.01 }}
                           />
-                          <button 
-                            disabled={!userName || isSubmitting}
+                          <motion.button
+                            disabled={!userName || isSubmitting || !selectedMonk}
                             onClick={handleBooking}
-                            className={`w-full py-6 rounded-2xl font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 disabled:opacity-30 ${theme.button}`}
+                            className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 disabled:opacity-30 shadow-xl ${theme.button}`}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                           >
-                            {isSubmitting ? <Loader2 className="animate-spin" /> : <>Initiate Sacrifice <Sparkles size={16} /></>}
-                          </button>
+                            {isSubmitting ? <Loader2 className="animate-spin" /> : <>
+                              {t({mn: "Захиалах", en: "Book Ritual"})} <Sparkles size={16} />
+                            </>}
+                          </motion.button>
                         </motion.div>
                       )}
                     </AnimatePresence>

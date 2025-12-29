@@ -12,19 +12,14 @@ import { Sparkles, ShieldCheck } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
 
-// --- 1. MISSING STYLES DECLARATION ---
+// --- 1. STYLES ---
 const sectionStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Jost:wght@200;300;400&display=swap');
   .font-celestial { font-family: 'Cinzel', serif; }
   .font-ethereal { font-family: 'Jost', sans-serif; }
 `;
 
-// --- 2. TIGHT INTERFACES ---
-interface LanguageContent {
-  mn: string;
-  en: string;
-}
-
+interface LanguageContent { mn: string; en: string; }
 interface MonkData {
   id: number;
   arcana: string;
@@ -32,7 +27,6 @@ interface MonkData {
   title: LanguageContent;
   video: string;
 }
-
 interface ThemeConfig {
   textColor: string;
   accentColor: string;
@@ -43,10 +37,9 @@ interface ThemeConfig {
   titleGradient: string;
 }
 
-// --- 3. BACKGROUND COMPONENTS ---
+// --- 2. GALAXY BACKGROUNDS ---
 const HeavenlyBackground: React.FC = () => (
   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-    {/* Tailwind v4 suggests bg-linear-to-b instead of bg-gradient-to-b */}
     <div className="absolute inset-0 bg-linear-to-b from-[#FFFBEB] via-[#fffbf0] to-[#fff7ed]" />
     <motion.div 
       animate={{ rotate: 360 }}
@@ -54,76 +47,52 @@ const HeavenlyBackground: React.FC = () => (
       className="absolute top-[-50%] left-1/2 -translate-x-1/2 w-[150vw] h-[150vw] opacity-30"
       style={{ background: "conic-gradient(from 0deg, transparent 0%, #fbbf24 10%, transparent 20%, #fbbf24 30%, transparent 50%)" }}
     />
-    {[...Array(15)].map((_, i) => (
-      <motion.div
-        key={i}
-        initial={{ y: "110vh", opacity: 0 }}
-        animate={{ y: "-10vh", opacity: [0, 0.6, 0] }}
-        transition={{ duration: 10 + (i % 5), repeat: Infinity, delay: i * 0.8, ease: "linear" }}
-        className="absolute bottom-0 w-2 h-2 bg-amber-400 rounded-full blur-xs"
-        style={{ left: `${(i * 7) % 100}%` }}
-      />
-    ))}
   </div>
 );
 
 const CosmicBackground: React.FC = () => (
   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-    <div className="absolute inset-0 bg-linear-to-b from-[#020617] via-[#0f172a] to-[#1e1b4b]" />
+    {/* Deep Space Base */}
+    <div className="absolute inset-0 bg-linear-to-b from-[#05051a] via-[#2E1B49] to-[#0C164F]" />
+    
+    {/* Magenta Nebula Cloud */}
     <motion.div 
-      animate={{ rotate: -360 }}
-      transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
-      className="absolute top-[-20%] right-[-20%] w-[120vw] h-[120vw] opacity-20"
-      style={{ background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)" }}
+      animate={{ 
+        scale: [1, 1.2, 1],
+        opacity: [0.1, 0.2, 0.1] 
+      }}
+      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      className="absolute top-[-10%] left-[-10%] w-[100vw] h-[100vw] rounded-full blur-[120px]"
+      style={{ background: "radial-gradient(circle, #C72075 0%, transparent 70%)" }}
     />
-    {[...Array(30)].map((_, i) => (
+
+    {/* Stars & Pulsing Dust */}
+    {[...Array(40)].map((_, i) => (
       <motion.div
         key={i}
-        animate={{ opacity: [0.1, 1, 0.1], scale: [0.5, 1.5, 0.5] }}
-        transition={{ duration: 2 + (i % 4), repeat: Infinity, delay: i * 0.2 }}
-        className="absolute w-1 h-1 bg-indigo-100 rounded-full shadow-[0_0_4px_white]"
-        style={{ top: `${(i * 13) % 100}%`, left: `${(i * 17) % 100}%` }}
+        animate={{ 
+          opacity: [0.2, 1, 0.2],
+          scale: [0.5, 1.2, 0.5] 
+        }}
+        transition={{ duration: 3 + (i % 5), repeat: Infinity, delay: i * 0.1 }}
+        className={`absolute rounded-full shadow-[0_0_8px_white] ${i % 3 === 0 ? "w-[2px] h-[2px] bg-cyan-300" : "w-[1px] h-[1px] bg-white"}`}
+        style={{ top: `${(i * 19) % 100}%`, left: `${(i * 13) % 100}%` }}
       />
     ))}
   </div>
 );
 
-// --- 4. VIKING CORNER (Fixing missing className prop) ---
-interface VikingCornerProps {
-  theme: ThemeConfig;
-  className?: string;
-}
-
-const VikingCorner: React.FC<VikingCornerProps> = ({ theme, className }) => (
+const VikingCorner: React.FC<{ theme: ThemeConfig; className?: string }> = ({ theme, className }) => (
   <svg className={`absolute w-14 h-14 ${theme.accentColor} opacity-60 ${className ?? ""}`} viewBox="0 0 100 100" fill="none">
     <path d="M0 0 L100 0 L100 4 L4 4 L4 100 L0 100 Z" fill="currentColor" />
-    <path d="M12 12 C 30 12, 12 30, 30 30" stroke="currentColor" strokeWidth="2" fill="none" />
     <circle cx="8" cy="8" r="3" fill="currentColor" />
   </svg>
 );
 
 const MONKS_DATA: MonkData[] = [
-  {
-    id: 1,
-    arcana: "ᚠ",
-    name: { mn: "Данзанравжаа", en: "The Great Danzan" },
-    title: { mn: "Говийн Догшин Ноён Хутагт", en: "Saint of the Gobi" },
-    video: "/num1.mp4", 
-  },
-  {
-    id: 2,
-    arcana: "ᚢ",
-    name: { mn: "Занабазар", en: "Holy Zanabazar" },
-    title: { mn: "Өндөр Гэгээн", en: "The High Creator" },
-    video: "/num4.mp4", 
-  },
-  {
-    id: 3,
-    arcana: "ᚦ",
-    name: { mn: "Богд Жавзандамба", en: "8th Bogd Khan" },
-    title: { mn: "Монголын Шашны Тэргүүн", en: "Supreme Oracle" },
-    video: "/num3.mp4", 
-  },
+  { id: 1, arcana: "ᚠ", name: { mn: "Данзанравжаа", en: "The Great Danzan" }, title: { mn: "Говийн Догшин Ноён Хутагт", en: "Saint of the Gobi" }, video: "/num1.mp4" },
+  { id: 2, arcana: "ᚢ", name: { mn: "Занабазар", en: "Holy Zanabazar" }, title: { mn: "Өндөр Гэгээн", en: "The High Creator" }, video: "/num4.mp4" },
+  { id: 3, arcana: "ᚦ", name: { mn: "Богд Жавзандамба", en: "8th Bogd Khan" }, title: { mn: "Монголын Шашны Тэргүүн", en: "Supreme Oracle" }, video: "/num3.mp4" },
 ];
 
 export default function MajesticTarotSection() {
@@ -132,19 +101,19 @@ export default function MajesticTarotSection() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
-
-  if (!mounted) return <div className="h-screen bg-[#FDFBF7]" />;
+  if (!mounted) return <div className="h-screen bg-[#05051a]" />;
 
   const isNight = resolvedTheme === "dark";
 
+  // --- ZODIAC GALAXY THEME CONFIG ---
   const theme: ThemeConfig = isNight ? {
-    textColor: "text-indigo-50",
-    accentColor: "text-indigo-400",
-    borderColor: "border-indigo-800/50",
-    cardBg: "bg-[#05050a]/80",
-    glowColor: "rgba(99,102,241,0.25)",
-    mandalaColor: "text-indigo-500",
-    titleGradient: "from-indigo-200 via-indigo-400 to-purple-600"
+    textColor: "text-cyan-50",
+    accentColor: "text-cyan-400",
+    borderColor: "border-cyan-400/30",
+    cardBg: "bg-[#0C164F]/80",
+    glowColor: "rgba(199, 32, 117, 0.4)", // Magenta Glow
+    mandalaColor: "text-cyan-500",
+    titleGradient: "from-cyan-300 via-[#C72075] to-purple-600"
   } : {
     textColor: "text-[#451a03]",
     accentColor: "text-amber-600",
@@ -161,18 +130,15 @@ export default function MajesticTarotSection() {
       
       {isNight ? <CosmicBackground /> : <HeavenlyBackground />}
       
+      {/* Background Rotating Mandala */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
-          className={`relative w-300 h-300 border border-current rounded-full flex items-center justify-center ${theme.mandalaColor}`}
+          className={`relative w-250 h-250 border border-current rounded-full flex items-center justify-center ${theme.mandalaColor}`}
         >
           {[...Array(12)].map((_, i) => (
-            <div 
-              key={i} 
-              className="absolute w-full h-px bg-linear-to-r from-transparent via-current to-transparent" 
-              style={{ transform: `rotate(${i * 30}deg)` }} 
-            />
+            <div key={i} className="absolute w-full h-px bg-linear-to-r from-transparent via-current to-transparent" style={{ transform: `rotate(${i * 30}deg)` }} />
           ))}
         </motion.div>
       </div>
@@ -213,16 +179,7 @@ export default function MajesticTarotSection() {
   );
 }
 
-// --- 5. MAJESTIC CARD (Typed properly) ---
-interface MajesticCardProps {
-  monk: MonkData;
-  index: number;
-  language: "mn" | "en";
-  theme: ThemeConfig;
-  isNight: boolean;
-}
-
-function MajesticCard({ monk, index, language, theme, isNight }: MajesticCardProps) {
+function MajesticCard({ monk, index, language, theme, isNight }: { monk: MonkData; index: number; language: "mn" | "en"; theme: ThemeConfig; isNight: boolean; }) {
   const [isHovered, setIsHovered] = useState(false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -251,16 +208,12 @@ function MajesticCard({ monk, index, language, theme, isNight }: MajesticCardPro
         className={`relative w-full h-full rounded-[30px] border transition-all duration-1000 overflow-hidden backdrop-blur-md shadow-2xl ${theme.cardBg} ${theme.borderColor}`}
       >
         <div className="absolute inset-0 z-0">
-          <video 
-            autoPlay loop muted playsInline 
-            className={`w-full h-full object-cover transition-all duration-[2s]
-              ${isHovered ? " contrast-[1.1] " : "contrast-100 "}
-            `}
-          >
+          <video autoPlay loop muted playsInline className={`w-full h-full object-cover transition-all duration-[2s] ${isHovered ? "contrast-[1.1] scale-110" : "contrast-100"}`}>
             <source src={monk.video} type="video/mp4" />
           </video>
-          <div className={`absolute inset-0 bg-linear-to-t from-black via-transparent to-black/40 transition-opacity duration-700 ${isHovered ? "opacity-60" : "opacity-90"}`} />
+          <div className={`absolute inset-0 bg-linear-to-t from-black via-transparent to-black/40 transition-opacity duration-700 ${isHovered ? "opacity-40" : "opacity-80"}`} />
           
+          {/* Cosmic Glow Interaction */}
           <motion.div 
             style={{ 
                 background: `radial-gradient(circle at center, ${theme.glowColor} 0%, transparent 70%)`,
@@ -276,10 +229,10 @@ function MajesticCard({ monk, index, language, theme, isNight }: MajesticCardPro
         <VikingCorner theme={theme} className="bottom-4 left-4 -rotate-90" />
         <VikingCorner theme={theme} className="bottom-4 right-4 rotate-180" />
 
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-30">
             <motion.div 
-              animate={isHovered ? { y: 5, scale: 1.1 } : { y: 0, scale: 1 }}
-              className={`font-celestial text-4xl font-black tracking-[0.2em] drop-shadow-lg ${theme.accentColor}`}
+              animate={isHovered ? { y: 5, scale: 1.1, color: "#C72075" } : { y: 0, scale: 1 }}
+              className={`font-celestial text-4xl font-black tracking-[0.2em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] ${theme.accentColor}`}
             >
               {monk.arcana}
             </motion.div>
@@ -288,21 +241,14 @@ function MajesticCard({ monk, index, language, theme, isNight }: MajesticCardPro
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-end pb-20 px-10 pointer-events-none">
           <AnimatePresence>
             {isHovered && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="text-center"
-              >
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="text-center">
                 <div className={`flex items-center justify-center gap-2 mb-4 ${theme.accentColor}`}>
                   <Sparkles size={18} className="animate-pulse" />
                 </div>
-                
-                <h3 className="text-4xl font-celestial text-white font-bold tracking-tight mb-2 uppercase">
+                <h3 className="text-4xl font-celestial text-white font-bold tracking-tight mb-2 uppercase drop-shadow-lg">
                   {monk.name[language]}
                 </h3>
-                
-                <p className={`${theme.accentColor} font-bold tracking-[0.3em] text-[10px] uppercase`}>
+                <p className={`${isNight ? 'text-cyan-300' : 'text-amber-600'} font-bold tracking-[0.3em] text-[10px] uppercase`}>
                   {monk.title[language]}
                 </p>
               </motion.div>
@@ -310,17 +256,16 @@ function MajesticCard({ monk, index, language, theme, isNight }: MajesticCardPro
           </AnimatePresence>
         </div>
 
-        <motion.div
-            style={{ x, y }}
-            className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-        >
+        {/* Custom Cosmic Cursor */}
+        <motion.div style={{ x, y }} className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <div className={`w-16 h-16 border rounded-full flex items-center justify-center backdrop-blur-sm ${theme.borderColor}`}>
-                <div className={`w-2 h-2 rounded-full animate-ping ${isNight ? 'bg-indigo-400' : 'bg-amber-500'}`} />
+                <div className={`w-2 h-2 rounded-full animate-ping ${isNight ? 'bg-cyan-400 shadow-[0_0_10px_#50F2CE]' : 'bg-amber-500'}`} />
             </div>
         </motion.div>
       </motion.div>
 
-      <div className={`absolute -bottom-12 left-1/2 -translate-x-1/2 w-3/4 h-20 blur-[100px] rounded-full transition-opacity duration-1000 ${isHovered ? "opacity-100" : "opacity-0"} ${isNight ? 'bg-indigo-900/30' : 'bg-amber-600/20'}`} />
+      {/* Ground Glow */}
+      <div className={`absolute -bottom-12 left-1/2 -translate-x-1/2 w-3/4 h-20 blur-[100px] rounded-full transition-opacity duration-1000 ${isHovered ? "opacity-100" : "opacity-0"} ${isNight ? 'bg-[#C72075]/30' : 'bg-amber-600/20'}`} />
     </motion.div>
   );
 }

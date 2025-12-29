@@ -1,10 +1,9 @@
 "use client";
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
-import { 
-  ArrowRight, Eye, Star, Flame, Zap, Compass, Loader2, ShieldCheck 
+import { motion, useSpring, useTransform, useMotionValue, AnimatePresence } from "framer-motion";
+import {
+  ArrowRight, Eye, Star, Flame, Zap, Compass, Loader2, ShieldCheck, Orbit, Sparkles
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import OverlayNavbar from "../components/Navbar";
@@ -12,25 +11,55 @@ import GoldenNirvanaFooter from "../components/Footer";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Service } from "@/database/types";
 
-// --- DYNAMIC VIKING FRAME ---
-const VikingServiceFrame = ({ color }: { color: string }) => (
+// --- 1. ENHANCED ZODIAC CELESTIAL FRAME WITH ANIMATIONS ---
+const ZodiacServiceFrame = ({ color }: { color: string }) => (
   <div className="absolute inset-0 pointer-events-none z-30">
     <svg className="w-full h-full" viewBox="0 0 400 600" fill="none">
-      <path 
-        d="M40 60 L40 40 L60 40 M340 40 L360 40 L360 60 M360 540 L360 560 L340 560 M60 560 L40 560 L40 540" 
-        stroke={color} strokeWidth="1.5" strokeOpacity="0.6" 
+      <defs>
+        <filter id="celestial-glow">
+          <feGaussianBlur stdDeviation="1" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+      {/* Animated Corner Brackets */}
+      <motion.path
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 2, ease: "easeInOut" }}
+        d="M40 60 L40 40 L60 40 M340 40 L360 40 L360 60 M360 540 L360 560 L340 560 M60 560 L40 560 L40 540"
+        stroke={color} strokeWidth="1" strokeOpacity="0.4"
       />
-      <circle cx="200" cy="40" r="3" fill={color} />
-      <path d="M160 40 Q200 10 240 40" stroke={color} strokeWidth="2" />
-      <path d="M160 560 Q200 590 240 560" stroke={color} strokeWidth="2" />
-      <text x="365" y="300" fill={color} fontSize="12" className="font-serif opacity-30 [writing-mode:vertical-rl]">
-        ᚢᚦᚬᚱᚴᚼᚠᛅᛚ
-      </text>
+      {/* Pulsing Sacred Geometry Rings */}
+      <motion.circle
+        cx="200" cy="40" r="15"
+        stroke={color} strokeWidth="0.5" strokeOpacity="0.2"
+        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.circle
+        cx="200" cy="560" r="20"
+        stroke={color} strokeWidth="0.5" strokeOpacity="0.2"
+        animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.5, 0.2] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      />
+      {/* Rotating Zodiac Symbols Bar */}
+      <g fill={color} className="opacity-30" style={{ fontSize: '10px' }} filter="url(#celestial-glow)">
+        <motion.text
+          x="375" y="200" className="[writing-mode:vertical-rl]"
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        >♈ ♉ ♊ ♋ ♌ ♍</motion.text>
+        <motion.text
+          x="15" y="200" className="[writing-mode:vertical-rl]"
+          animate={{ rotate: [0, -360] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        >♎ ♏ ♐ ♑ ♒ ♓</motion.text>
+      </g>
     </svg>
   </div>
 );
 
-export default function VikingServices() {
+export default function CelestialServices() {
   const { t, language } = useLanguage();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -44,51 +73,109 @@ export default function VikingServices() {
         const res = await fetch('/api/services');
         const data = await res.json();
         setServices(Array.isArray(data) ? data : []);
-      } catch (e) { console.error(e); } 
+      } catch (e) { console.error(e); }
       finally { setLoading(false); }
     }
     fetchData();
   }, []);
 
   if (!mounted) return null;
+
   const isDark = resolvedTheme === "dark";
 
   return (
     <>
       <OverlayNavbar />
-      
-      {/* GLOBAL THEME SYNCED BACKGROUND */}
-      <div className={`fixed inset-0 transition-colors duration-1000 -z-20 ${isDark ? "bg-[#020205]" : "bg-[#FDFBF7]"}`} />
-      
-      {/* Atmosphere Gradients */}
-      <div className={`fixed inset-0 pointer-events-none z-0 transition-opacity duration-1000 ${isDark ? "opacity-40" : "opacity-10"}`}>
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/20 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-amber-500/20 blur-[120px]" />
-      </div>
-
-      <main className="relative min-h-screen pt-40 pb-32 overflow-hidden">
-        {/* HERO */}
-        <div className="container mx-auto px-6 text-center mb-24 relative z-10">
-          <motion.h1 
-            className={`text-6xl md:text-9xl font-serif leading-[0.8] mb-12 tracking-tighter transition-colors duration-700 ${isDark ? "text-white" : "text-stone-900"}`}
-          >
-            {t({mn: "Ариун", en: "Ancient"})} <br />
-            <span className={`italic font-light transition-colors ${isDark ? "text-indigo-400" : "text-amber-600"}`}>
-               {t({mn: "Зөвлөгөө", en: "Rituals"})}
-            </span>
-          </motion.h1>
+      <main className={`relative min-h-screen transition-colors duration-1000 overflow-hidden ${isDark ? "bg-[#05051a]" : "bg-[#FDFBF7]"}`}>
+        {/* --- ENHANCED NEBULA BACKGROUND WITH ANIMATIONS (Watercolor Style) --- */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          {isDark && (
+            <>
+              <motion.div
+                className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#C72075]/10 blur-[140px]"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div
+                className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#2E1B49]/20 blur-[120px]"
+                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+              />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-screen" />
+              {/* Added Sparkling Stars */}
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white rounded-full"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: Math.random() * 2 + 1, repeat: Infinity, delay: Math.random() * 5 }}
+                />
+              ))}
+            </>
+          )}
         </div>
 
-        {/* GRID */}
-        <div className="container mx-auto px-6">
+        {/* HERO WITH ENHANCED ANIMATIONS */}
+        <div className="container mx-auto px-6 text-center pt-48 mb-24 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            className="space-y-4"
+          >
+            <motion.span
+              className={`text-[10px] font-black tracking-[0.6em] uppercase flex items-center justify-center gap-2 ${isDark ? "text-cyan-400" : "text-amber-700"}`}
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Orbit size={14} /> {t({mn: "Одот тамга", en: "Celestial Seals"})}
+            </motion.span>
+            <motion.h1
+              className={`text-6xl md:text-9xl font-serif leading-[0.8] tracking-tighter transition-colors duration-700 ${isDark ? "text-white" : "text-stone-900"}`}
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {t({mn: "Ариун", en: "Ancient"})} <br />
+              <span className={`italic font-light transition-colors ${isDark ? "text-[#C72075]" : "text-amber-600"}`}>
+                {t({mn: "Зан Үйл", en: "Rituals"})}
+              </span>
+            </motion.h1>
+          </motion.div>
+        </div>
+
+        {/* GRID WITH STAGGERED ENTRANCE ANIMATIONS */}
+        <div className="container mx-auto px-6 pb-40">
           {loading ? (
-            <div className="flex justify-center py-20"><Loader2 className={`animate-spin ${isDark ? 'text-indigo-500' : 'text-amber-500'}`} size={48} /></div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-              {services.map((service, idx) => (
-                <ServiceTarotCard key={idx} service={service} index={idx} isGlobalDark={isDark} lang={language === 'mn' ? 'mn' : 'en'} />
-              ))}
+            <div className="flex justify-center py-20">
+              <Loader2 className={`animate-spin ${isDark ? 'text-cyan-500' : 'text-amber-500'}`} size={48} />
             </div>
+          ) : (
+            <AnimatePresence>
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12"
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  visible: { transition: { staggerChildren: 0.2 } }
+                }}
+              >
+                {services.map((service, idx) => (
+                  <motion.div
+                    key={idx}
+                    variants={{
+                      hidden: { opacity: 0, y: 50 },
+                      visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+                    }}
+                  >
+                    <ServiceTarotCard service={service} index={idx} isGlobalDark={isDark} lang={language === 'mn' ? 'mn' : 'en'} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           )}
         </div>
       </main>
@@ -98,39 +185,34 @@ export default function VikingServices() {
 }
 
 function ServiceTarotCard({ service, index, isGlobalDark, lang }: { service: any, index: number, isGlobalDark: boolean, lang: 'mn'|'en' }) {
-  // Logic: Is this service naturally 'mystical' (Lunar)?
-  const isMystical = service.type === "divination";
-  
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotateX = useSpring(useTransform(y, [-100, 100], [10, -10]), { stiffness: 100, damping: 20 });
-  const rotateY = useSpring(useTransform(x, [-100, 100], [-10, 10]), { stiffness: 100, damping: 20 });
+  const rotateX = useSpring(useTransform(y, [-100, 100], [10, -10]), { stiffness: 80, damping: 20 });
+  const rotateY = useSpring(useTransform(x, [-100, 100], [-10, 10]), { stiffness: 80, damping: 20 });
+  // Enhanced Interactive Glow follow mouse with scale
+  const flashX = useSpring(useTransform(x, (v) => v - 200));
+  const flashY = useSpring(useTransform(y, (v) => v - 200));
 
-  // THEME MATRIX
   const theme = isGlobalDark ? {
-    // DARK MODE STYLES
-    bg: isMystical ? "bg-[#07070c]" : "bg-[#0a0a0f]",
-    border: "border-white/10",
-    accent: isMystical ? "#818cf8" : "#6366f1", // Indigo vs Violet
+    bg: "bg-[#0C164F]/80",
+    border: "border-cyan-400/20",
+    accent: "#50F2CE", // Cyan
+    secondary: "#C72075", // Magenta
     text: "text-white",
-    subText: isMystical ? "text-indigo-400" : "text-blue-400",
-    desc: "text-slate-400",
-    cardInner: "bg-white/5",
-    btn: "bg-white text-black hover:bg-indigo-400",
-    glow: "bg-indigo-500/10",
-    ring: "border-white/5"
+    subText: "text-cyan-300",
+    desc: "text-cyan-50/60",
+    btn: "bg-gradient-to-r from-[#C72075] to-[#7B337D] text-white",
+    glow: "bg-[#C72075]/20"
   } : {
-    // LIGHT MODE STYLES
-    bg: isMystical ? "bg-[#faf9f6]" : "bg-white",
+    bg: "bg-white",
     border: "border-stone-200",
-    accent: isMystical ? "#4f46e5" : "#d97706", // Deep Indigo vs Amber
+    accent: "#d97706",
+    secondary: "#f59e0b",
     text: "text-stone-900",
-    subText: isMystical ? "text-indigo-600" : "text-amber-700",
+    subText: "text-amber-700",
     desc: "text-stone-500",
-    cardInner: "bg-stone-100/50",
-    btn: "bg-stone-900 text-white hover:bg-amber-700",
-    glow: "bg-amber-500/5",
-    ring: "border-stone-900/5"
+    btn: "bg-stone-900 text-white",
+    glow: "bg-amber-500/5"
   };
 
   const Icons = [Eye, Star, Flame, Zap, ShieldCheck, Compass];
@@ -141,87 +223,97 @@ function ServiceTarotCard({ service, index, isGlobalDark, lang }: { service: any
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: index * 0.05 }}
+      transition={{ delay: index * 0.1 }}
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
-        x.set(e.clientX - rect.left - rect.width / 2);
-        y.set(e.clientY - rect.top - rect.height / 2);
+        x.set(e.clientX - (rect.left + rect.width / 2));
+        y.set(e.clientY - (rect.top + rect.height / 2));
       }}
       onMouseLeave={() => { x.set(0); y.set(0); }}
-      className="relative group h-[620px]"
+      className="relative group h-[620px] perspective-1000"
+      whileHover={{ scale: 1.05, transition: { duration: 0.3 } }}
     >
       <Link href={`/booking/${service._id}`} className="block h-full">
         <motion.div
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-          className={`relative h-full w-full rounded-[2rem] border transition-all duration-1000 
-            ${theme.bg} ${theme.border} ${isGlobalDark ? 'shadow-2xl shadow-black' : 'shadow-xl shadow-stone-200'}`}
+          className={`relative h-full w-full rounded-[2.5rem] border backdrop-blur-xl transition-all duration-1000
+            ${theme.bg} ${theme.border} ${isGlobalDark ? 'shadow-[0_0_50px_rgba(0,0,0,0.3)] hover:border-cyan-400/50' : 'shadow-xl'}`}
         >
-          {/* Grain Texture (Syncs with theme) */}
-          <div className={`absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-multiply ${isGlobalDark ? 'invert' : ''} bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]`} />
-          
-          <VikingServiceFrame color={theme.accent} />
-
-          {/* BACKGROUND ICON WATERMARK */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none" style={{ transform: "translateZ(10px)" }}>
-             <Icon size={250} strokeWidth={1} color={theme.accent} />
-          </div>
-
+          {/* Enhanced Holographic Mouse Shine with Animation */}
+          {isGlobalDark && (
+            <motion.div
+              style={{ x: flashX, y: flashY }}
+              className="absolute w-[400px] h-[400px] rounded-full bg-gradient-to-r from-cyan-400/10 via-[#C72075]/10 to-transparent blur-3xl z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            />
+          )}
+          <ZodiacServiceFrame color={theme.accent} />
           <div className="relative z-40 p-10 h-full flex flex-col items-center">
-            
-            {/* TOP EMBLEM */}
-            <div className={`w-10 h-10 rounded-full border mb-10 flex items-center justify-center font-serif font-bold text-xs ${theme.subText} ${theme.ring}`}>
+            {/* TOP EMBLEM WITH PULSE */}
+            <motion.div
+              className={`w-10 h-10 rounded-full border mb-10 flex items-center justify-center font-serif font-black text-xs transition-colors duration-700
+                ${isGlobalDark ? 'border-cyan-400/30 text-cyan-300' : 'border-stone-200 text-stone-400'}`}
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
               {index + 1}
-            </div>
-
-            {/* IDENTITY BLOOM */}
+            </motion.div>
             <div style={{ transform: "translateZ(40px)" }} className="flex flex-col items-center">
-               <div className={`mb-8 p-6 rounded-[2rem] border-2 transition-all duration-500 group-hover:rotate-[360deg] 
-                  ${theme.ring} ${theme.cardInner}`}>
-                  <Icon color={theme.accent} size={36} />
-               </div>
-
-               <span className={`text-[10px] font-black tracking-[0.4em] uppercase mb-4 ${theme.subText}`}>
-                 {service.type === "divination" ? "Ancient Arcana" : "Holy Offering"}
-               </span>
-
-               <h3 className={`text-4xl font-serif font-bold leading-none mb-6 px-2 text-center ${theme.text}`}>
-                 {service.title?.[lang]}
-               </h3>
-
-               <p className={`text-sm leading-relaxed max-w-[260px] text-center mb-8 font-medium ${theme.desc}`}>
-                 {service.desc?.[lang]?.substring(0, 85)}...
-               </p>
+              <motion.div
+                className={`mb-8 p-6 rounded-full border transition-all duration-1000 group-hover:rotate-[360deg]
+                  ${isGlobalDark ? 'border-cyan-400/20 bg-[#2E1B49]/40 shadow-[0_0_20px_#C7207510]' : 'border-stone-100 bg-stone-50'}`}
+                whileHover={{ scale: 1.2, rotate: 360 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Icon color={theme.accent} size={36} className={isGlobalDark ? "animate-pulse" : ""} />
+              </motion.div>
+              <span className={`text-[9px] font-black tracking-[0.5em] uppercase mb-4 transition-colors ${theme.subText}`}>
+                {service.type === "divination" ? "Zodiac Reading" : "Celestial Offering"}
+              </span>
+              <h3 className={`text-4xl font-serif font-black leading-none mb-6 px-2 text-center tracking-tighter ${theme.text}`}>
+                {service.title?.[lang]}
+              </h3>
+              <p className={`text-sm leading-relaxed max-w-[260px] text-center mb-8 font-medium transition-colors ${theme.desc}`}>
+                {service.desc?.[lang]?.substring(0, 85)}...
+              </p>
             </div>
-
             <div className="flex-1" />
-
-            {/* ACTION SECTION */}
+            {/* ACTION SECTION WITH HOVER EFFECTS */}
             <div style={{ transform: "translateZ(20px)" }} className="w-full">
-               <div className={`flex justify-between items-end mb-8 border-b pb-4 ${theme.ring}`}>
-                  <div className="text-left">
-                     <span className={`text-[10px] font-bold uppercase tracking-widest opacity-40 ${theme.text}`}>Sacrifice</span>
-                     <p className={`text-2xl font-serif font-black ${theme.text}`}>{service.price.toLocaleString()}₮</p>
-                  </div>
-                  <div className={`text-right text-[10px] font-black uppercase tracking-tighter opacity-40 ${theme.text}`}>
-                     {service.duration} <br /> {lang === 'mn' ? 'Мөчлөг' : 'Session'}
-                  </div>
-               </div>
-
-               <button className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3 ${theme.btn}`}>
-                  {lang === 'mn' ? 'Зан үйл эхлэх' : 'Initiate Ritual'}
-                  <ArrowRight size={14} />
-               </button>
+              <div className={`flex justify-between items-end mb-8 border-b pb-4 ${isGlobalDark ? 'border-cyan-400/20' : 'border-stone-100'}`}>
+                <div className="text-left">
+                  <span className={`text-[10px] font-bold uppercase tracking-widest opacity-40 ${theme.text}`}>Sacrifice</span>
+                  <p className={`text-2xl font-serif font-black ${theme.text}`}>{service.price.toLocaleString()}₮</p>
+                </div>
+                <div className={`text-right text-[10px] font-black uppercase tracking-tighter opacity-40 ${theme.text}`}>
+                  {service.duration} <br /> {lang === 'mn' ? 'Мөчлөг' : 'Session'}
+                </div>
+              </div>
+              <motion.button
+                className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.3em] transition-all duration-500 flex items-center justify-center gap-3 shadow-xl ${theme.btn}`}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(255,255,255,0.5)" }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {lang === 'mn' ? 'Зан үйл эхлэх' : 'Initiate Ritual'}
+                <Sparkles size={14} />
+              </motion.button>
             </div>
-
           </div>
-
-          {/* DYNAMIC GLOW (Indigo in Dark, Amber in Light) */}
-          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full blur-[100px] pointer-events-none opacity-0 group-hover:opacity-40 transition-opacity duration-1000 ${theme.glow}`} />
+          {/* Enhanced Dynamic Floor Aura with Pulse */}
+          <motion.div
+            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full blur-[110px] pointer-events-none opacity-0 group-hover:opacity-30 transition-opacity duration-1000 ${theme.glow}`}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
         </motion.div>
-        
-        {/* Floor Shadow */}
-        <div className={`absolute -bottom-8 left-10 right-10 h-10 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 
-           ${isGlobalDark ? 'bg-indigo-900/30' : 'bg-amber-900/10'}`} />
+        {/* Enhanced Floor Shadow with Spread */}
+        <motion.div
+          className={`absolute -bottom-10 left-10 right-10 h-10 blur-[50px] rounded-full opacity-0 group-hover:opacity-100 transition-all duration-1000
+            ${isGlobalDark ? 'bg-[#C72075]/30' : 'bg-amber-900/10'}`}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        />
       </Link>
     </motion.div>
   );

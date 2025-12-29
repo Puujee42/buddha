@@ -2,67 +2,114 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
-import { Sparkles, Sun, Moon, ArrowUpRight, Gem, Loader2 } from "lucide-react";
+import { motion, useSpring, useTransform, useMotionValue, AnimatePresence } from "framer-motion";
+import { Sparkles, ArrowUpRight, Loader2, Orbit, Star } from "lucide-react";
 import OverlayNavbar from "../components/Navbar";
 import GoldenNirvanaFooter from "../components/Footer";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
 import { Monk } from "@/database/types";
 
-// --- 1. THE VIKING-TAROT FRAME ---
-// This SVG creates the intricate interlaced border typical of Norse art
-const TarotFrame = ({ isDark }: { isDark: boolean }) => {
-  const color = isDark ? "#818cf8" : "#b45309";
-  const glow = isDark ? "rgba(99, 102, 241, 0.5)" : "rgba(251, 191, 36, 0.5)";
+// --- 1. THE MAGICAL STARFIELD ---
+const Starfield = () => (
+  <div className="absolute inset-0 z-0 pointer-events-none">
+    {[...Array(50)].map((_, i) => (
+      <motion.div
+        key={i}
+        className="absolute rounded-full bg-white"
+        initial={{ 
+          opacity: Math.random(), 
+          x: Math.random() * 100 + "%", 
+          y: Math.random() * 100 + "%",
+          scale: Math.random() * 0.5 + 0.5 
+        }}
+        animate={{ 
+          opacity: [0.2, 0.8, 0.2],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{ 
+          duration: 3 + Math.random() * 5, 
+          repeat: Infinity, 
+          ease: "linear" 
+        }}
+        style={{
+          width: Math.random() * 3 + "px",
+          height: Math.random() * 3 + "px",
+          boxShadow: "0 0 10px rgba(255,255,255,0.8)"
+        }}
+      />
+    ))}
+  </div>
+);
+
+// --- 2. THE ZODIAC CELESTIAL FRAME (Enhanced) ---
+const ZodiacFrame = ({ isDark }: { isDark: boolean }) => {
+  const color = isDark ? "#50F2CE" : "#b45309";
+  const secondary = isDark ? "#C72075" : "#f59e0b";
 
   return (
     <div className="absolute inset-0 pointer-events-none z-30">
       <svg className="w-full h-full" viewBox="0 0 300 450" fill="none">
         <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="blur" />
+          <filter id="glow-symbol">
+            <feGaussianBlur stdDeviation="1" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
         </defs>
         
-        {/* Main Border Path - Norse Knotwork Style */}
-        <path 
-          d="M20 40 L20 20 L40 20 M260 20 L280 20 L280 40 M280 410 L280 430 L260 430 M40 430 L20 430 L20 410" 
-          stroke={color} strokeWidth="2" strokeLinecap="round" 
+        {/* Animated Corner Brackets */}
+        <motion.path 
+          d="M30 20 H20 V30 M270 20 H280 V30 M280 420 V430 H270 M20 420 V430 H30" 
+          stroke={color} strokeWidth="1" strokeLinecap="square"
+          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity }}
         />
         
-        {/* Elaborate Corners */}
-        {[
-          "M15 45 Q15 15 45 15", // Top Left
-          "M255 15 Q285 15 285 45", // Top Right
-          "M285 405 Q285 435 255 435", // Bottom Right
-          "M45 435 Q15 435 15 405"  // Bottom Left
-        ].map((d, i) => (
-          <path key={i} d={d} stroke={color} strokeWidth="1" className="opacity-50" />
-        ))}
+        {/* Pulsing Zodiac Symbols */}
+        <g className="font-serif font-bold" filter="url(#glow-symbol)">
+          {[
+            { x: 23, y: 28, char: "♈" },
+            { x: 268, y: 28, char: "♋" },
+            { x: 23, y: 428, char: "♎" },
+            { x: 268, y: 428, char: "♑" }
+          ].map((sym, i) => (
+            <motion.text 
+              key={i} x={sym.x} y={sym.y} fill={color} fontSize="10"
+              animate={{ opacity: [0.2, 1, 0.2], scale: [0.9, 1.1, 0.9] }}
+              transition={{ duration: 3, delay: i * 0.5, repeat: Infinity }}
+            >
+              {sym.char}
+            </motion.text>
+          ))}
+        </g>
 
-        {/* Center Top Arch */}
-        <path 
-          d="M100 20 Q150 -5 200 20" 
-          stroke={color} strokeWidth="3" filter="url(#glow)"
-        />
-        
-        {/* Runic Decals in corners */}
-        <text x="25" y="35" fill={color} fontSize="10" className="font-serif opacity-60">ᛗ</text>
-        <text x="265" y="35" fill={color} fontSize="10" className="font-serif opacity-60">ᚦ</text>
-        <text x="25" y="425" fill={color} fontSize="10" className="font-serif opacity-60">ᚠ</text>
-        <text x="265" y="425" fill={color} fontSize="10" className="font-serif opacity-60">ᛟ</text>
+        {/* Ethereal Rings */}
+        <circle cx="150" cy="225" r="180" stroke={secondary} strokeWidth="0.5" className="opacity-10" />
       </svg>
     </div>
   );
 };
 
-// --- 2. ATMOSPHERICS ---
-const CelestialOverlay = ({ isDark }: { isDark: boolean }) => (
+// --- 3. NEBULA ATMOSPHERICS ---
+const NebulaOverlay = ({ isDark }: { isDark: boolean }) => (
   <div className="absolute inset-0 pointer-events-none overflow-hidden">
-    <div className={`absolute top-0 left-1/4 w-96 h-96 blur-[120px] rounded-full opacity-20 ${isDark ? 'bg-indigo-600' : 'bg-amber-300'}`} />
-    <div className={`absolute bottom-0 right-1/4 w-96 h-96 blur-[120px] rounded-full opacity-10 ${isDark ? 'bg-purple-900' : 'bg-orange-200'}`} />
+    {isDark ? (
+      <>
+        <Starfield />
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 5, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-10%] left-1/4 w-[600px] h-[600px] blur-[150px] rounded-full opacity-25 bg-[#C72075]" 
+        />
+        <motion.div 
+          animate={{ scale: [1.2, 1, 1.2], rotate: [0, -5, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[-10%] right-1/4 w-[600px] h-[600px] blur-[150px] rounded-full opacity-15 bg-[#2E1B49]" 
+        />
+      </>
+    ) : (
+      <div className="absolute inset-0 bg-gradient-to-b from-amber-50/50 via-white to-transparent" />
+    )}
   </div>
 );
 
@@ -92,34 +139,41 @@ export default function DivineTarotShowcase() {
   return (
     <>
       <OverlayNavbar />
-      <section className={`relative min-h-screen transition-colors duration-1000 pt-32 pb-48 overflow-hidden ${isDark ? "bg-[#050508]" : "bg-[#fcfaf7]"}`}>
-        <CelestialOverlay isDark={isDark} />
+      <section className={`relative min-h-screen transition-colors duration-1000 pt-48 pb-64 overflow-hidden ${isDark ? "bg-[#05051a]" : "bg-[#fcfaf7]"}`}>
+        <NebulaOverlay isDark={isDark} />
         
         <div className="container mx-auto px-6 relative z-10">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-24"
+            className="text-center mb-32"
           >
-            <div className={`inline-flex items-center gap-4 mb-6 ${isDark ? 'text-indigo-400' : 'text-amber-700'}`}>
-              <div className="h-px w-12 bg-current opacity-30" />
-              <span className="text-xs font-bold tracking-[0.4em] uppercase">{t({ mn: "Тэнгэрийн Хөлгүүд", en: "Celestial Arcana" })}</span>
-              <div className="h-px w-12 bg-current opacity-30" />
-            </div>
-            <h1 className={`text-6xl md:text-8xl font-serif mb-6 tracking-tight ${isDark ? 'text-white' : 'text-stone-900'}`}>
-              {isDark ? "The Sacred" : "Guardians of"}<br/>
-              <span className={`italic font-light ${isDark ? 'text-indigo-400' : 'text-amber-600'}`}>
-                {isDark ? "Oracles" : "Enlightenment"}
+            <div className={`inline-flex items-center gap-4 mb-6 ${isDark ? 'text-cyan-400' : 'text-amber-700'}`}>
+              <motion.div animate={{ width: [0, 50, 0] }} transition={{ duration: 3, repeat: Infinity }} className="h-px bg-current opacity-30" />
+              <span className="text-xs font-black tracking-[0.6em] uppercase flex items-center gap-2">
+                <Sparkles size={14} className="animate-pulse" /> {t({ mn: "Одот Аркана", en: "Zodiac Arcana" })}
               </span>
+              <motion.div animate={{ width: [0, 50, 0] }} transition={{ duration: 3, repeat: Infinity }} className="h-px bg-current opacity-30" />
+            </div>
+            
+            <h1 className="text-7xl md:text-9xl font-serif mb-8 tracking-tighter drop-shadow-[0_0_30px_rgba(255,255,255,0.15)]">
+              <span className={isDark ? "text-white" : "text-stone-900"}>{isDark ? "The Astral" : "Guardians of"}</span><br/>
+              <motion.span 
+                animate={{ color: isDark ? ["#C72075", "#7B337D", "#C72075"] : "" }}
+                transition={{ duration: 5, repeat: Infinity }}
+                className={`italic font-light ${!isDark ? 'text-amber-600' : ''}`}
+              >
+                {isDark ? "Collective" : "Enlightenment"}
+              </motion.span>
             </h1>
           </motion.div>
 
           {loading ? (
-            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-amber-500" size={48} /></div>
+            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-cyan-500" size={48} /></div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-10 gap-y-20">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-12 gap-y-24">
               {monks.map((monk, idx) => (
-                <VikingTarotCard 
+                <ZodiacTarotCard 
                   key={monk._id?.toString()} 
                   monk={monk} 
                   index={idx} 
@@ -136,96 +190,122 @@ export default function DivineTarotShowcase() {
   );
 }
 
-// --- 3. THE CARD COMPONENT ---
-function VikingTarotCard({ monk, index, isDark, lang }: { monk: Monk, index: number, isDark: boolean, lang: 'mn'|'en' }) {
+// --- 4. THE MAGIC ZODIAC CARD COMPONENT ---
+function ZodiacTarotCard({ monk, index, isDark, lang }: { monk: Monk, index: number, isDark: boolean, lang: 'mn'|'en' }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotateX = useSpring(useTransform(y, [-100, 100], [10, -10]), { stiffness: 100, damping: 20 });
-  const rotateY = useSpring(useTransform(x, [-100, 100], [-10, 10]), { stiffness: 100, damping: 20 });
+  
+  // Springy 3D Rotation
+  const rotateX = useSpring(useTransform(y, [-150, 150], [12, -12]), { stiffness: 60, damping: 20 });
+  const rotateY = useSpring(useTransform(x, [-150, 150], [-12, 12]), { stiffness: 60, damping: 20 });
+  
+  // Magical Aurora Flash that follows mouse
+  const flashX = useSpring(useTransform(x, (v) => v - 200));
+  const flashY = useSpring(useTransform(y, (v) => v - 200));
 
   const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1 }}
-      className="group perspective-1000"
+      initial={{ opacity: 0, y: 100, scale: 0.9 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 1, delay: index * 0.15, ease: "easeOut" }}
+      className="group perspective-2000"
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
-        x.set(e.clientX - rect.left - rect.width / 2);
-        y.set(e.clientY - rect.top - rect.height / 2);
+        x.set(e.clientX - (rect.left + rect.width / 2));
+        y.set(e.clientY - (rect.top + rect.height / 2));
       }}
       onMouseLeave={() => { x.set(0); y.set(0); }}
     >
       <Link href={`/monks/${monk._id}`}>
         <motion.div
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-          className={`relative aspect-[2/3] w-full rounded-lg overflow-hidden transition-all duration-500
+          className={`relative aspect-[2/3.2] w-full rounded-sm overflow-hidden transition-all duration-1000 border-2
             ${isDark 
-              ? 'bg-[#0a0a0f] border border-white/5 shadow-2xl shadow-indigo-500/10' 
-              : 'bg-white border border-stone-200 shadow-xl shadow-stone-200'
+              ? 'bg-[#0C164F]/70 border-cyan-400/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl hover:border-cyan-400/50' 
+              : 'bg-white border-stone-200 shadow-2xl'
             }`}
         >
-          {/* Card Texture Overlay */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
-          
-          <TarotFrame isDark={isDark} />
+          {/* HOLOGRAPHIC GLOW EFFECT (Follows mouse) */}
+          {isDark && (
+            <motion.div 
+              style={{ x: flashX, y: flashY }}
+              className="absolute w-[400px] h-[400px] rounded-full bg-gradient-to-r from-cyan-400/20 via-[#C72075]/20 to-transparent blur-3xl z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            />
+          )}
 
-          {/* Top Info (Roman Numeral) */}
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40">
-            <span className={`text-[10px] font-black tracking-[0.5em] ${isDark ? 'text-indigo-400' : 'text-amber-700'}`}>
+          <ZodiacFrame isDark={isDark} />
+
+          {/* Top Arcana Number */}
+          <div className="absolute top-8 left-1/2 -translate-x-1/2 z-40 text-center">
+            <motion.span 
+              animate={{ opacity: [0.4, 1, 0.4] }} 
+              transition={{ duration: 3, repeat: Infinity }}
+              className={`text-xs font-black tracking-[0.8em] ${isDark ? 'text-cyan-300 drop-shadow-[0_0_10px_#50F2CE]' : 'text-amber-700'}`}
+            >
               {romanNumerals[index] || index + 1}
-            </span>
+            </motion.span>
           </div>
 
-          {/* Arched Portrait Portal */}
-          <div className="absolute inset-0 p-8 pt-12 pb-24">
-            <div className={`relative h-full w-full rounded-t-full overflow-hidden border-2 
-              ${isDark ? 'border-indigo-500/20 bg-indigo-950/20' : 'border-amber-200 bg-stone-50'}`}>
+          {/* Portal with Sacred Halo */}
+          <div className="absolute inset-0 p-10 pt-16 pb-28">
+            <div className={`relative h-full w-full rounded-t-full overflow-hidden border-2 transition-all duration-700
+              ${isDark ? 'border-cyan-400/30 bg-[#2E1B49]/40 group-hover:border-cyan-400/60' : 'border-amber-200 bg-stone-50'}`}>
               
               <motion.img 
                 src={monk.image} 
                 alt={monk.name[lang]}
-                className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 brightness-90 group-hover:brightness-110"
               />
               
-              {/* Divine Halo Effect */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full bg-white/10 blur-3xl" />
+              {/* Dynamic Aura Gradient */}
+              <div className={`absolute inset-0 transition-opacity duration-700 ${isDark ? 'bg-gradient-to-t from-[#05051a] via-transparent to-transparent opacity-90' : 'bg-gradient-to-t from-black/50 via-transparent to-transparent'}`} />
+              
+              {/* Spinning Sacred Halo (Background) */}
+              {isDark && (
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                  className="absolute top-1/4 left-1/2 -translate-x-1/2 w-40 h-40 border border-cyan-400/10 rounded-full blur-sm"
+                />
+              )}
             </div>
           </div>
 
-          {/* Vertical Name Accent */}
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-40 pointer-events-none">
-            <p style={{ writingMode: 'vertical-lr' }} className={`text-[9px] uppercase font-bold tracking-[0.6em] rotate-180 opacity-40 ${isDark ? 'text-indigo-200' : 'text-stone-500'}`}>
+          {/* Floating Sacred Title */}
+          <div className="absolute left-6 top-1/2 -translate-y-1/2 z-40">
+            <p style={{ writingMode: 'vertical-lr' }} className={`text-[10px] uppercase font-black tracking-[0.5em] rotate-180 transition-all ${isDark ? 'text-cyan-200 opacity-40 group-hover:opacity-80 group-hover:tracking-[0.7em]' : 'text-stone-400 opacity-40'}`}>
               {monk.title[lang]}
             </p>
           </div>
 
-          {/* Card Footer Info */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 pt-12 text-center bg-gradient-to-t from-inherit to-transparent">
-            <motion.h3 className={`text-xl font-serif font-bold mb-1 ${isDark ? 'text-white' : 'text-stone-900'}`}>
+          {/* Footer Card Info */}
+          <div className="absolute bottom-0 left-0 right-0 p-8 pb-10 text-center">
+            <h3 className={`text-2xl font-serif font-black mb-2 transition-all group-hover:tracking-tight ${isDark ? 'text-white' : 'text-stone-900'}`}>
               {monk.name[lang]}
-            </motion.h3>
+            </h3>
             
-            <div className={`flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-indigo-400' : 'text-amber-700'}`}>
-              <Gem size={10} className="animate-pulse" />
-              <span>{lang === 'mn' ? 'Захиалга' : 'Booking'}</span>
-              <ArrowUpRight size={12} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            <div className={`flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] transition-colors ${isDark ? 'text-cyan-400 group-hover:text-white' : 'text-amber-700'}`}>
+              <Orbit size={14} className={isDark ? "animate-spin-slow" : ""} />
+              <span>{lang === 'mn' ? 'Зурхай' : 'Zodiac Path'}</span>
+              <ArrowUpRight size={14} className="group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
             </div>
           </div>
 
-          {/* Corner Gem Decor */}
-          <div className={`absolute bottom-4 left-4 z-40 p-1 rounded-full border ${isDark ? 'border-indigo-500/30 text-indigo-400' : 'border-amber-200 text-amber-600'}`}>
-            <Sparkles size={10} />
-          </div>
+          {/* Interactive Star Corner */}
+          <motion.div 
+            whileHover={{ rotate: 180, scale: 1.2 }}
+            className={`absolute bottom-6 left-6 z-40 p-2 rounded-full border-2 transition-all duration-700 ${isDark ? 'border-cyan-400/40 text-cyan-300 bg-[#0C164F] shadow-[0_0_15px_#50F2CE]' : 'border-amber-200 text-amber-600 bg-white'}`}
+          >
+            <Star size={12} fill={isDark ? "currentColor" : "none"} />
+          </motion.div>
         </motion.div>
       </Link>
       
-      {/* Floor Glow */}
-      <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 w-2/3 h-4 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 ${isDark ? 'bg-indigo-500/20' : 'bg-amber-500/10'}`} />
+      {/* Interactive Nebula Bloom (Floor Glow) */}
+      <div className={`absolute -bottom-8 left-1/2 -translate-x-1/2 w-3/4 h-10 blur-[60px] rounded-full opacity-0 group-hover:opacity-100 transition-all duration-1000 ${isDark ? 'bg-[#C72075]' : 'bg-amber-500/20'}`} />
     </motion.div>
   );
 }
