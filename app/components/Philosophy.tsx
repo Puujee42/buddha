@@ -1,35 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { History, Crown, Brush, Sun, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { 
+  History, 
+  Crown, 
+  Brush, 
+  Moon, 
+  Sun, 
+  ArrowLeft, 
+  ArrowRight, 
+  Sparkles,
+  Compass
+} from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "next-themes";
 
-// --- ATMOSPHERICS ---
+// --- SACRED ATMOSPHERICS ---
 
-const SacredMandala = () => (
+const CosmicMandala = ({ isDark }: { isDark: boolean }) => (
   <motion.div
-    animate={{ rotate: 360 }}
-    transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
-    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140vh] h-[140vh] opacity-[0.05] pointer-events-none z-0"
+    animate={{ rotate: isDark ? -360 : 360 }}
+    transition={{ duration: 250, repeat: Infinity, ease: "linear" }}
+    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vh] h-[150vh] opacity-[0.08] pointer-events-none z-0"
   >
-    <svg viewBox="0 0 100 100" className="w-full h-full text-amber-600 fill-current">
-      <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1 1" />
-      <path d="M50 0 L55 45 L100 50 L55 55 L50 100 L45 55 L0 50 L45 45 Z" strokeWidth="0.05" />
+    <svg viewBox="0 0 100 100" className={`w-full h-full fill-current ${isDark ? "text-indigo-400" : "text-amber-600"}`}>
+      <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.05" strokeDasharray="1 2" />
+      <path d="M50 0 L52 48 L100 50 L52 52 L50 100 L48 52 L0 50 L48 48 Z" />
+      <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="0.1" />
     </svg>
   </motion.div>
 );
 
-const TimeDust = () => (
+const ChronoDust = ({ isDark }: { isDark: boolean }) => (
   <div className="absolute inset-0 pointer-events-none overflow-hidden z-[2]">
-    {[...Array(15)].map((_, i) => (
+    {[...Array(20)].map((_, i) => (
       <motion.div
         key={i}
-        initial={{ y: "100%", opacity: 0 }}
-        animate={{ y: "-10%", opacity: [0, 0.4, 0] }}
-        transition={{ duration: 10 + (i % 10), repeat: Infinity, delay: i * 0.7 }}
-        className="absolute w-1 h-1 bg-amber-400 rounded-full blur-[1px]"
-        style={{ left: `${(i * 7) % 100}%` }}
+        initial={{ y: "110%", opacity: 0 }}
+        animate={{ y: "-10%", opacity: [0, 0.5, 0], x: Math.sin(i) * 50 }}
+        transition={{ duration: 12 + (i % 8), repeat: Infinity, delay: i * 0.5 }}
+        className={`absolute w-1 h-1 rounded-full blur-[1px] ${isDark ? "bg-indigo-300 shadow-[0_0_8px_white]" : "bg-amber-400 shadow-[0_0_8px_orange]"}`}
+        style={{ left: `${(i * 5.5) % 100}%` }}
       />
     ))}
   </div>
@@ -37,164 +49,195 @@ const TimeDust = () => (
 
 export default function ManualHeritageSection() {
   const { t, language } = useLanguage();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return <div className="h-screen bg-[#020205]" />;
+
+  const isDark = resolvedTheme === "dark";
 
   const eras = [
     {
       id: "ancient",
-      icon: <History />,
+      arcana: "IX",
+      icon: <Compass />,
       year: "II BC - IX AD",
       image: "/tenzin.png",
       bichig: "ᠡᠷᠲᠡᠨ ᠦ",
-      title: t({ mn: "Эртний Дэлгэрэлт", en: "Ancient Roots" }),
-      desc: t({ mn: "Торгоны замаар дамжин ирсэн анхны гэгээрлийн үр.", en: "The first seeds of enlightenment arriving via the Silk Road." })
+      title: t({ mn: "Эртний Дэлгэрэлт", en: "Ancient Origins" }),
+      desc: t({ mn: "Торгоны замаар дамжин ирсэн анхны гэгээрлийн үр.", en: "The primordial seeds of Dharma carried through the winds of the Silk Road." })
     },
     {
       id: "middle",
+      arcana: "XVII",
       icon: <Crown />,
       year: "XIII - XIV",
       image: "/bell.png",
       bichig: "ᠳᠤᠮᠳᠠᠳᠤ",
-      title: t({ mn: "Хаадын Дэлгэрэлт", en: "Imperial Dharma" }),
-      desc: t({ mn: "Их Монгол гүрний төрийн бодлого дахь бурхны шашин.", en: "Buddhism as the spiritual foundation of the Great Mongol Empire." })
+      title: t({ mn: "Хаадын Дэлгэрэлт", en: "Imperial Mandate" }),
+      desc: t({ mn: "Их Монгол гүрний төрийн бодлого дахь бурхны шашин.", en: "When the Great Khans wove the Dharma into the fabric of the Empire." })
     },
     {
       id: "renaissance",
+      arcana: "XXI",
       icon: <Brush />,
       year: "XVI - XIX",
       image: "/temple.png",
       bichig: "ᠰᠡᠷᠭᠦᠭᠡᠯᠲᠡ",
-      title: t({ mn: "Соёлын Сэргэлт", en: "Cultural Zenith" }),
-      desc: t({ mn: "Занабазарын үеийн урлаг, соёлын алтан эрин.", en: "The golden age of Mongolian art and philosophy under Zanabazar." })
+      title: t({ mn: "Соёлын Сэргэлт", en: "The Golden Zenith" }),
+      desc: t({ mn: "Занабазарын үеийн урлаг, соёлын алтан эрин.", en: "The absolute peak of artistic enlightenment under the Saint Zanabazar." })
     }
   ];
+
+  const theme = isDark ? {
+    bg: "bg-[#020205]",
+    gradient: "from-[#05051a] via-[#020205] to-black",
+    textMain: "text-white",
+    textSub: "text-indigo-400",
+    textDesc: "text-indigo-100/60",
+    accent: "text-amber-400",
+    cardBorder: "border-indigo-500/30",
+    navBg: "bg-indigo-950/40",
+    btnPrimary: "bg-indigo-600 shadow-indigo-500/20 text-white"
+  } : {
+    bg: "bg-[#FDFBF7]",
+    gradient: "from-[#FFFBEB] via-[#FDFBF7] to-[#FDFBF7]",
+    textMain: "text-[#451a03]",
+    textSub: "text-amber-600",
+    textDesc: "text-[#78350F]/70",
+    accent: "text-amber-500",
+    cardBorder: "border-amber-200",
+    navBg: "bg-white",
+    btnPrimary: "bg-[#451a03] shadow-amber-900/20 text-amber-100"
+  };
 
   const handleNext = () => setCurrentIndex((prev) => (prev + 1) % eras.length);
   const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + eras.length) % eras.length);
 
   return (
-    <section className="relative h-screen w-full bg-[#FDFBF7] overflow-hidden flex flex-col justify-center">
+    <section className={`relative h-screen w-full transition-colors duration-1000 overflow-hidden flex flex-col justify-center ${theme.bg}`}>
       
-      {/* --- BACKGROUND LAYER --- */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#FFFBEB] to-[#FDFBF7] z-0" />
-      <SacredMandala />
-      <TimeDust />
+      {/* --- ATMOSPHERE --- */}
+      <div className={`absolute inset-0 z-0 bg-linear-to-b ${theme.gradient}`} />
+      <CosmicMandala isDark={isDark} />
+      <ChronoDust isDark={isDark} />
 
-      {/* --- TOP HEADER (STATIC) --- */}
+      {/* --- HEADER --- */}
       <div className="absolute top-12 left-12 z-20">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-3"
-        >
-          <Sun size={24} className="text-amber-500 animate-spin-slow" />
-          <span className="text-xs font-bold uppercase tracking-[0.4em] text-amber-800/60">
-            {t({ mn: "Түүхэн мандал", en: "Sacred Timeline" })}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg border backdrop-blur-md ${theme.cardBorder}`}>
+            {isDark ? <Moon size={20} className="text-indigo-400" /> : <Sun size={20} className="text-amber-500 animate-[spin_10s_linear_infinite]" />}
+          </div>
+          <span className={`text-[10px] font-black uppercase tracking-[0.5em] opacity-60 ${theme.textMain}`}>
+            {t({ mn: "Түүхэн мандал", en: "Chronicles of the Stars" })}
           </span>
         </motion.div>
       </div>
 
       {/* --- MAIN STAGE --- */}
       <div className="relative z-10 container mx-auto px-6 lg:px-24">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
           
-          {/* LEFT: CONTENT (Animated by Index) */}
-          <div className="w-full lg:w-1/2 order-2 lg:order-1">
+          {/* LEFT: THE SCROLL OF TIME */}
+          <div className="w-full lg:w-1/2 order-2 lg:order-1 space-y-10">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.6, ease: "circOut" }}
-                className="space-y-6"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 30 }}
+                transition={{ duration: 0.8, ease: "circOut" }}
+                className="space-y-8"
               >
-                <div className="flex items-center gap-4 text-amber-600">
-                  <span className="p-3 bg-white rounded-full shadow-sm border border-amber-100">
+                <div className="flex items-center gap-5">
+                  <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center backdrop-blur-xl transition-all shadow-2xl ${theme.cardBorder} ${theme.navBg} ${theme.textSub}`}>
                     {eras[currentIndex].icon}
-                  </span>
-                  <span className="text-sm font-bold tracking-[0.2em] text-amber-500">
-                    {eras[currentIndex].year}
-                  </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className={`text-xs font-black tracking-widest uppercase ${theme.textSub}`}>Arcana {eras[currentIndex].arcana}</span>
+                    <span className={`text-xl font-serif italic ${theme.accent}`}>{eras[currentIndex].year}</span>
+                  </div>
                 </div>
 
-                <h2 className="text-5xl lg:text-7xl font-serif text-[#451a03] leading-tight">
+                <h2 className={`text-6xl lg:text-8xl font-serif font-black leading-[1.1] transition-colors ${theme.textMain}`}>
                   {eras[currentIndex].title}
                 </h2>
 
-                <p className="text-lg lg:text-xl text-[#78350F]/70 leading-relaxed max-w-lg">
+                <p className={`text-lg lg:text-xl font-medium leading-relaxed max-w-lg transition-colors ${theme.textDesc}`}>
                   {eras[currentIndex].desc}
                 </p>
 
-                {/* Vertical Script Element (Mobile/Tablet Friendly) */}
-                <div className="pt-6 flex items-center gap-4">
-                  <div className="h-[2px] w-12 bg-amber-500/20" />
-                  <span className="text-2xl font-serif text-amber-900/40 tracking-widest">
+                <div className="flex items-center gap-6 pt-4">
+                  <div className={`h-[1px] w-24 ${isDark ? "bg-indigo-500/30" : "bg-amber-900/10"}`} />
+                  <span className={`text-4xl font-serif opacity-30 tracking-[0.3em] ${theme.textMain}`}>
                     {eras[currentIndex].bichig}
                   </span>
                 </div>
               </motion.div>
             </AnimatePresence>
 
-            {/* NAVIGATION BUTTONS */}
-            <div className="mt-12 flex items-center gap-6">
-              <button 
-                onClick={handlePrev}
-                className="group w-14 h-14 rounded-full border border-amber-500/30 flex items-center justify-center text-amber-600 hover:bg-amber-500 hover:text-white transition-all duration-500 shadow-sm"
-              >
-                <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+            {/* NAVIGATION Ritual Artifacts */}
+            <div className="flex items-center gap-8">
+              <button onClick={handlePrev} className={`group w-16 h-16 rounded-full border flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${theme.cardBorder} ${theme.textMain} ${theme.navBg}`}>
+                <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
               </button>
               
-              <div className="flex items-center gap-2">
+              <div className="flex gap-3">
                  {eras.map((_, i) => (
-                   <div 
+                   <motion.div 
                     key={i} 
-                    className={`h-1.5 transition-all duration-500 rounded-full ${i === currentIndex ? "w-8 bg-amber-500" : "w-2 bg-amber-200"}`} 
+                    animate={{ width: i === currentIndex ? 40 : 10, opacity: i === currentIndex ? 1 : 0.3 }}
+                    className={`h-1 rounded-full ${isDark ? "bg-indigo-400" : "bg-amber-600"}`} 
                    />
                  ))}
               </div>
 
-              <button 
-                onClick={handleNext}
-                className="group w-14 h-14 rounded-full bg-[#451a03] flex items-center justify-center text-amber-100 hover:bg-amber-600 transition-all duration-500 shadow-xl shadow-amber-900/20"
-              >
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              <button onClick={handleNext} className={`group w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 shadow-2xl ${theme.btnPrimary}`}>
+                <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </div>
 
-          {/* RIGHT: THE VISUAL STUPA */}
-          <div className="w-full lg:w-1/2 h-[50vh] lg:h-[70vh] order-1 lg:order-2">
+          {/* RIGHT: THE MONOLITH PORTAL */}
+          <div className="w-full lg:w-1/2 h-[50vh] lg:h-[75vh] order-1 lg:order-2 perspective-[2000px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
-                initial={{ scale: 0.9, opacity: 0, rotateY: 20 }}
-                animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-                exit={{ scale: 1.1, opacity: 0, rotateY: -20 }}
-                transition={{ duration: 0.8, ease: "backOut" }}
-                className="relative h-full w-full"
+                initial={{ opacity: 0, rotateY: 45, scale: 0.8 }}
+                animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+                exit={{ opacity: 0, rotateY: -45, scale: 0.8 }}
+                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                className="relative h-full w-full group"
               >
-                {/* Image Portal with Rounded Stupa Shape */}
-                <div className="h-full w-full bg-white rounded-t-[240px] rounded-b-[40px] overflow-hidden shadow-2xl border-[12px] border-white ring-1 ring-amber-500/10">
+                {/* Image Altar */}
+                <div className={`h-full w-full rounded-t-[300px] rounded-b-[40px] overflow-hidden border-[2px] transition-all duration-1000 shadow-[0_50px_100px_rgba(0,0,0,0.5)] ${theme.cardBorder}`}>
                    <img 
                     src={eras[currentIndex].image} 
-                    className="w-full h-full object-cover transition-all duration-[3s] hover:scale-110" 
+                    className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[4s]" 
                     alt="heritage" 
                    />
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#451a03]/40 to-transparent mix-blend-multiply" />
+                   <div className={`absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent ${isDark ? "opacity-80" : "opacity-40"}`} />
                    
-                   {/* Vertical Script Ribbon */}
-                   <div className="absolute top-12 right-12 z-20 flex flex-col items-center gap-4">
-                      <div className="w-[1px] h-20 bg-white/50" />
-                      <span className="text-3xl text-white font-serif drop-shadow-lg" style={{ writingMode: 'vertical-rl' }}>
+                   {/* Vertical Holographic Script */}
+                   <div className="absolute top-20 right-10 z-20 flex flex-col items-center gap-6">
+                      <div className={`w-[1px] h-24 bg-linear-to-b from-transparent via-white/50 to-transparent`} />
+                      <span className="text-4xl text-white font-serif tracking-[0.5em] [writing-mode:vertical-rl] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                          {eras[currentIndex].bichig}
                       </span>
                    </div>
                 </div>
 
-                {/* Decorative Aura */}
-                <div className="absolute -inset-10 bg-amber-500/10 blur-[80px] rounded-full -z-10 animate-pulse" />
-                <Sparkles className="absolute -top-4 -right-4 text-amber-400 w-12 h-12" />
+                {/* Ritual Glow */}
+                <div className={`absolute -inset-10 blur-[120px] rounded-full -z-10 transition-colors duration-1000 ${isDark ? "bg-indigo-600/20" : "bg-amber-500/10"}`} />
+                <Sparkles className={`absolute -top-6 -right-6 w-16 h-16 transition-colors duration-1000 ${theme.accent}`} />
+                
+                {/* Arcana Seal */}
+                <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 px-8 py-3 rounded-full border backdrop-blur-2xl font-black text-[10px] tracking-[0.5em] uppercase z-30 ${theme.cardBorder} ${theme.navBg} ${theme.textMain}`}>
+                   {eras[currentIndex].id} Realm
+                </div>
               </motion.div>
             </AnimatePresence>
           </div>
@@ -202,12 +245,11 @@ export default function ManualHeritageSection() {
         </div>
       </div>
 
-      {/* --- PROGRESS THREAD (BOTTOM) --- */}
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-amber-500/10">
+      {/* --- PROGRESS THREAD --- */}
+      <div className={`absolute bottom-0 left-0 w-full h-[2px] ${isDark ? "bg-indigo-900/20" : "bg-amber-900/5"}`}>
         <motion.div 
-          initial={false}
           animate={{ width: `${((currentIndex + 1) / eras.length) * 100}%` }}
-          className="h-full bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]" 
+          className={`h-full transition-colors duration-1000 ${isDark ? "bg-indigo-400 shadow-[0_0_20px_rgba(129,140,248,0.8)]" : "bg-amber-600"}`} 
         />
       </div>
 

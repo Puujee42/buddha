@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   motion, 
   AnimatePresence, 
@@ -15,266 +15,189 @@ import {
   Sparkles, 
   Flower, 
   Sun,
-  Wind
+  Moon,
+  Wind,
+  Star,
+  Eye,
+  Loader2
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
-// Ensure this path matches your project structure
+import { useTheme } from "next-themes";
 import { Comment } from "@/database/types"; 
 
-// --- VISUAL EFFECTS (Ported & Brightened from Hero) ---
+// --- DYNAMIC ATMOSPHERES ---
 
-// 1. Heavenly Rays (Adapted for Light Theme)
-const HeavenlyRays = () => (
-  <motion.div 
-    animate={{ rotate: 360 }}
-    transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
-    className="absolute -top-[50%] left-1/2 -translate-x-1/2 w-[150vmax] h-[150vmax] opacity-30 pointer-events-none z-0"
-    style={{
-      background: "conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(251, 191, 36, 0.2) 20deg, transparent 40deg, transparent 60deg, rgba(251, 191, 36, 0.2) 80deg, transparent 100deg, transparent 180deg, rgba(245, 158, 11, 0.1) 220deg, transparent 260deg)"
-    }}
-  />
-);
+const CelestialAtmosphere = ({ isDark }: { isDark: boolean }) => (
+  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    {/* Base Layer transition */}
+    <div className={`absolute inset-0 transition-opacity duration-1000 ${
+      isDark ? "bg-linear-to-b from-[#020617] via-[#0f172a] to-black opacity-100" : "bg-linear-to-b from-[#FFFBEB] via-[#FEF3C7] to-white opacity-100"
+    }`} />
+    
+    {/* Rotating Celestial Halo */}
+    <motion.div 
+      animate={{ rotate: isDark ? -360 : 360 }}
+      transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
+      className={`absolute top-[-30%] left-[-20%] w-[150vw] h-[150vw] opacity-20`}
+      style={{
+        background: isDark 
+          ? "radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)"
+          : "conic-gradient(from 0deg, transparent 0%, #fbbf24 10%, transparent 50%)"
+      }}
+    />
 
-// 2. Golden Dust (Similar to Spirit Orbs but Golden)
-const GoldenDust = ({ delay }: { delay: number }) => (
-  <motion.div
-    initial={{ y: "110vh", opacity: 0, scale: 0 }}
-    animate={{ 
-      y: "-20vh", 
-      opacity: [0, 0.8, 0],
-      scale: [0, 1.2, 0],
-      x: (Math.random() - 0.5) * 100
-    }}
-    transition={{
-      duration: Math.random() * 15 + 10,
-      repeat: Infinity,
-      ease: "easeInOut",
-      delay: delay,
-    }}
-    className="absolute w-1 h-1 bg-amber-400 rounded-full blur-[1px] shadow-[0_0_8px_#fbbf24] pointer-events-none"
-    style={{ left: `${Math.random() * 100}%` }}
-  />
+    {/* Stardust/Dust Particles (Deterministic to avoid Hydration Error) */}
+    <div className="absolute inset-0 z-[1]">
+      {[...Array(25)].map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ y: "110vh", opacity: 0 }}
+          animate={{ 
+            y: "-10vh", 
+            opacity: [0, 0.7, 0],
+            x: Math.sin(i) * 80
+          }}
+          transition={{
+            duration: 12 + (i % 10),
+            repeat: Infinity,
+            delay: i * 0.4,
+          }}
+          className={`absolute w-[2px] h-[2px] rounded-full blur-xs ${
+            isDark ? "bg-indigo-300 shadow-[0_0_10px_white]" : "bg-amber-400 shadow-[0_0_8px_orange]"
+          }`}
+          style={{ left: `${(i * 4) % 100}%` }}
+        />
+      ))}
+    </div>
+  </div>
 );
 
 export default function CelestialRiverComments() {
   const { t } = useLanguage();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Parallax Logic
-  const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const yFog = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
-  
-  // Mouse Interaction for the "Offering" glow
   const mouseX = useSpring(0, { stiffness: 40, damping: 20 });
   const mouseY = useSpring(0, { stiffness: 40, damping: 20 });
 
-  function handleMouseMove({ clientX, clientY, currentTarget }: React.MouseEvent) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
-  }
+  // 1. ALL HOOKS AT TOP LEVEL
+  const isDark = resolvedTheme === "dark";
+  const glowColor = isDark ? 'rgba(79, 70, 229, 0.4)' : 'rgba(251, 191, 36, 0.4)';
+  const glowTemplate = useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, ${glowColor}, transparent 70%)`;
 
-  // --- DATA FETCHING ---
   useEffect(() => {
+    setMounted(true);
     async function fetchComments() {
       try {
         const response = await fetch('/api/comments');
         if (response.ok) {
           const data = await response.json();
-          // Fix Date objects from JSON string
-          const formattedData = data.map((c: any) => ({
-            ...c,
-            createdAt: new Date(c.createdAt)
-          }));
-          setComments(formattedData);
-        } else {
-            // Mock Data if API fails (for visuals)
-            const mockData: Comment[] = [
-                { 
-                    _id: '1' as any, 
-                    authorName: 'Saruul', authorRole: 'Pilgrim', text: 'May peace be upon all beings.', 
-                    avatar: 'https://i.pravatar.cc/150?u=1', karma: 12, element: 'gold', createdAt: new Date()
-                },
-                { 
-                    _id: '2' as any, 
-                    authorName: 'Tenzin', authorRole: 'Monk', text: 'The mind is like the sky, endless and clear.', 
-                    avatar: 'https://i.pravatar.cc/150?u=2', karma: 108, element: 'ochre', createdAt: new Date()
-                },
-            ];
-            setComments(mockData);
+          setComments(data.map((c: any) => ({ ...c, createdAt: new Date(c.createdAt) })));
         }
-      } catch (error) { console.error("Fetch Error", error); }
+      } catch (e) { console.error(e); }
     }
     fetchComments();
   }, []);
 
-  // --- SUBMIT HANDLER ---
+  if (!mounted) return <div className="min-h-screen bg-[#FDFBF7]" />;
+
+  const handleMouseMove = ({ clientX, clientY, currentTarget }: React.MouseEvent) => {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
     setIsSubmitting(true);
     
-    // Simulate API delay
-    await new Promise(r => setTimeout(r, 800));
-    
-    // Create new optimistic comment based on Interface
     const newEntry: Comment = {
-       _id: Date.now().toString() as any, // Cast for optimistic UI update
-       authorName: "Seeker", // Could come from auth context
-       authorRole: "Pilgrim",
+       _id: Date.now().toString() as any,
+       authorName: "Seeker",
+       authorRole: isDark ? "Ghost of Stars" : "Pilgrim of Light",
        avatar: `https://i.pravatar.cc/150?u=${Date.now()}`,
        text: newComment,
        karma: 0,
-       element: "light", // Default theme for new comments
+       element: isDark ? "gold" : "light",
        createdAt: new Date()
     };
     
     setComments([newEntry, ...comments]);
     setNewComment("");
-    setIsSubmitting(false);
-    
-    if (scrollRef.current) {
-        scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-    }
+    setTimeout(() => setIsSubmitting(false), 800);
   };
 
   const ui = {
-     header: t({ mn: "Ариун Мөрөн", en: "River of Offering" }),
-     sub: t({ mn: "Бодлын Урсгал", en: "Stream of Consciousness" }),
-     placeholder: t({ mn: "Эерэг бодлоо илгээгээрэй...", en: "Inscribe your prayers..." }),
-     btn: t({ mn: "Өргөх", en: "Offer Prayer" })
+     header: isDark ? t({ mn: "Бодлын Мөрөн", en: "River of Souls" }) : t({ mn: "Ариун Мөрөн", en: "River of Offering" }),
+     sub: isDark ? t({ mn: "Аркана цуглуулга", en: "The Collective Arcana" }) : t({ mn: "Бодлын Урсгал", en: "Stream of Consciousness" }),
+     btn: isDark ? t({ mn: "Шившлэг", en: "Cast Seal" }) : t({ mn: "Өргөх", en: "Offer Prayer" })
   };
 
   return (
-    <section 
-      ref={containerRef} 
-      className="relative w-full min-h-screen py-32 overflow-hidden bg-[#FDFBF7]"
-    >
-      
-      {/* ================= BACKGROUND: THE CELESTIAL REALM ================= */}
-      
-      {/* 1. Base Gradient (Cream to Divine Light) */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A]/30 z-0" />
-      
-      {/* 2. Heavenly Rays (The 'Buddha' light from top) */}
-      <HeavenlyRays />
+    <section className="relative w-full py-40 overflow-hidden font-ethereal transition-colors duration-1000">
+      <CelestialAtmosphere isDark={isDark} />
 
-      {/* 3. Fog Layer (Parallax Clouds) */}
-      <motion.div 
-         style={{ y: yFog }}
-         className="absolute inset-0 z-0 opacity-40 mix-blend-soft-light bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" 
-      />
-
-      {/* 4. Rising Golden Dust */}
-      <div className="absolute inset-0 z-[1] pointer-events-none">
-         {[...Array(25)].map((_, i) => <GoldenDust key={i} delay={i * 0.2} />)}
-      </div>
-
-      
       <div className="relative z-10 container mx-auto px-4 lg:px-12 flex flex-col h-full">
         
         {/* ================= HEADER ================= */}
-        <div className="text-center mb-16 relative">
-            
-            {/* Spinning Sun Icon */}
-            <motion.div
-               initial={{ scale: 0, rotate: -90 }}
-               whileInView={{ scale: 1, rotate: 0 }}
-               transition={{ duration: 1, type: "spring" }}
-               className="inline-block mb-4"
-            >
-               <Sun size={40} className="text-amber-500 animate-[spin_12s_linear_infinite]" />
+        <div className="text-center mb-24 relative">
+            <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity }} className="inline-block mb-6">
+               <div className={`p-4 rounded-full border shadow-2xl transition-all duration-700 ${
+                   isDark ? "bg-indigo-950/40 border-indigo-400/50 text-indigo-300" : "bg-white border-amber-200 text-amber-500"
+               }`}>
+                  {isDark ? <Moon fill="currentColor" size={32} /> : <Sun size={32} className="animate-spin-slow" />}
+               </div>
             </motion.div>
             
-            <motion.h2 
-               initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-               whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-               className="text-6xl md:text-8xl font-serif text-[#78350F] drop-shadow-sm mb-2 tracking-tight"
-            >
+            <h2 className={`text-6xl md:text-9xl font-serif transition-colors drop-shadow-2xl ${isDark ? "text-white" : "text-[#78350F]"}`}>
                {ui.header}
-            </motion.h2>
-            
-            <div className="flex items-center justify-center gap-4">
-               <div className="h-[1px] w-12 bg-amber-500/30" />
-               <p className="text-amber-600/70 font-medium tracking-[0.3em] uppercase text-xs">{ui.sub}</p>
-               <div className="h-[1px] w-12 bg-amber-500/30" />
+            </h2>
+            <div className="flex items-center justify-center gap-4 mt-6">
+                <div className={`h-px w-20 bg-linear-to-r from-transparent via-current to-transparent ${isDark ? 'text-indigo-500' : 'text-amber-500'}`} />
+                <p className={`text-[10px] font-black tracking-[0.6em] uppercase opacity-60 ${isDark ? "text-indigo-200" : "text-amber-800"}`}>{ui.sub}</p>
+                <div className={`h-px w-20 bg-linear-to-r from-transparent via-current to-transparent ${isDark ? 'text-indigo-500' : 'text-amber-500'}`} />
             </div>
         </div>
 
+        {/* ================= INPUT SEAL ================= */}
+        <div className="relative max-w-2xl w-full mx-auto mb-32 z-20" onMouseMove={handleMouseMove}>
+             <motion.div className="absolute -inset-20 opacity-30 blur-3xl z-0 pointer-events-none" style={{ background: glowTemplate }} />
 
-        {/* ================= INPUT 'ALTAR' ================= */}
-        <div className="relative max-w-2xl mx-auto mb-24 z-20 perspective-1000" onMouseMove={handleMouseMove}>
-             
-             {/* Dynamic Aura following mouse behind input */}
-             <motion.div 
-               className="absolute -inset-10 opacity-30 blur-2xl z-0"
-               style={{
-                 background: useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, rgba(251, 191, 36, 0.4), transparent 70%)`
-               }}
-             />
-
-             <motion.form 
-                onSubmit={handleSubmit}
-                initial={{ rotateX: 20, opacity: 0, y: 50 }}
-                whileInView={{ rotateX: 0, opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="relative bg-white/80 backdrop-blur-xl border border-amber-200/50 rounded-2xl p-2 shadow-[0_10px_40px_-10px_rgba(251,191,36,0.2)] flex items-center gap-4 pr-3 overflow-hidden group hover:border-amber-400/50 transition-colors"
-             >
-                <div className="pl-4">
-                   <Flower className="text-amber-400 group-hover:rotate-45 transition-transform duration-700" />
+             <form onSubmit={handleSubmit} className={`relative backdrop-blur-3xl border-2 rounded-2xl p-2 flex items-center gap-4 transition-all duration-700 shadow-2xl ${
+                 isDark ? "bg-black/60 border-indigo-500/30" : "bg-white/80 border-amber-200/50"
+             }`}>
+                <div className="pl-6">
+                   {isDark ? <Eye className="text-indigo-400" size={24} /> : <Flower className="text-amber-400" size={24} />}
                 </div>
-                
                 <input 
-                   type="text"
-                   value={newComment}
-                   onChange={(e) => setNewComment(e.target.value)}
-                   placeholder={ui.placeholder}
-                   className="flex-1 bg-transparent border-none outline-none text-[#78350f] placeholder-amber-900/30 font-serif text-lg h-14"
+                   type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)}
+                   placeholder="..."
+                   className={`flex-1 bg-transparent border-none outline-none font-serif text-2xl h-16 ${isDark ? "text-white placeholder-indigo-400/20" : "text-[#78350f] placeholder-amber-900/20"}`}
                 />
-                
-                <motion.button
-                   whileHover={{ scale: 1.05 }}
-                   whileTap={{ scale: 0.95 }}
-                   disabled={isSubmitting}
-                   className="bg-gradient-to-br from-amber-400 to-orange-500 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-amber-500/30 transition-all disabled:opacity-70"
-                >
-                   {isSubmitting ? <Wind className="animate-spin" /> : <Send size={18} />}
-                   <span className="hidden md:inline">{ui.btn}</span>
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`px-10 py-5 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-2xl flex items-center gap-3 transition-all ${
+                    isDark ? "bg-indigo-600 text-white shadow-indigo-500/40" : "bg-amber-500 text-white"
+                }`}>
+                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Sparkles size={16} />} <span>{ui.btn}</span>
                 </motion.button>
-             </motion.form>
+             </form>
         </div>
 
-
-        {/* ================= HORIZONTAL SCROLL STREAM ================= */}
-        <div className="relative w-full -mx-4 md:-mx-0">
-             
-             {/* Left & Right Fade (Fog edges) */}
-             <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#FDFBF7] to-transparent z-10 pointer-events-none" />
-             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#FDFBF7] to-transparent z-10 pointer-events-none" />
-
-             {/* The Stream Channel */}
-             <div 
-               ref={scrollRef}
-               className="flex overflow-x-auto gap-8 px-12 md:px-[20vw] py-12 pb-24 snap-x snap-mandatory hide-scrollbar scroll-smooth"
-               style={{ scrollbarWidth: 'none' }}
-             >
-                {/* Connecting Golden Thread */}
-                <div className="absolute top-[50%] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-300 to-transparent -z-10" />
-
-                <AnimatePresence mode="popLayout">
-                   {comments.map((comment, index) => (
-                      <LanternCard key={comment._id?.toString() || index} comment={comment} index={index} />
-                   ))}
-                </AnimatePresence>
-
-                {/* Empty Space for smooth end scrolling */}
-                <div className="shrink-0 w-[20vw]" />
-             </div>
+        {/* ================= THE ARCANA STREAM ================= */}
+        <div 
+          ref={scrollRef}
+          className="flex overflow-x-auto gap-16 px-12 md:px-[30vw] py-20 hide-scrollbar scroll-smooth snap-x"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          <AnimatePresence mode="popLayout">
+             {comments.map((comment, index) => (
+                <ArcanaCard key={comment._id?.toString() || index} comment={comment} index={index} isDark={isDark} />
+             ))}
+          </AnimatePresence>
         </div>
 
       </div>
@@ -282,82 +205,80 @@ export default function CelestialRiverComments() {
   );
 }
 
-// =================================================================
-// LANTERN CARD: The "Floating Thought" on the river
-// =================================================================
-function LanternCard({ comment, index }: { comment: Comment, index: number }) {
-  
-  // Independent Bobbing Physics
-  const randomDuration = 4 + Math.random() * 2;
-  const randomDelay = Math.random() * 2;
-  
-  // Theme styling based on element
-  const elementStyles = {
-    gold: "border-amber-400/50 bg-amber-50 shadow-[0_20px_40px_-10px_rgba(251,191,36,0.3)]",
-    saffron: "border-orange-400/50 bg-orange-50 shadow-[0_20px_40px_-10px_rgba(249,115,22,0.3)]",
-    ochre: "border-[#A16207]/30 bg-[#FEF3C7] shadow-[0_20px_40px_-10px_rgba(161,98,7,0.2)]",
-    light: "border-white/80 bg-white/80 backdrop-blur-md shadow-[0_20px_40px_-10px_rgba(251,191,36,0.2)]",
-  };
-  const activeStyle = elementStyles[comment.element] || elementStyles.light;
+// --- SUB-COMPONENT: 3D ARCANA CARD ---
+
+function ArcanaCard({ comment, index, isDark }: { comment: Comment, index: number, isDark: boolean }) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotateX = useSpring(useTransform(y, [-100, 100], [12, -12]), { stiffness: 60, damping: 20 });
+  const rotateY = useSpring(useTransform(x, [-100, 100], [-12, 12]), { stiffness: 60, damping: 20 });
+
+  function handleCardMove(e: React.MouseEvent) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    x.set(e.clientX - (rect.left + rect.width / 2));
+    y.set(e.clientY - (rect.top + rect.height / 2));
+  }
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.8, y: 50, rotate: -5 }}
-      animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
-      exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.3 } }}
-      transition={{ type: "spring", damping: 20, stiffness: 100, delay: index * 0.1 }}
-      className="relative shrink-0 snap-center group perspective-1000"
+      initial={{ opacity: 0, scale: 0.8, rotateY: 30 }}
+      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+      exit={{ opacity: 0, scale: 0.5, filter: "blur(20px)" }}
+      onMouseMove={handleCardMove}
+      onMouseLeave={() => { x.set(0); y.set(0); }}
+      className="relative shrink-0 snap-center perspective-1000"
     >
-        {/* Bobbing Motion Wrapper */}
         <motion.div
-           animate={{ y: [-8, 8, -8] }}
-           transition={{ duration: randomDuration, delay: randomDelay, repeat: Infinity, ease: "easeInOut" }}
-           className="relative"
+           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+           className={`w-[320px] md:w-[380px] h-[520px] rounded-sm border-2 p-10 flex flex-col transition-all duration-700 shadow-2xl relative ${
+              isDark ? "bg-[#05050a]/80 border-indigo-500/40 text-indigo-50" : "bg-white/90 border-amber-200 text-[#451a03]"
+           }`}
         >
-             {/* Thread Connection Nodes */}
-             <div className="absolute top-1/2 left-[-15px] right-[-15px] h-[1px] bg-amber-300 z-0 opacity-50" />
-             <div className="absolute top-1/2 left-[-6px] w-3 h-3 rounded-full bg-white border border-amber-400 z-10 -translate-y-1/2 shadow-sm" />
-             <div className="absolute top-1/2 right-[-6px] w-3 h-3 rounded-full bg-white border border-amber-400 z-10 -translate-y-1/2 shadow-sm" />
-
-             {/* CARD VISUALS */}
-             <div className={`w-[320px] md:w-[380px] rounded-2xl p-6 ${activeStyle} border group-hover:-translate-y-2 transition-transform duration-500 ease-out`}>
+             {/* Ornate Frame Inside Card */}
+             <div className={`absolute inset-4 border transition-colors opacity-20 ${isDark ? "border-indigo-400" : "border-amber-500"}`} />
+             
+             {/* Header Identity */}
+             <div className="relative z-10 flex flex-col items-center text-center mb-10 pt-2">
+                <span className={`text-[8px] font-black tracking-[0.8em] uppercase mb-6 opacity-40 transition-colors ${isDark ? 'text-indigo-300' : 'text-amber-800'}`}>
+                   SOUL Arcana {index + 1}
+                </span>
                 
-                {/* Header info */}
-                <div className="flex items-center gap-4 mb-4 border-b border-amber-900/5 pb-3">
-                   <div className="relative">
-                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
-                         <img src={comment.avatar} alt="avatar" className="w-full h-full object-cover" />
-                      </div>
-                      {/* Karma Badge */}
-                      <div className="absolute -bottom-1 -right-1 bg-amber-100 text-[#92400e] text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-white shadow-sm flex items-center gap-1">
-                         <Sparkles size={8} /> {comment.karma}
-                      </div>
-                   </div>
-                   
-                   <div>
-                      <h4 className="font-serif font-bold text-[#78350F] text-lg leading-none">{comment.authorName}</h4>
-                      <p className="text-[10px] text-amber-900/50 uppercase tracking-widest mt-1">{comment.authorRole}</p>
-                   </div>
-                   
-                   <div className="ml-auto opacity-20 group-hover:opacity-100 transition-opacity text-amber-500">
-                      <Flower size={20} />
-                   </div>
+                <div className="relative group/avatar mb-6">
+                    <div className={`w-20 h-20 rounded-full border-2 p-1 transition-all duration-1000 ${isDark ? "border-indigo-500/50" : "border-amber-400"}`}>
+                       <img src={comment.avatar} className="w-full h-full rounded-full object-cover grayscale group-hover/avatar:grayscale-0 transition-all duration-700" alt="avatar" />
+                    </div>
+                    <Sparkles className="absolute -top-2 -right-2 text-amber-400 animate-pulse" size={16} />
                 </div>
 
-                {/* Message Text */}
-                <p className="text-[#451a03] font-light italic leading-relaxed text-base min-h-[60px]">
-                   "{comment.text}"
+                <h4 className="font-serif text-2xl tracking-widest uppercase mb-1 drop-shadow-md">{comment.authorName}</h4>
+                <p className={`text-[9px] font-bold tracking-[0.3em] uppercase ${isDark ? "text-indigo-400" : "text-amber-600"}`}>
+                  {comment.authorRole}
                 </p>
-
-                {/* Footer Shine Effect */}
-                <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-white/40 to-transparent rounded-b-2xl pointer-events-none" />
              </div>
 
-             {/* Water Reflection / Shadow */}
-             <div className="absolute -bottom-10 left-8 right-8 h-4 bg-amber-500/20 blur-xl rounded-[100%] opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-500" />
-             
+             {/* Soul Message */}
+             <div className="relative z-10 flex-1 flex flex-col justify-center px-2">
+                <p className="text-base font-medium leading-relaxed italic text-center opacity-80 line-clamp-6 font-serif">
+                   "{comment.text}"
+                </p>
+             </div>
+
+             {/* Footer Archetype */}
+             <div className="relative z-10 pt-8 flex justify-between items-center opacity-30">
+                <div className="h-px flex-1 bg-current mr-4" />
+                <div className="flex items-center gap-2 text-[10px] font-black tracking-widest">
+                   <Star size={12} fill="currentColor" /> {comment.karma}
+                </div>
+                <div className="h-px flex-1 bg-current ml-4" />
+             </div>
+
+             {/* Holographic Glare Effect */}
+             <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-[1.5s] pointer-events-none" />
         </motion.div>
+        
+        {/* Glow Under Card */}
+        <div className={`absolute -bottom-12 left-1/2 -translate-x-1/2 w-2/3 h-12 blur-3xl opacity-20 transition-colors duration-1000 ${isDark ? "bg-indigo-600" : "bg-amber-400"}`} />
     </motion.div>
   );
 }

@@ -31,7 +31,6 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
       <body className={`${playfair.variable} ${lato.variable} font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Navbar />
           {children}
           <Footer />
         </ThemeProvider>

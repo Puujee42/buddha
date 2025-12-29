@@ -146,7 +146,7 @@ export default function SignUpPage() {
             <div className="space-y-6">
               
               {/* 1. SIGN UP (Golden Button) */}
-              <SignUpButton mode="modal">
+              <SignUpButton mode="redirect">
                 <motion.button 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}

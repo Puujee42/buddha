@@ -8,261 +8,259 @@ import {
   useTransform, 
   AnimatePresence, 
   useSpring, 
+  useMotionValue
 } from "framer-motion";
-import { Play, ArrowRight, Sparkles, Sun } from "lucide-react";
+import { Sparkles, Sun, Moon, ArrowRight, Star, Eye } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "next-themes";
 
-// --- ATMOSPHERE COMPONENTS ---
+// --- SACRED ORNAMENTS ---
 
-const HeavenlyRays = () => (
-  <motion.div 
-    animate={{ rotate: 360 }}
-    transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
-    className="absolute -top-[60%] left-1/2 -translate-x-1/2 w-[180vmax] h-[180vmax] opacity-40 pointer-events-none z-0"
-    style={{
-      background: "conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(245, 158, 11, 0.1) 20deg, transparent 40deg, transparent 60deg, rgba(245, 158, 11, 0.1) 80deg, transparent 100deg, transparent 180deg, rgba(245, 158, 11, 0.05) 220deg, transparent 260deg)"
-    }}
-  />
+const CornerFiligree = ({ isDark }: { isDark: boolean }) => (
+  <div className={`absolute inset-6 pointer-events-none z-20 border-[1px] transition-colors duration-1000 ${isDark ? "border-indigo-500/20" : "border-amber-500/20"}`}>
+    {[
+      "top-0 left-0",
+      "top-0 right-0 rotate-90",
+      "bottom-0 left-0 -rotate-90",
+      "bottom-0 right-0 rotate-180"
+    ].map((pos, i) => (
+      <div key={i} className={`absolute w-16 h-16 ${pos}`}>
+        <svg viewBox="0 0 100 100" fill="none" className={isDark ? "text-indigo-400/40" : "text-amber-500/40"}>
+          <path d="M0 0 L100 0 L100 4 L4 4 L4 100 L0 100 Z" fill="currentColor" />
+          <circle cx="10" cy="10" r="4" fill="currentColor" />
+        </svg>
+      </div>
+    ))}
+  </div>
 );
 
-const GoldenDust = ({ delay }: { delay: number }) => (
-  <motion.div
-    initial={{ y: "110vh", opacity: 0, scale: 0 }}
-    animate={{ 
-      y: "-20vh", 
-      opacity: [0, 0.8, 0],
-      scale: [0, 1.2, 0],
-      x: (Math.random() - 0.5) * 150
-    }}
-    transition={{
-      duration: Math.random() * 20 + 15,
-      repeat: Infinity,
-      ease: "easeInOut",
-      delay: delay,
-    }}
-    className="absolute w-[3px] h-[3px] bg-amber-500 rounded-full blur-[0.5px] pointer-events-none z-[2]"
-    style={{ left: `${Math.random() * 100}%` }}
-  />
-);
-
-const GentleFog = ({ scrollYProgress }: { scrollYProgress: any }) => {
-    const yFog = useTransform(scrollYProgress, [0, 1], ["0%", "-30%"]);
-    return (
-        <motion.div 
-            style={{ y: yFog }}
-            className="absolute inset-0 z-[1] opacity-30 mix-blend-multiply bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-pulse" 
+const SacredDust = ({ isDark }: { isDark: boolean }) => {
+  return (
+    <div className="absolute inset-0 z-[2] pointer-events-none">
+      {[...Array(40)].map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ y: "110vh", opacity: 0 }}
+          animate={{ 
+            y: "-10vh", 
+            opacity: [0, 0.8, 0],
+            x: Math.sin(i) * 200 
+          }}
+          transition={{
+            duration: 10 + (i % 15),
+            repeat: Infinity,
+            delay: i * 0.2,
+          }}
+          className={`absolute w-[1.5px] h-[1.5px] rounded-full ${
+            isDark ? "bg-indigo-300 shadow-[0_0_8px_white]" : "bg-amber-400 shadow-[0_0_8px_orange]"
+          }`}
+          style={{ left: `${(i * 7.7) % 100}%` }}
         />
-    );
+      ))}
+    </div>
+  );
 };
 
 export default function Hero() {
-  const { language, setLanguage, t } = useLanguage();
-  console.log('Current language:', language);
+  const { language, t } = useLanguage();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Mouse Follower Logic
-  const mouseX = useSpring(0, { stiffness: 30, damping: 20 });
-  const mouseY = useSpring(0, { stiffness: 30, damping: 20 });
+
+  // 1. TOP LEVEL HOOKS
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Smooth Springs for Parallax
+  const rotateX = useSpring(useTransform(mouseY, [-400, 400], [5, -5]), { stiffness: 50, damping: 20 });
+  const rotateY = useSpring(useTransform(mouseX, [-400, 400], [-5, 5]), { stiffness: 50, damping: 20 });
+  const mouseGlowX = useSpring(useTransform(mouseX, (v) => v - 400));
+  const mouseGlowY = useSpring(useTransform(mouseY, (v) => v - 400));
+
+  const { scrollYProgress } = useScroll();
+  const opacityFade = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
+  const scalePortal = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
 
   useEffect(() => {
+    setMounted(true);
     const handleMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
+      const { clientX, clientY } = e;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      mouseX.set(clientX - centerX);
+      mouseY.set(clientY - centerY);
     };
     window.addEventListener("mousemove", handleMove);
     return () => window.removeEventListener("mousemove", handleMove);
   }, [mouseX, mouseY]);
 
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  const textY = useTransform(scrollYProgress, [0, 1], [0, 150]); 
-  const opacityFade = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  const isDark = resolvedTheme === "dark";
 
-  // --- CONTENT DICTIONARY (Restored Original "Bright World" text) ---
   const content = t({
     mn: {
-      tag: "Гандантэгчинлэн",
-      pre: "Сэтгэлийн",
-      main: "Амар Амгалан",
-      sub: "Гэрэлт Ертөнц",
-      desc: "Бурханы сургаал, энэрэл нигүүлслийн хүчээр дотоод сэтгэлийн ариусал, жинхэнэ амар амгаланг мэдрээрэй.",
-      btn1: "Ариусал эрэх",
-      btn2: "Танилцах",
-      mantra: "ОМ МАНИ БАДМЭ ХУМ"
+      arcana: "Аркана I",
+      main: isDark ? "ГЭГЭЭН ОД" : "АМАР АМГАЛАН",
+      sub: isDark ? "Celestial Path" : "The Pure Land",
+      desc: isDark 
+        ? "Одот тэнгэрийн доорх нууцад нэвтэрч, хувь тавилангийн хүрдийг эргүүлэгч."
+        : "Бурханы энэрэл нигүүлслээр ариуссан, дотоод сэтгэлийн гэрэлт ертөнц.",
+      btn: isDark ? "Одод унших" : "Ариусал эрэх",
+      mantra: "OM MANI PADME HUM"
     },
     en: {
-      tag: "Gandantegchinlen",
-      pre: "Eternal",
-      
-      main: "Enlightenment",
-      sub: "Pure Land",
-      desc: "Through the compassion of the Buddha, find the purification of the soul and true inner peace in the embrace of wisdom.",
-      btn1: "Seek Peace",
-      btn2: "Learn More",
+      arcana: "Arcana I",
+      main: isDark ? "THE STAR" : "ENLIGHTENMENT",
+      sub: isDark ? "Celestial Path" : "The Pure Land",
+      desc: isDark 
+        ? "A guide through the cosmic void, turning the wheel of eternal destiny."
+        : "A sacred sanctuary for the soul, illuminated by the ancient light of Buddha.",
+      btn: isDark ? "Read Destiny" : "Seek Peace",
       mantra: "OM MANI PADME HUM"
     }
   });
 
+  if (!mounted) return <div className="h-screen w-full bg-[#020617]" />;
+
   return (
     <section 
-      ref={containerRef} 
-      className="relative h-screen w-full overflow-hidden transparent font-serif"
+      ref={containerRef}
+      className={`relative h-screen w-full overflow-hidden transition-colors duration-1000 font-serif flex items-center justify-center ${
+        isDark ? "bg-[#020205]" : "bg-[#FCF9F2]"
+      }`}
     >
-      {/* ================= BACKGROUND LAYERS ================= */}
-      
-      {/* 1. Base Cream Layer */}
-      <div className="absolute inset-0 bg-[#FFFBEB] z-0" />
+      {/* --- TAROT BORDERS & DUST --- */}
+      <CornerFiligree isDark={isDark} />
+      <SacredDust isDark={isDark} />
 
-      {/* 2. THE VIDEO - Styled for Bright Aesthetics */}
-      <div className="absolute inset-0 z-0 opacity-40 ">
-        <video 
-          autoPlay 
-          loop 
-          muted 
-          playsInline 
-          className="w-full h-full object-cover "
-        >
+      {/* --- RITUAL VIDEO PORTAL (Background) --- */}
+      <motion.div 
+        style={{ scale: scalePortal }}
+        className="absolute inset-0 z-0 overflow-hidden"
+      >
+        <div className={`absolute inset-0 z-10 transition-opacity duration-1000 ${
+          isDark 
+          ? "bg-gradient-to-b from-black via-indigo-950/40 to-black" 
+          : "bg-gradient-to-b from-[#FFFBEB]/80 via-transparent to-[#FFFBEB]/80"
+        }`} />
+        <video autoPlay loop muted playsInline className={`w-full h-full object-cover transition-all duration-1000 ${isDark ? "opacity-30 grayscale-[0.5] contrast-[1.2]" : "opacity-40"}`}>
           <source src="/video.mp4" type="video/mp4" />
         </video>
-      </div>
+      </motion.div>
 
-      {/* 3. Central Readability Halo */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(253,251,247,0.95)_0%,rgba(253,251,247,0.6)_40%,transparent_100%)] z-0" />
-
-      {/* 4. Atmospheric Overlays */}
-      <HeavenlyRays />
-      <GentleFog scrollYProgress={scrollYProgress} />
-      <div className="absolute inset-0 z-[2] pointer-events-none">
-        {[...Array(35)].map((_, i) => <GoldenDust key={i} delay={i * 0.3} />)}
-      </div>
-
-      {/* 5. Mouse Interaction */}
-      <motion.div
-        className="fixed top-0 left-0 w-[800px] h-[800px] bg-amber-300/20 blur-[100px] rounded-full pointer-events-none z-[1]"
-        style={{ 
-          x: useTransform(mouseX, (v) => v - 400),
-          y: useTransform(mouseY, (v) => v - 400),
-        }}
-      />
-      
-      {/* ================= LANGUAGE SWITCHER ================= */}
-      
-      {/* ================= MAIN CONTENT ================= */}
+      {/* --- 3D TILTING UI CARD --- */}
       <motion.div 
-        // style={{ y: textY, opacity: opacityFade }}
-        className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6"
+        style={{ rotateX, rotateY, opacity: opacityFade, transformStyle: "preserve-3d" }}
+        className="relative z-30 max-w-5xl w-full flex flex-col items-center text-center px-6"
       >
-        
-        {/* Spinner Icon */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.5 }}
-          className="mb-6"
-        >
-          <div className="p-3 rounded-full bg-amber-50 border border-amber-200 shadow-lg">
-             <Sun size={28} className="text-amber-600 animate-[spin_12s_linear_infinite]" />
-          </div>
-        </motion.div>
-
-        {/* --- TITLE SECTION --- */}
-        <div className="relative mb-8">
-          
-          <motion.h2
-             key={`pre-${language}`}
-             initial={{ opacity: 0, letterSpacing: "1em" }}
-             animate={{ opacity: 1, letterSpacing: "0.5em" }}
-             transition={{ duration: 1.5 }}
-             className="text-[#92400e] font-sans font-bold text-sm md:text-base uppercase tracking-[0.5em] mb-2"
-          >
-            {content.pre}
-          </motion.h2>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-               key={language}
-               initial={{ opacity: 0, scale: 0.9, y: 30, filter: "blur(10px)" }}
-               animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-               exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-               transition={{ duration: 1, ease: "easeOut" }}
-            >
-               {/* Main Title - HIGH CONTRAST DARK AMBER */}
-               <h1 className="text-5xl md:text-8xl lg:text-[7rem] font-serif leading-[1.1] tracking-tight text-[#451a03] drop-shadow-sm">
-                 {content.main}
-               </h1>
-               
-               {/* Subtitle - GOLDEN/ORANGE ACCENT */}
-               <h2 className="text-3xl md:text-5xl font-serif italic text-amber-600/90 font-light mt-1">
-                 {content.sub}
-               </h2>
-            </motion.div>
-          </AnimatePresence>
+        {/* Arcana Vertical Label */}
+        <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden lg:flex flex-col items-center gap-4 opacity-40">
+           <div className={`w-[1px] h-20 ${isDark ? "bg-indigo-400" : "bg-amber-600"}`} />
+           <span className={`uppercase tracking-[0.5em] text-[10px] font-bold [writing-mode:vertical-lr] ${isDark ? "text-indigo-300" : "text-amber-800"}`}>
+             {content.arcana}
+           </span>
         </div>
 
-        {/* --- DESCRIPTION --- */}
-        <motion.p 
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           transition={{ delay: 0.8, duration: 1.2 }}
-           // High readability Dark Brown
-           className="max-w-2xl text-[#5d4037] font-medium text-lg md:text-2xl leading-relaxed text-center mb-12"
-        >
-           {content.desc}
-        </motion.p>
-            
-        {/* --- BUTTONS --- */}
+        {/* Sacred Icon Portal */}
         <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            className="flex flex-col md:flex-row gap-6 items-center"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", duration: 1.5 }}
+          className="mb-10 relative"
         >
+          <div className={`w-24 h-24 rounded-full border-2 flex items-center justify-center relative z-10 transition-all duration-700 shadow-[0_0_30px_rgba(0,0,0,0.3)] ${
+              isDark ? "bg-indigo-900/40 border-indigo-400 text-amber-200" : "bg-white border-amber-300 text-amber-600"
+          }`}>
+             {isDark ? <Moon size={40} fill="currentColor" /> : <Sun size={40} className="animate-[spin_20s_linear_infinite]" />}
+          </div>
+          {/* Pulsing Halo */}
+          <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${isDark ? "bg-indigo-400" : "bg-amber-400"}`} />
+        </motion.div>
+
+        {/* Title Section */}
+        <div className="space-y-4 mb-12">
+           <motion.div 
+             initial={{ letterSpacing: "0.2em", opacity: 0 }}
+             animate={{ letterSpacing: "0.8em", opacity: 1 }}
+             className={`text-[10px] font-black uppercase tracking-[0.8em] ${isDark ? "text-indigo-400" : "text-amber-600"}`}
+           >
+             The Major Arcana
+           </motion.div>
+           
+           <h1 className={`text-6xl md:text-9xl font-serif font-black tracking-tighter transition-colors drop-shadow-2xl ${
+               isDark ? "text-white" : "text-[#451a03]"
+           }`}>
+             {content.main}
+           </h1>
+           
+           <div className="flex items-center justify-center gap-4">
+              <div className={`h-[1px] w-12 ${isDark ? "bg-indigo-500/30" : "bg-amber-900/10"}`} />
+              <h2 className={`text-2xl md:text-4xl font-serif italic font-light ${isDark ? "text-amber-200/80" : "text-amber-700/80"}`}>
+                {content.sub}
+              </h2>
+              <div className={`h-[1px] w-12 ${isDark ? "bg-indigo-500/30" : "bg-amber-900/10"}`} />
+           </div>
+        </div>
+
+        {/* Description */}
+        <p className={`max-w-xl text-lg md:text-xl font-medium leading-relaxed mb-12 transition-colors ${
+            isDark ? "text-indigo-100/70" : "text-amber-950/70"
+        }`}>
+           {content.desc}
+        </p>
+
+        {/* Tarot Action Buttons */}
+        <div className="flex flex-col md:flex-row gap-8 items-center">
             <Link href="/services">
                 <motion.button 
-                   whileHover={{ scale: 1.05 }}
-                   whileTap={{ scale: 0.95 }}
-                   className="group relative px-10 py-4 bg-gradient-to-r from-amber-600 to-[#b45309] rounded-lg text-white font-sans font-bold tracking-widest uppercase text-sm shadow-[0_10px_20px_rgba(245,158,11,0.2)] hover:shadow-[0_15px_30px_rgba(245,158,11,0.4)] transition-all overflow-hidden"
+                   whileHover={{ scale: 1.05, boxShadow: isDark ? "0 0 30px rgba(99, 102, 241, 0.4)" : "0 0 30px rgba(245, 158, 11, 0.3)" }}
+                   className={`relative px-12 py-5 rounded-full font-black uppercase tracking-[0.2em] text-xs transition-all overflow-hidden ${
+                       isDark ? "bg-indigo-600 text-white" : "bg-amber-600 text-white"
+                   }`}
                 >
                    <span className="relative z-10 flex items-center gap-3">
-                     {content.btn1} <Sparkles size={16} />
+                     {content.btn} <Eye size={16} />
                    </span>
-                   {/* Shine */}
-                   <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 group-hover:animate-shine" />
+                   {/* Shimmer */}
+                   <motion.div 
+                    animate={{ x: ["-100%", "200%"] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" 
+                   />
                 </motion.button>
             </Link>
 
             <Link href="/about">
-                <motion.button 
-                   whileHover={{ scale: 1.05 }}
-                   whileTap={{ scale: 0.95 }}
-                   className="px-10 py-4 rounded-lg border-2 border-amber-900/10 text-[#78350F] font-bold tracking-widest uppercase text-sm hover:bg-amber-50 hover:border-amber-900/20 transition-all flex items-center gap-2"
-                >
-                   {content.btn2} <ArrowRight size={16} />
-                </motion.button>
+               <motion.button className={`flex items-center gap-3 font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:gap-5 ${
+                 isDark ? "text-indigo-300" : "text-amber-900"
+               }`}>
+                  The Path <ArrowRight size={14} />
+               </motion.button>
             </Link>
-        </motion.div>
+        </div>
       </motion.div>
 
-      {/* ================= FOOTER MANTRA ================= */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 2 }}
-        className="absolute bottom-10 left-0 right-0 z-20 text-center pointer-events-none"
-      >
-           <p className="text-[10px] md:text-xs font-bold tracking-[0.6em] text-[#78350F]/50 uppercase">
+      {/* --- MOUSE GLOW (Holographic Light Leak) --- */}
+      <motion.div
+        className={`fixed top-0 left-0 w-[600px] h-[600px] blur-[150px] rounded-full pointer-events-none z-[10] opacity-40 mix-blend-screen transition-colors duration-1000 ${
+            isDark ? "bg-indigo-500/20" : "bg-amber-300/30"
+        }`}
+        style={{ 
+          x: mouseGlowX,
+          y: mouseGlowY,
+        }}
+      />
+
+      {/* --- RITUAL MANTRA FOOTER --- */}
+      <div className="absolute bottom-12 left-0 right-0 z-40 text-center pointer-events-none">
+           <motion.div 
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className={`text-[9px] font-black tracking-[1em] uppercase transition-colors ${
+               isDark ? "text-indigo-400" : "text-amber-900/60"
+           }`}>
              {content.mantra}
-           </p>
-      </motion.div>
-
-      <style jsx global>{`
-        @keyframes shine {
-          0% { left: -100%; }
-          100% { left: 200%; }
-        }
-        .animate-shine {
-          animation: shine 0.8s ease-in-out;
-        }
-      `}</style>
+           </motion.div>
+      </div>
     </section>
   );
 }

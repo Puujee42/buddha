@@ -1,29 +1,36 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   motion,
   useScroll,
   useMotionValue,
-  useMotionTemplate
+  useMotionTemplate,
+  useSpring,
+  useTransform,
+  AnimatePresence
 } from "framer-motion";
 import {
   Heart,
   Globe,
   BookOpen,
   Sun,
+  Moon,
   Sparkles,
   HandHeart,
   ArrowDown,
-  Infinity as InfinityIcon
+  Infinity as InfinityIcon,
+  Star,
+  Eye
 } from "lucide-react";
 import GoldenNirvanaFooter from "../components/Footer";
 import OverlayNavbar from "../components/Navbar";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "next-themes";
 
-// --- CUSTOM SVG: The Endless Knot (Background Geometry) ---
-const EndlessKnot = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className} fill="none" stroke="currentColor">
+// --- CUSTOM SVG: The Endless Knot ---
+const EndlessKnot = ({ isNight }: { isNight: boolean }) => (
+  <svg viewBox="0 0 100 100" className={`w-full h-full transition-colors duration-1000 ${isNight ? "text-indigo-500/20" : "text-amber-500/10"}`} fill="none" stroke="currentColor">
      <path d="M30 30 L70 30 L70 70 L30 70 Z" strokeWidth="0.5" className="opacity-50" />
      <path d="M30 30 Q50 10 70 30 T70 70 Q50 90 30 70 T30 30" strokeWidth="1" />
      <path d="M20 50 L80 50" strokeWidth="0.5" strokeDasharray="2 2" />
@@ -33,61 +40,58 @@ const EndlessKnot = ({ className }: { className?: string }) => (
 );
 
 export default function MissionPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
+  
+  // Hydration safety
+  useEffect(() => setMounted(true), []);
 
-  // Mouse Glow Effect
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  // Mouse Physics
+  const mouseX = useSpring(0, { stiffness: 40, damping: 20 });
+  const mouseY = useSpring(0, { stiffness: 40, damping: 20 });
 
-  function handleMouseMove(e: React.MouseEvent) {
-    const { clientX, clientY } = e;
-    mouseX.set(clientX);
-    mouseY.set(clientY);
-  }
+  const isNight = mounted && resolvedTheme === "dark";
+  const glowColor = isNight ? 'rgba(79, 70, 229, 0.15)' : 'rgba(251, 191, 36, 0.2)';
+  const lightBackground = useMotionTemplate`radial-gradient(800px circle at ${mouseX}px ${mouseY}px, ${glowColor}, transparent 80%)`;
 
-  const glowBg = useMotionTemplate`radial-gradient(
-    800px circle at ${mouseX}px ${mouseY}px, 
-    rgba(253, 230, 138, 0.4),
-    transparent 80%
-  )`;
+  const theme = isNight ? {
+    bgMain: "bg-[#020205]",
+    bgSec: "bg-[#05051a]",
+    textMain: "text-indigo-50",
+    textSub: "text-indigo-400",
+    accent: "text-amber-400",
+    border: "border-indigo-500/20",
+    cardBg: "bg-black/40",
+    icon: <Moon size={24} fill="currentColor" className="animate-pulse" />
+  } : {
+    bgMain: "bg-[#FFFBEB]",
+    bgSec: "bg-[#FEF3C7]/50",
+    textMain: "text-[#451a03]",
+    textSub: "text-amber-600",
+    accent: "text-[#F59E0B]",
+    border: "border-amber-200",
+    cardBg: "bg-white",
+    icon: <Sun size={24} className="animate-spin-slow" />
+  };
 
   const content = {
-    heroTag: t({ mn: "Цаг хугацаа үгүй, орон зай үгүй", en: "No Time, No Space" }),
-    heroHeadline1: t({ mn: "Цаг хугацаа, орон зайг", en: "Regardless of" }),
-    heroHeadline2: t({ mn: "үл хамааран", en: "Time and Space" }),
-    heroSubtitle: t({ mn: "Оюун санааны амар амгаланг танд түгээнэ.", en: "Spreading peace of mind to you." }),
-    heroSubEng: t({ mn: "Spreading peace of mind regardless of time and space", en: "Spreading peace of mind regardless of time and space" }),
-    missionTag: t({ mn: "Бидний Эрхэм Зорилго", en: "Our Mission" }),
-    missionTitle: t({ mn: "Сэтгэл бүрд Амар амгалангийн үрийг тарих.", en: "Planting Seeds of Peace in every heart." }),
-    missionDesc: t({
-      mn: "\"Бидний эрхэм зорилго бол хүн бүрийн сэтгэлд амар амгалангийн үрийг тарьж, амьдралын аливаа асуултад нь Бурхны шашны гүн ухаанаар дамжуулан хариулт өгөхөд оршино.\"",
-      en: "\" We aim to provide the opportunity to meet with masters online face-to-face, get answers to the questions you carry in your heart, and receive spiritual services directly via video call. Using technological advancements, we bring mental peace right to your side. .\""
-    }),
-    pillar1: {
-      title: t({ mn: "Гэрээсээ холбогд", en: "Contact from your home" }),
-      desc: t({ mn: " Очиж дугаарлах шаардлагагүй, багштайгаа видео дуудлагаар шууд уулз.", en: "No need to go and take a number, meet directly with your teacher via video call." })
-    },
-    pillar2: {
-      title: t({ mn: "Асуултдаа хариулт авах", en: "Guidance" }),
-      desc: t({ mn: "Сэтгэлдээ тээж явсан асуултаа асууж, мэргэжлийн зөвлөгөө ав..", en: "Ask the questions you have carried in your heart and get professional advice." })
-    },
-    pillar3: {
-      title: t({ mn: "Засал ном", en: "Service  " }),
-      desc: t({ mn: "Уламжлалт зан үйл, засал номыг байгаа газраасаа авах боломж.", en: "The opportunity to receive traditional rituals and remedies at your location." })
-    },
-    impactTitle: t({ mn: "Дижитал Сангха", en: "Digital Sangha" }),
-    impactSubtitle: t({ mn: "\"Гандантэгчинлэн хийд таны гарт\"", en: "\"Gandantegchinlen Monastery in your hand\"" }),
+    heroTag: t({ mn: "Цаг хугацаа үгүй, орон зай үгүй", en: "Beyond Time and Space" }),
+    heroHeadline1: t({ mn: "Цаг хугацаа, орон зайг", en: "Transcending" }),
+    heroHeadline2: t({ mn: "үл хамааран", en: "Infinite Realms" }),
+    heroSubtitle: t({ mn: "Оюун санааны амар амгаланг танд түгээнэ.", en: "Distributing the light of inner peace." }),
+    missionTag: t({ mn: "Бидний Эрхэм Зорилго", en: "Our Sacred Mission" }),
+    missionTitle: t({ mn: "Амар амгалангийн үрийг тарих", en: "Planting Seeds of Peace" }),
     stats: [
-      { number: "24/7", label: t({ mn: "Онлайн Зөвлөгөө", en: "Online Consultation" }), icon: <Globe /> },
-      { number: "100+", label: t({ mn: "Ном Судар", en: "Sutras & Books" }), icon: <BookOpen /> },
-      { number: "50+", label: t({ mn: "Лам Хувраг", en: "Venerable Monks" }), icon: <Sun /> },
-      { number: "∞", label: t({ mn: "Амар Амгалан", en: "Infinite Peace" }), icon: <Heart /> }
+      { number: "24/7", label: t({ mn: "Онлайн Зөвлөгөө", en: "Eternal Guide" }), icon: <Star /> },
+      { number: "108+", label: t({ mn: "Ном Судар", en: "Ancient Arcanas" }), icon: <BookOpen /> },
+      { number: "50+", label: t({ mn: "Лам Хувраг", en: "Venerable Souls" }), icon: <Eye /> },
+      { number: "∞", label: t({ mn: "Амар Амгалан", en: "Infinite Peace" }), icon: <InfinityIcon /> }
     ],
-    quote: t({ mn: "\"Амар амгалан гаднаас ирдэггүй, дотроосоо ундардаг.\"", en: "\"Peace does not come from outside, it wells up from within.\"" }),
-    monastery: t({ mn: "Гандантэгчинлэн хийд", en: "Gandantegchinlen Monastery" })
   };
+
+  if (!mounted) return <div className="min-h-screen bg-[#FFFBEB]" />;
 
   return (
     <>
@@ -95,213 +99,177 @@ export default function MissionPage() {
       
       <main 
         ref={containerRef}
-        onMouseMove={handleMouseMove}
-        className="relative w-full min-h-screen bg-[#FFFBEB] text-[#451a03] font-serif overflow-hidden selection:bg-[#F59E0B] selection:text-white"
+        onMouseMove={(e) => { mouseX.set(e.clientX); mouseY.set(e.clientY); }}
+        className={`relative w-full min-h-screen transition-colors duration-1000 font-ethereal overflow-hidden ${theme.bgMain} ${theme.textMain}`}
       >
         {/* ATMOSPHERE */}
-        <motion.div className="fixed inset-0 pointer-events-none z-0" style={{ background: glowBg }} />
-        <div className="fixed inset-0 pointer-events-none opacity-[0.4] z-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] mix-blend-multiply" />
+        <motion.div className="fixed inset-0 pointer-events-none z-10 opacity-50 mix-blend-screen blur-3xl" style={{ background: lightBackground }} />
+        <div className="fixed inset-0 pointer-events-none opacity-[0.2] z-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay" />
 
 
         {/* --- SECTION 1: THE GREAT VOW (Hero) --- */}
-        <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 pt-20">
+        <section className="relative min-h-screen flex flex-col items-center justify-center px-6">
            
-           {/* Floating Background Mandala */}
            <motion.div 
-             animate={{ rotate: 360 }}
-             transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
-             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] text-[#F59E0B]/10 pointer-events-none"
+             animate={{ rotate: isNight ? -360 : 360 }}
+             transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
+             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vh] h-[100vh] pointer-events-none"
            >
-              <EndlessKnot className="w-full h-full" />
+              <EndlessKnot isNight={isNight} />
            </motion.div>
 
-           <div className="relative z-10 text-center max-w-5xl space-y-10">
-              
-              {/* Badge */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1 }}
-                className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-[#D97706]/20 bg-[#FFFBEB]/50 backdrop-blur-sm"
-              >
-                 <InfinityIcon className="w-4 h-4 text-[#D97706]" />
-                 <span className="text-xs font-sans font-bold tracking-[0.2em] uppercase text-[#92400E]">
+           <div className="relative z-10 text-center max-w-6xl space-y-12">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`inline-flex items-center gap-3 px-6 py-2 rounded-full border backdrop-blur-md transition-colors ${theme.border}`}>
+                 <div className={isNight ? "text-indigo-400" : "text-amber-600"}>
+                   <InfinityIcon size={14} />
+                 </div>
+                 <span className="text-[10px] font-black tracking-[0.4em] uppercase opacity-70">
                     {content.heroTag}
                  </span>
               </motion.div>
 
-              {/* Main Headline */}
-              <motion.h1 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1.2, delay: 0.2 }}
-                className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.1] text-[#451a03]"
-              >
+              <h1 className="text-6xl md:text-9xl font-celestial font-black leading-none tracking-tighter">
                 {content.heroHeadline1} <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D97706] to-[#F59E0B]">
+                <span className="italic text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-orange-600">
                    {content.heroHeadline2}
                 </span>
-              </motion.h1>
+              </h1>
 
-              {/* Sub Headline */}
-              <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.2, delay: 0.4 }}
-                className="text-xl md:text-3xl text-[#78350F] font-light max-w-3xl mx-auto leading-relaxed"
-              >
+              <p className={`text-2xl md:text-4xl font-serif font-light max-w-3xl mx-auto leading-relaxed transition-colors ${isNight ? 'text-indigo-200/60' : 'text-amber-900/60'}`}>
                 {content.heroSubtitle}
-              </motion.p>
-              
-              {/* English Translation (Subtle) */}
-              <motion.p 
-                 initial={{ opacity: 0 }}
-                 animate={{ opacity: 0.6 }}
-                 transition={{ delay: 1 }}
-                 className="text-sm font-sans uppercase tracking-widest text-[#92400E]"
-              >
-                 {content.heroSubEng}
-              </motion.p>
+              </p>
            </div>
 
-           <motion.div 
-             initial={{ opacity: 0 }} 
-             animate={{ opacity: 1 }} 
-             transition={{ delay: 1, duration: 1 }}
-             className="absolute bottom-12 animate-bounce text-[#D97706]/50"
-           >
-             <ArrowDown size={32} />
+           <motion.div animate={{ y: [0, 15, 0] }} transition={{ repeat: Infinity, duration: 2 }} className={`absolute bottom-12 transition-colors ${theme.accent}`}>
+             <ArrowDown size={32} strokeWidth={1} />
            </motion.div>
         </section>
 
 
-        {/* --- SECTION 2: THE SACRED GOAL (Our Mission) --- */}
-        <section className="relative py-32 bg-[#FEF3C7]/50">
-           <div className="container mx-auto px-6">
-              
-              <div className="flex flex-col md:flex-row gap-16 items-center">
-                 {/* Left: Manifesto Text */}
-                 <div className="w-full md:w-1/2 space-y-8">
-                     <h2 className="text-xs font-sans font-bold uppercase tracking-[0.3em] text-[#D97706]">
-                        {content.missionTag}
+        {/* --- SECTION 2: THE SACRED GOAL (Artifact Rows) --- */}
+        <section className={`relative py-48 transition-colors duration-1000 ${theme.bgSec}`}>
+           <div className="container mx-auto px-6 lg:px-24">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+                 <div className="space-y-12">
+                     <span className={`text-[10px] font-black uppercase tracking-[0.5em] flex items-center gap-3 ${theme.textSub}`}>
+                        {theme.icon} {content.missionTag}
+                     </span>
+                     <h2 className="text-5xl md:text-7xl font-celestial font-bold leading-tight">
+                        {content.missionTitle}
                      </h2>
-                     <h3 className="text-4xl md:text-5xl font-bold text-[#451a03] leading-tight">
-                        {content.missionTitle.split(t({ mn: "Амар", en: "Peace" }))[0]} <br />
-                        <span className="italic text-[#D97706]">{t({ mn: "Амар амгалангийн үрийг", en: "Seeds of Peace" })}</span> {t({ mn: "тарих", en: "in every heart" })}.
-                     </h3>
-                     <div className="w-20 h-1 bg-[#F59E0B]" />
-                     <p className="text-lg md:text-xl text-[#78350F] leading-relaxed font-light">
-                        {content.missionDesc}
+                     <div className={`w-32 h-[1px] bg-linear-to-r from-current to-transparent ${theme.accent}`} />
+                     <p className={`text-xl md:text-2xl leading-relaxed font-medium transition-colors italic ${isNight ? 'text-indigo-100/70' : 'text-amber-950/70'}`}>
+                        {t({
+                          mn: "Бид технологийн дэвшлийг ашиглан оюун санааны амар амгаланг таны дэргэд авчирч байна.",
+                          en: "We breathe life into ancient lineage through digital ethers, bringing the stillness of the monastery directly to your side."
+                        })}
                      </p>
                  </div>
 
-                 {/* Right: The 3 Pillars Cards */}
-                 <div className="w-full md:w-1/2 grid grid-cols-1 gap-6">
-                     
-                     <MissionRow 
-                        icon={<Sparkles className="w-6 h-6" />}
-                        title={content.pillar1.title}
-                        desc={content.pillar1.desc}
+                 <div className="grid grid-cols-1 gap-8">
+                     <MissionArtifact 
+                        icon={<Sparkles />}
+                        title={t({ mn: "Гэрээсээ холбогд", en: "Digital Presence" })}
+                        desc={t({ mn: "Видео дуудлагаар багштайгаа шууд уулзах боломж.", en: "Face-to-face sacred connection via the digital portal." })}
+                        isNight={isNight}
+                        theme={theme}
                      />
-                     <MissionRow 
-                        icon={<BookOpen className="w-6 h-6" />}
-                        title={content.pillar2.title}
-                        desc={content.pillar2.desc}
-                     />
-                     <MissionRow 
-                        icon={<Globe className="w-6 h-6" />}
-                        title={content.pillar3.title}
-                        desc={content.pillar3.desc}
+                     <MissionArtifact 
+                        icon={<Eye />}
+                        title={t({ mn: "Засал ном", en: "Sacred Rituals" })}
+                        desc={t({ mn: "Уламжлалт зан үйлийг байгаа газраасаа авах.", en: "Receive traditional remedies at your sanctuary of choice." })}
+                        isNight={isNight}
+                        theme={theme}
                      />
                  </div>
               </div>
-
            </div>
         </section>
 
 
-        {/* --- SECTION 3: THE RIPPLE EFFECT (Impact) --- */}
-        <section className="relative py-40 overflow-hidden">
-           {/* Visual Decoration */}
-           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] opacity-10 pointer-events-none">
-              <img src="https://www.svgrepo.com/show/9658/lotus-flower.svg" alt="Lotus" className="w-full h-full animate-spin-slow" />
+        {/* --- SECTION 3: THE IMPACT ORBS --- */}
+        <section className="relative py-48 overflow-hidden">
+           <div className="absolute right-[-10%] top-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-10 pointer-events-none">
+              <EndlessKnot isNight={isNight} />
            </div>
            
-           <div className="container mx-auto px-6 relative z-10">
-              <div className="text-center max-w-3xl mx-auto mb-20">
-                 <h2 className="text-4xl md:text-5xl font-bold text-[#451a03] mb-6">
-                    {content.impactTitle}
+           <div className="container mx-auto px-6 relative z-10 text-center">
+              <header className="max-w-4xl mx-auto mb-32">
+                 <h2 className="text-5xl md:text-8xl font-celestial font-bold mb-8">
+                    The Global Sangha
                  </h2>
-                 <p className="text-xl text-[#78350F] italic">
-                    {content.impactSubtitle}
+                 <p className={`text-2xl font-serif italic ${isNight ? 'text-indigo-400' : 'text-amber-600'}`}>
+                    "Nirvana at your fingertips"
                  </p>
-              </div>
+              </header>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
                  {content.stats.map((stat, idx) => (
-                   <StatCard key={idx} number={stat.number} label={stat.label} icon={stat.icon} />
+                   <StatOrb key={idx} {...stat} isNight={isNight} theme={theme} delay={idx * 0.1} />
                  ))}
               </div>
            </div>
         </section>
 
 
-        {/* --- SECTION 4: FOOTER QUOTE --- */}
-        <section className="relative py-32 bg-[#451a03] text-[#FDE68A]">
-           <div className="container mx-auto px-6 text-center max-w-4xl">
-              <HandHeart className="w-16 h-16 mx-auto mb-8 text-[#F59E0B]" />
+        {/* --- SECTION 4: THE VOID QUOTE --- */}
+        <section className={`relative py-40 transition-colors duration-1000 ${isNight ? "bg-black" : "bg-[#451a03]"} text-[#FDE68A]`}>
+           <div className="container mx-auto px-6 text-center max-w-5xl">
+              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 4, repeat: Infinity }} className="mb-12">
+                 <HandHeart className="w-16 h-16 mx-auto text-[#F59E0B]" />
+              </motion.div>
               
-              <div className="space-y-8 text-xl md:text-2xl font-light leading-relaxed opacity-90">
-                 <p>
-                    {content.quote}
-                 </p>
-              </div>
+              <p className="text-3xl md:text-5xl font-serif font-light leading-snug drop-shadow-2xl italic">
+                 {language === 'mn' ? "\"Амар амгалан гаднаас ирдэггүй, дотроосоо ундардаг.\"" : "\"Peace is not found in the world, but within the observer.\""}
+              </p>
 
-              <div className="mt-16 pt-8 border-t border-[#FDE68A]/20">
-                 <span className="font-sans text-xs uppercase tracking-[0.4em] text-[#F59E0B]">
-                    {content.monastery}
+              <div className={`mt-20 pt-10 border-t ${isNight ? 'border-indigo-500/20' : 'border-white/10'}`}>
+                 <span className="font-celestial text-xs uppercase tracking-[0.6em] text-amber-500 opacity-60">
+                    Gandantegchinlen Archives
                  </span>
               </div>
            </div>
         </section>
 
       </main>
-      <GoldenNirvanaFooter />
     </>
   );
 }
 
-// --- SUB-COMPONENTS ---
+// --- ARTISTIC SUB-COMPONENTS ---
 
-function MissionRow({ icon, title, desc }: any) {
+function MissionArtifact({ icon, title, desc, isNight, theme }: any) {
    return (
       <motion.div 
-        initial={{ opacity: 0, x: 20 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
-        className="flex items-center gap-6 p-6 rounded-2xl bg-white border border-[#FDE68A] shadow-sm hover:shadow-md transition-all"
+        whileHover={{ scale: 1.02, x: 10 }}
+        className={`flex items-center gap-8 p-10 rounded-sm border-2 transition-all duration-700 ${theme.cardBg} ${theme.border}`}
       >
-         <div className="w-12 h-12 rounded-full bg-[#FFFBEB] flex items-center justify-center text-[#D97706] shrink-0">
-            {icon}
+         <div className={`w-16 h-16 rounded-full border flex items-center justify-center transition-colors duration-1000 ${isNight ? "border-indigo-400 bg-indigo-950 text-indigo-300" : "border-amber-300 bg-amber-50 text-amber-600"}`}>
+            {React.cloneElement(icon, { size: 28 })}
          </div>
          <div>
-            <h4 className="text-xl font-bold text-[#451a03] font-serif">{title}</h4>
-            <p className="text-sm text-[#78350F] font-sans opacity-80">{desc}</p>
+            <h4 className="text-3xl font-celestial font-bold mb-2 tracking-tight">{title}</h4>
+            <p className={`text-base font-medium opacity-60`}>{desc}</p>
          </div>
       </motion.div>
    )
 }
 
-function StatCard({ number, label, icon }: any) {
+function StatOrb({ number, label, icon, theme, delay, isNight }: any) {
    return (
       <motion.div 
-        whileHover={{ y: -5 }}
-        className="flex flex-col items-center justify-center p-10 bg-[#FFFBEB] rounded-[2rem] border border-[#FDE68A] shadow-lg text-center"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay, duration: 1 }}
+        whileHover={{ y: -15 }}
+        className={`flex flex-col items-center justify-center p-14 rounded-[3rem] border-2 shadow-2xl transition-all duration-1000 ${theme.cardBg} ${theme.border}`}
       >
-         <div className="text-[#D97706] mb-4 opacity-80">{icon}</div>
-         <span className="text-4xl font-bold text-[#451a03] mb-2">{number}</span>
-         <span className="text-xs font-sans uppercase tracking-widest text-[#92400E]">{label}</span>
+         <div className={`${isNight ? 'text-indigo-400' : 'text-amber-500'} mb-6`}>{React.cloneElement(icon, { size: 40 })}</div>
+         <span className="text-5xl font-celestial font-black mb-4">{number}</span>
+         <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">{label}</span>
+         
+         {/* Glass Glare */}
+         <div className="absolute inset-0 bg-linear-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-[3rem]" />
       </motion.div>
    )
 }
-
