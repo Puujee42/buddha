@@ -29,6 +29,7 @@ export interface Monk {
     en: string;
   };
   image: string;
+  video?: string;
   specialties: string[]; // e.g., ["Astrology", "Meditation"]
   bio: {
     mn: string;

@@ -192,7 +192,7 @@ function DivineCard({ monk, index, language, btnText }: { monk: Monk, index: num
   
   const floatDuration = 6 + (index % 3);
 
-  // --- STYLE MAPPING ---
+  // --- STYLE MAPPING --- 
   const theme = isNight ? {
       frame: <SilverDiademFrame />,
       cardBg: "bg-slate-900/80 border-indigo-500/30",
@@ -225,7 +225,7 @@ function DivineCard({ monk, index, language, btnText }: { monk: Monk, index: num
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.8, delay: index * 0.1 }}
-      className="relative group h-[580px] w-full cursor-pointer z-10"
+      className="relative group h-[580px] shadow-2xl w-full cursor-pointer z-10"
       style={{ perspective: 1000 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -236,7 +236,7 @@ function DivineCard({ monk, index, language, btnText }: { monk: Monk, index: num
            animate={{ y: [-10, 10, -10] }}
            transition={{ duration: floatDuration, repeat: Infinity, ease: "easeInOut" }}
            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-           className="relative h-full w-full"
+           className="relative h-full shadow-2xl w-full"
         >
            
            {/* A. HALO BACKDROP */}

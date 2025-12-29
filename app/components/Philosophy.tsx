@@ -1,239 +1,216 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
-import { 
-  motion, 
-  useScroll, 
-  useTransform, 
-  useSpring,
-  useMotionValue 
-} from "framer-motion";
-import { History, Crown, Brush, Sun, Cloud, Sparkles, Scroll, ArrowRight } from "lucide-react"; 
-import { useLanguage } from "../contexts/LanguageContext"; 
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { History, Crown, Brush, Sun, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
-// --- HEAVENLY DECORATIONS ---
+// --- ATMOSPHERICS ---
 
-// 1. Rotating Mandala (Massive Background)
 const SacredMandala = () => (
-  <motion.div 
+  <motion.div
     animate={{ rotate: 360 }}
-    transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
-    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vh] h-[150vh] opacity-[0.07] pointer-events-none z-0"
+    transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
+    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140vh] h-[140vh] opacity-[0.05] pointer-events-none z-0"
   >
     <svg viewBox="0 0 100 100" className="w-full h-full text-amber-600 fill-current">
-        <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.2" strokeDasharray="2 1" />
-        <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="0.5" />
-        <path d="M50 0 L50 100 M0 50 L100 50 M15 15 L85 85 M85 15 L15 85" stroke="currentColor" strokeWidth="0.1" />
+      <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1 1" />
+      <path d="M50 0 L55 45 L100 50 L55 55 L50 100 L45 55 L0 50 L45 45 Z" strokeWidth="0.05" />
     </svg>
   </motion.div>
 );
 
-// 2. Parallax Clouds
-const CloudLayer = () => (
-  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-40 mix-blend-multiply animate-pulse pointer-events-none z-[1]" />
-);
-
-// 3. Golden Dust Particles
 const TimeDust = () => (
   <div className="absolute inset-0 pointer-events-none overflow-hidden z-[2]">
-    {[...Array(20)].map((_, i) => (
+    {[...Array(15)].map((_, i) => (
       <motion.div
         key={i}
-        initial={{ y: "110vh", opacity: 0 }}
-        animate={{ 
-          y: "-10vh", 
-          opacity: [0, 0.5, 0],
-          x: Math.random() * 100 - 50
-        }}
-        transition={{
-          duration: 15 + Math.random() * 10,
-          repeat: Infinity,
-          delay: i * 0.5,
-          ease: "linear"
-        }}
-        className="absolute bottom-0 w-1 h-1 bg-amber-400 rounded-full blur-[1px] shadow-[0_0_8px_#f59e0b]"
-        style={{ left: `${Math.random() * 100}%` }}
+        initial={{ y: "100%", opacity: 0 }}
+        animate={{ y: "-10%", opacity: [0, 0.4, 0] }}
+        transition={{ duration: 10 + (i % 10), repeat: Infinity, delay: i * 0.7 }}
+        className="absolute w-1 h-1 bg-amber-400 rounded-full blur-[1px]"
+        style={{ left: `${(i * 7) % 100}%` }}
       />
     ))}
   </div>
 );
 
-export default function HorizontalHeritageSection() {
+export default function ManualHeritageSection() {
   const { t, language } = useLanguage();
-  
-  // Ref for the long scrolling container
-  const targetRef = useRef<HTMLDivElement>(null);
-  
-  // Tracks how far down we've scrolled in this section (0 to 1)
-  const { scrollYProgress } = useScroll({ 
-    target: targetRef,
-  });
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Maps vertical scroll to horizontal movement
-  // We move from 0% (start) to -75% (end) to show all cards
-  const x = useTransform(scrollYProgress, [0, 1], ["2%", "-75%"]);
-  
-  // Parallax Text fades
-  const opacityHeader = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
-
-  // --- DATA ---
   const eras = [
-    {
-      id: "intro",
-      type: "header",
-      content: {
-          title: t({ mn: "Түүхэн Замнал", en: "Sacred Timeline" }),
-          sub: t({ mn: "Гурван Цагийн Хэлхээ", en: "Chronicle of Eternity" }),
-          desc: t({ mn: "Монголын бурхны шашны дэлгэрэлтийн түүхэн замнал.", en: "Journey through the golden history of Dharma in Mongolia." })
-      }
-    },
     {
       id: "ancient",
       icon: <History />,
       year: "II BC - IX AD",
-      image: "/tenzin.png", 
+      image: "/tenzin.png",
       bichig: "ᠡᠷᠲᠡᠨ ᠦ",
-      title: t({ mn: "Эртний Дэлгэрэлт", en: "The First Light" }),
-      desc: t({ mn: "Хүннү гүрнээс эхлэн Уйгур хүртэлх Төв Азийн нүүдэлчдийн сэтгэлгээнд Бурхны шашин анхлан соёолж, торгоны замаар дамжин ирсэн үе.", en: "From the Xiongnu to the Uyghur Khaganates, the seeds of Dharma were first sown in the nomadic soul along the Silk Road." })
+      title: t({ mn: "Эртний Дэлгэрэлт", en: "Ancient Roots" }),
+      desc: t({ mn: "Торгоны замаар дамжин ирсэн анхны гэгээрлийн үр.", en: "The first seeds of enlightenment arriving via the Silk Road." })
     },
     {
       id: "middle",
       icon: <Crown />,
       year: "XIII - XIV",
-      image: "/bell.png", 
+      image: "/bell.png",
       bichig: "ᠳᠤᠮᠳᠠᠳᠤ",
-      title: t({ mn: "Хаадын Дэлгэрэлт", en: "Royal Patronage" }),
-      desc: t({ mn: "Их Монгол гүрний үед Бурхны шашин төрийн бодлогын хэмжээнд хүрч, Хубилай хаан ба Пагва лам нарын 'Багш-Шийтгүүлэгч' ёс тогтжээ.", en: "Under the Great Khans, Buddhism became the spiritual pillar of the empire. The bond between Kublai Khan and Pagpa Lama unified state and religion." })
+      title: t({ mn: "Хаадын Дэлгэрэлт", en: "Imperial Dharma" }),
+      desc: t({ mn: "Их Монгол гүрний төрийн бодлого дахь бурхны шашин.", en: "Buddhism as the spiritual foundation of the Great Mongol Empire." })
     },
     {
-      id: "late",
+      id: "renaissance",
       icon: <Brush />,
-      year: "XVI - XXI",
-      image: "/temple.png", 
-      bichig: "ᠬᠣᠵᠢᠭᠤ",
-      title: t({ mn: "Соёлын Мандал", en: "Cultural Golden Age" }),
-      desc: t({ mn: "Өндөр Гэгээн Занабазарын ур ухаанаар бурхны шашин монгол хүний сэтгэл зүй, урлаг соёлд гүн бат шингэсэн дахин сэргэлтийн үе.", en: "The era of Undur Gegeen Zanabazar. A renaissance where Buddhism deeply entwined with Mongolian art, philosophy, and identity." })
-    },
+      year: "XVI - XIX",
+      image: "/temple.png",
+      bichig: "ᠰᠡᠷᠭᠦᠭᠡᠯᠲᠡ",
+      title: t({ mn: "Соёлын Сэргэлт", en: "Cultural Zenith" }),
+      desc: t({ mn: "Занабазарын үеийн урлаг, соёлын алтан эрин.", en: "The golden age of Mongolian art and philosophy under Zanabazar." })
+    }
   ];
 
+  const handleNext = () => setCurrentIndex((prev) => (prev + 1) % eras.length);
+  const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + eras.length) % eras.length);
+
   return (
-    // Height is 400vh to give enough scroll room for the horizontal movement
-    <section ref={targetRef} className="relative h-[400vh] bg-[#FDFBF7] font-serif">
-        
-        {/* ================= STICKY VIEWPORT ================= */}
-        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-center">
-            
-            {/* --- ATMOSPHERE (FIXED BEHIND SCROLL) --- */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#FFFBEB] via-[#fffbf0] to-[#fff] z-0" />
-            <div className="absolute inset-0 mix-blend-soft-light opacity-60 z-[1]"><CloudLayer /></div>
-            <div className="absolute inset-0 z-[2]"><TimeDust /></div>
-            <SacredMandala />
+    <section className="relative h-screen w-full bg-[#FDFBF7] overflow-hidden flex flex-col justify-center">
+      
+      {/* --- BACKGROUND LAYER --- */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#FFFBEB] to-[#FDFBF7] z-0" />
+      <SacredMandala />
+      <TimeDust />
 
-            {/* --- PROGRESS BAR (GOLDEN THREAD) --- */}
-            <div className="absolute bottom-20 left-12 right-12 h-[2px] bg-amber-200/50 z-20">
-               <motion.div 
-                 style={{ scaleX: scrollYProgress }} 
-                 className="h-full bg-amber-500 origin-left" 
-               />
+      {/* --- TOP HEADER (STATIC) --- */}
+      <div className="absolute top-12 left-12 z-20">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-3"
+        >
+          <Sun size={24} className="text-amber-500 animate-spin-slow" />
+          <span className="text-xs font-bold uppercase tracking-[0.4em] text-amber-800/60">
+            {t({ mn: "Түүхэн мандал", en: "Sacred Timeline" })}
+          </span>
+        </motion.div>
+      </div>
+
+      {/* --- MAIN STAGE --- */}
+      <div className="relative z-10 container mx-auto px-6 lg:px-24">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+          
+          {/* LEFT: CONTENT (Animated by Index) */}
+          <div className="w-full lg:w-1/2 order-2 lg:order-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.6, ease: "circOut" }}
+                className="space-y-6"
+              >
+                <div className="flex items-center gap-4 text-amber-600">
+                  <span className="p-3 bg-white rounded-full shadow-sm border border-amber-100">
+                    {eras[currentIndex].icon}
+                  </span>
+                  <span className="text-sm font-bold tracking-[0.2em] text-amber-500">
+                    {eras[currentIndex].year}
+                  </span>
+                </div>
+
+                <h2 className="text-5xl lg:text-7xl font-serif text-[#451a03] leading-tight">
+                  {eras[currentIndex].title}
+                </h2>
+
+                <p className="text-lg lg:text-xl text-[#78350F]/70 leading-relaxed max-w-lg">
+                  {eras[currentIndex].desc}
+                </p>
+
+                {/* Vertical Script Element (Mobile/Tablet Friendly) */}
+                <div className="pt-6 flex items-center gap-4">
+                  <div className="h-[2px] w-12 bg-amber-500/20" />
+                  <span className="text-2xl font-serif text-amber-900/40 tracking-widest">
+                    {eras[currentIndex].bichig}
+                  </span>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* NAVIGATION BUTTONS */}
+            <div className="mt-12 flex items-center gap-6">
+              <button 
+                onClick={handlePrev}
+                className="group w-14 h-14 rounded-full border border-amber-500/30 flex items-center justify-center text-amber-600 hover:bg-amber-500 hover:text-white transition-all duration-500 shadow-sm"
+              >
+                <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+              </button>
+              
+              <div className="flex items-center gap-2">
+                 {eras.map((_, i) => (
+                   <div 
+                    key={i} 
+                    className={`h-1.5 transition-all duration-500 rounded-full ${i === currentIndex ? "w-8 bg-amber-500" : "w-2 bg-amber-200"}`} 
+                   />
+                 ))}
+              </div>
+
+              <button 
+                onClick={handleNext}
+                className="group w-14 h-14 rounded-full bg-[#451a03] flex items-center justify-center text-amber-100 hover:bg-amber-600 transition-all duration-500 shadow-xl shadow-amber-900/20"
+              >
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
+          </div>
 
-            {/* --- THE HORIZONTAL TRACK --- */}
-            <motion.div style={{ x }} className="flex gap-20 pl-12 items-center relative z-10 h-[80vh]">
-               
-               {eras.map((era, index) => {
-                 if (era.type === 'header') {
-                   return (
-                     <div key={index} className="w-[80vw] md:w-[40vw] flex-shrink-0 flex flex-col justify-center px-12 border-l-4 border-amber-500/20 pl-12">
-                        <div className="mb-6">
-                           <Sun size={48} strokeWidth={1} className="text-amber-500 animate-[spin_10s_linear_infinite]" />
-                        </div>
-                        <h2 className="text-6xl md:text-8xl font-medium text-[#451a03] mb-4">
-                           {era.content.title}
-                        </h2>
-                        <p className="text-3xl text-amber-600/80 italic font-light mb-8">
-                           {era.content.sub}
-                        </p>
-                        <p className="text-lg text-[#78350F] max-w-md leading-relaxed">
-                           {era.content.desc}
-                        </p>
-                        <div className="mt-12 flex items-center gap-4 text-xs font-bold uppercase tracking-[0.2em] text-amber-400 animate-pulse">
-                           <ArrowRight /> {t({mn: "Гүйлгэх", en: "Scroll to Explore"})}
-                        </div>
-                     </div>
-                   )
-                 }
-                 return <HeritageCard key={index} era={era} index={index} />
-               })}
+          {/* RIGHT: THE VISUAL STUPA */}
+          <div className="w-full lg:w-1/2 h-[50vh] lg:h-[70vh] order-1 lg:order-2">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ scale: 0.9, opacity: 0, rotateY: 20 }}
+                animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                exit={{ scale: 1.1, opacity: 0, rotateY: -20 }}
+                transition={{ duration: 0.8, ease: "backOut" }}
+                className="relative h-full w-full"
+              >
+                {/* Image Portal with Rounded Stupa Shape */}
+                <div className="h-full w-full bg-white rounded-t-[240px] rounded-b-[40px] overflow-hidden shadow-2xl border-[12px] border-white ring-1 ring-amber-500/10">
+                   <img 
+                    src={eras[currentIndex].image} 
+                    className="w-full h-full object-cover transition-all duration-[3s] hover:scale-110" 
+                    alt="heritage" 
+                   />
+                   <div className="absolute inset-0 bg-gradient-to-t from-[#451a03]/40 to-transparent mix-blend-multiply" />
+                   
+                   {/* Vertical Script Ribbon */}
+                   <div className="absolute top-12 right-12 z-20 flex flex-col items-center gap-4">
+                      <div className="w-[1px] h-20 bg-white/50" />
+                      <span className="text-3xl text-white font-serif drop-shadow-lg" style={{ writingMode: 'vertical-rl' }}>
+                         {eras[currentIndex].bichig}
+                      </span>
+                   </div>
+                </div>
 
-            </motion.div>
+                {/* Decorative Aura */}
+                <div className="absolute -inset-10 bg-amber-500/10 blur-[80px] rounded-full -z-10 animate-pulse" />
+                <Sparkles className="absolute -top-4 -right-4 text-amber-400 w-12 h-12" />
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
         </div>
+      </div>
+
+      {/* --- PROGRESS THREAD (BOTTOM) --- */}
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-amber-500/10">
+        <motion.div 
+          initial={false}
+          animate={{ width: `${((currentIndex + 1) / eras.length) * 100}%` }}
+          className="h-full bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]" 
+        />
+      </div>
+
     </section>
   );
-}
-
-// =========================================================================
-// THE "HEAVENLY PORTAL" CARD
-// =========================================================================
-function HeritageCard({ era, index }: { era: any, index: number }) {
-  
-  return (
-    <div className="w-[85vw] md:w-[60vw] lg:w-[45vw] flex-shrink-0 h-[70vh] relative perspective-1000 group">
-       
-       {/* 1. GLASS STUPA FRAME */}
-       <div className="relative h-full w-full bg-white/60 backdrop-blur-xl border border-white/80 rounded-t-[300px] rounded-b-[40px] shadow-[0_20px_50px_-10px_rgba(245,158,11,0.15)] overflow-hidden transition-all duration-700 hover:shadow-[0_40px_80px_-15px_rgba(245,158,11,0.3)] ring-1 ring-white/50 flex flex-col">
-          
-          {/* Top: The Image (Window to the Past) */}
-          <div className="relative h-[55%] m-4 rounded-t-[280px] rounded-b-[30px] overflow-hidden bg-amber-50 group-hover:h-[60%] transition-all duration-700 ease-in-out">
-             <img 
-               src={era.image} 
-               alt={era.title}
-               className="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-[2s] group-hover:scale-110"
-             />
-             {/* Holy Overlay */}
-             <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBEB] via-transparent to-transparent opacity-50 mix-blend-screen" />
-             
-             {/* The Vertical Script (Pillar) */}
-             <div className="absolute top-10 right-10 bottom-10 w-16 z-20 flex flex-col items-center">
-                <div className="h-full w-[1px] bg-white/60 mb-2" />
-                <span className="text-4xl font-serif text-white drop-shadow-md opacity-80" style={{ writingMode: 'vertical-rl' }}>
-                   {era.bichig}
-                </span>
-                <div className="h-full w-[1px] bg-white/60 mt-2" />
-             </div>
-          </div>
-
-          {/* Bottom: The Text (The Teaching) */}
-          <div className="flex-1 p-8 md:p-12 flex flex-col justify-center relative">
-             
-             {/* Icon Badge */}
-             <div className="absolute -top-8 left-12 p-4 bg-[#FDFBF7] rounded-full shadow-lg border border-amber-100 text-amber-600">
-                {era.icon}
-             </div>
-
-             <div className="mb-2 text-xs font-bold tracking-[0.3em] uppercase text-amber-400">
-                {era.year}
-             </div>
-             
-             <h3 className="text-3xl md:text-5xl font-serif text-[#451a03] mb-4 leading-tight group-hover:text-amber-700 transition-colors">
-                {era.title}
-             </h3>
-             
-             <p className="text-lg text-[#78350F]/80 leading-relaxed font-medium">
-                {era.desc}
-             </p>
-
-             {/* Reflection Shine */}
-             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          </div>
-
-       </div>
-
-       {/* 2. NUMBER WATERMARK BEHIND */}
-       <div className="absolute -bottom-10 -right-4 text-[12rem] font-serif text-amber-500/5 leading-none z-[-1]">
-          {index}
-       </div>
-
-    </div>
-  )
 }

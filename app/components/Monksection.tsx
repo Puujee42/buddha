@@ -1,143 +1,105 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useSpring,
-  useMotionValue
+import { 
+  motion, 
+  useScroll, 
+  useTransform, 
+  useSpring, 
+  useMotionValue, 
+  AnimatePresence 
 } from "framer-motion";
-import { ArrowUpRight, Sun, Flower, Moon, Sparkles, Eye } from "lucide-react";
+import { Sparkles, Sun, Moon, Star, ShieldCheck } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "next-themes";
 
-// --- ETHEREAL ASSETS ---
+// --- MAJESTIC COMPONENTS ---
 
-const DharmaMandala = () => (
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] pointer-events-none opacity-[0.05] z-0">
-    <motion.svg
-      viewBox="0 0 100 100"
-      className="w-full h-full fill-amber-900"
+const GoldCorner = ({ className }: { className: string }) => (
+  <svg className={`absolute w-12 h-12 text-amber-500/80 ${className}`} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 20V0H20" stroke="currentColor" strokeWidth="2" />
+    <path d="M0 40V15C0 6.71573 6.71573 0 15 0H40" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+    <circle cx="5" cy="5" r="2" fill="currentColor" />
+  </svg>
+);
+
+const MandalaBackdrop = () => (
+  <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none opacity-20">
+    <motion.div
       animate={{ rotate: 360 }}
-      transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
+      transition={{ duration: 100, repeat: Infinity, ease: "linear" }}
+      className="relative w-[1200px] h-[1200px] border border-amber-500/20 rounded-full flex items-center justify-center"
     >
-        <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.2" strokeDasharray="1 2" />
-        <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" strokeWidth="0.5" />
-        <path d="M50 10 L60 30 L90 50 L60 70 L50 90 L40 70 L10 50 L40 30 Z" fill="none" stroke="currentColor" strokeWidth="0.2" />
-    </motion.svg>
+      {[...Array(8)].map((_, i) => (
+        <div 
+          key={i} 
+          className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" 
+          style={{ transform: `rotate(${i * 45}deg)` }} 
+        />
+      ))}
+      <div className="absolute inset-0 border-[10px] border-dashed border-amber-500/10 rounded-full animate-pulse" />
+    </motion.div>
   </div>
 );
 
-const FloatingParticle = ({ theme, delay }: { theme: 'heavenly' | 'night', delay: number }) => (
-  <motion.div
-    initial={{ y: "110%", opacity: 0 }}
-    animate={{
-      y: "-20%",
-      opacity: [0, 0.6, 0],
-      x: Math.random() * 40 - 20,
-      rotate: theme === 'heavenly' ? [0, 180] : [0, -180]
-    }}
-    transition={{ duration: 15, repeat: Infinity, delay: delay, ease: "linear" }}
-    className={`absolute bottom-0 w-2 h-2 blur-[0.5px] z-[1] ${
-      theme === 'heavenly' 
-      ? "bg-gradient-to-tr from-amber-200 to-rose-200 rounded-tr-[50%] rounded-bl-[10%]" 
-      : "bg-indigo-300 rounded-full shadow-[0_0_8px_white]"
-    }`}
-    style={{ left: `${Math.random() * 100}%` }}
-  />
-);
-
-// --- UPDATED MOCK DATA ---
-const MYSTICS_DATA = [
+const MONKS_DATA = [
   {
     id: 1,
-    type: 'night',
-    name: { mn: "Астрал Сувд", en: "Astral Pearl" },
-    title: { mn: "Тарo Уншигч & Зурхайч", en: "Tarot Reader & Astrologer" },
-    image: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=2670&auto=format&fit=crop",
+    arcana: "I",
+    name: { mn: "Данзанравжаа", en: "The Great Saint Danzan" },
+    title: { mn: "Говийн Догшин Ноён Хутагт", en: "Master of the Gobi Desert" },
+    video: "/num1.mp4", 
   },
   {
     id: 2,
-    type: 'night',
-    name: { mn: "Орчлон", en: "Orchlon Oracle" },
-    title: { mn: "Далд Оюун Ухаан", en: "Subconscious Guide" },
-    image: "https://images.unsplash.com/photo-1568910741178-ee4410f94833?q=80&w=2670&auto=format&fit=crop",
+    arcana: "II",
+    name: { mn: "Занабазар", en: "Holy Zanabazar" },
+    title: { mn: "Өндөр Гэгээн", en: "The High Creator & Artist" },
+    video: "/num4.mp4", 
   },
   {
     id: 3,
-    type: 'heavenly',
-    name: { mn: "Занабазар", en: "Zanabazar" },
-    title: { mn: "Өндөр Гэгээн", en: "The High Saint" },
-    image: "https://images.unsplash.com/photo-1606132442436-b5fa53f317b9?q=80&w=2670&auto=format&fit=crop",
-  },
-  {
-    id: 4,
-    type: 'heavenly',
-    name: { mn: "Данзанравжаа", en: "Danzanravjaa" },
-    title: { mn: "Догшин Ноён Хутагт", en: "The Terrible Noble Saint" },
-    image: "https://images.unsplash.com/photo-1570228811808-144d151c706d?q=80&w=2545&auto=format&fit=crop",
+    arcana: "III",
+    name: { mn: "Богд Жавзандамба", en: "The 8th Bogd Khan" },
+    title: { mn: "Монголын Шашны Тэргүүн", en: "The Supreme Oracle" },
+    video: "/num3.mp4", 
   },
 ];
 
-export default function MysticalUnionSection() {
+export default function MajesticTarotSection() {
   const { language, t } = useLanguage();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mouseX = useSpring(0, { stiffness: 40, damping: 20 });
-  const mouseY = useSpring(0, { stiffness: 40, damping: 20 });
-
-  useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
-    };
-    window.addEventListener("mousemove", handleMove);
-    return () => window.removeEventListener("mousemove", handleMove);
-  }, [mouseX, mouseY]);
-
-  const content = t({
-    mn: { tag: "Увидастнууд", title_l1: "Тэнгэрлэг ба", title_l2: "Далд Оюун", desc: "Гэрэл ба сүүдрийн ертөнцөөр аялах зам тань эндээс эхэлнэ.", btn: "Танилцах" },
-    en: { tag: "The Mystics", title_l1: "Heavenly &", title_l2: "Night Souls", desc: "Your journey through the realms of light and shadow begins here.", btn: "View Details" }
-  });
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   return (
-    <section ref={containerRef} className="relative w-full py-32 overflow-hidden bg-[#0A0A0B]">
+    <section className={`relative w-full py-40 overflow-hidden transition-colors duration-1000 ${isDark ? "bg-[#020205]" : "bg-[#FCF9F2]"}`}>
+      <MandalaBackdrop />
       
-      {/* Dynamic Background Transition */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A] via-[#FDFBF7] to-[#FDFBF7] z-0 opacity-100" />
-      
-      <motion.div
-        className="fixed top-0 left-0 w-[800px] h-[800px] bg-indigo-500/20 blur-[150px] rounded-full pointer-events-none z-0"
-        style={{ x: useTransform(mouseX, (v) => v - 400), y: useTransform(mouseY, (v) => v - 400) }}
-      />
-
-      <DharmaMandala />
-      
-      <div className="absolute inset-0 pointer-events-none z-0">
-        {[...Array(15)].map((_, i) => <FloatingParticle key={`h-${i}`} theme="heavenly" delay={i} />)}
-        {[...Array(15)].map((_, i) => <FloatingParticle key={`n-${i}`} theme="night" delay={i + 0.5} />)}
-      </div>
+      {/* Dynamic Background Particles */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 mix-blend-overlay" />
 
       <div className="relative z-10 container mx-auto px-6">
-        
-        <div className="flex flex-col items-center text-center mb-28">
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="flex items-center gap-3 mb-6">
-            <span className="text-amber-600/60 text-xs tracking-[0.4em] uppercase font-bold flex items-center gap-2">
-               <Sparkles size={14} /> {content.tag}
-            </span>
+        <header className="flex flex-col items-center text-center mb-24 space-y-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0 }} 
+            whileInView={{ opacity: 1, scale: 1 }}
+            className="w-16 h-16 rounded-full border border-amber-500/30 flex items-center justify-center mb-4"
+          >
+            <ShieldCheck className="text-amber-500" size={32} strokeWidth={1} />
           </motion.div>
-
-          <h2 className="text-6xl md:text-8xl font-serif text-[#1e1b4b]">
-            <span className="block italic font-light text-indigo-400">{content.title_l1}</span>
-            <span className="block font-bold text-amber-900">{content.title_l2}</span>
-          </h2>
           
-          <p className="mt-8 max-w-xl text-slate-600 font-medium text-lg leading-relaxed">{content.desc}</p>
-        </div>
+          <h2 className="text-6xl md:text-8xl font-serif font-light tracking-tighter">
+            <span className={isDark ? "text-amber-50" : "text-amber-950"}>Supreme </span>
+            <span className="italic text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700">
+              Arcana
+            </span>
+          </h2>
+          <div className="w-40 h-[1px] bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
+        </header>
 
-        {/* Grid showing 2 Tarot (Night) then 2 Monks (Heavenly) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 perspective-[2000px]">
-           {MYSTICS_DATA.map((mystic, index) => (
-              <MysticalCard key={mystic.id} mystic={mystic} index={index} language={language} btnText={content.btn} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-20 max-w-7xl mx-auto">
+           {MONKS_DATA.map((monk, index) => (
+              <MajesticCard key={monk.id} monk={monk} index={index} language={language} isDark={isDark} />
            ))}
         </div>
       </div>
@@ -145,81 +107,122 @@ export default function MysticalUnionSection() {
   );
 }
 
-function MysticalCard({ mystic, index, language, btnText }: { mystic: any, index: number, language: "mn" | "en", btnText: string }) {
-  const isNight = mystic.type === 'night';
+function MajesticCard({ monk, index, language, isDark }: any) {
+  const [isHovered, setIsHovered] = useState(false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotateX = useSpring(useTransform(y, [-100, 100], [5, -5]), { stiffness: 50, damping: 15 });
-  const rotateY = useSpring(useTransform(x, [-100, 100], [-5, 5]), { stiffness: 50, damping: 15 });
+
+  // Smooth Spring Physics
+  const rotateX = useSpring(useTransform(y, [-150, 150], [12, -12]), { stiffness: 40, damping: 20 });
+  const rotateY = useSpring(useTransform(x, [-150, 150], [-12, 12]), { stiffness: 40, damping: 20 });
+  const glareX = useSpring(useTransform(x, [-150, 150], [0, 100]), { stiffness: 40, damping: 20 });
+  const glareY = useSpring(useTransform(y, [-150, 150], [0, 100]), { stiffness: 40, damping: 20 });
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 100 }}
       whileInView={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="group relative h-[580px] w-full cursor-pointer"
+      transition={{ duration: 1.2, delay: index * 0.3, ease: [0.22, 1, 0.36, 1] }}
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
-        x.set(e.clientX - rect.left - rect.width / 2);
-        y.set(e.clientY - rect.top - rect.height / 2);
+        x.set(e.clientX - (rect.left + rect.width / 2));
+        y.set(e.clientY - (rect.top + rect.height / 2));
       }}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
+      onMouseLeave={() => { x.set(0); y.set(0); setIsHovered(false); }}
+      onMouseEnter={() => setIsHovered(true)}
+      className="group relative h-[700px] w-full perspective-[2000px] cursor-none"
     >
-      <motion.div style={{ rotateX, rotateY }} className="relative w-full h-full">
-        
-        {/* CARD BASE: Switches between White/Gold (Heavenly) and Obsidian/Indigo (Night) */}
-        <div className={`absolute inset-0 rounded-[30px] border transition-all duration-500 overflow-hidden ${
-          isNight 
-          ? "bg-[#0F172A]/90 border-indigo-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)] group-hover:border-indigo-400" 
-          : "bg-white/60 border-amber-200 shadow-[0_20px_50px_rgba(251,191,36,0.1)] group-hover:border-amber-400"
-        }`}>
+      <motion.div
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        className={`relative w-full h-full rounded-[20px] border-[1px] transition-all duration-1000 overflow-hidden
+          ${isDark 
+            ? "bg-[#050508] border-amber-500/30 shadow-[0_0_50px_rgba(0,0,0,1)]" 
+            : "bg-white border-amber-900/10 shadow-xl"}
+          group-hover:border-amber-500 group-hover:shadow-[0_0_80px_rgba(245,158,11,0.2)]
+        `}
+      >
+        {/* VIDEO ENGINE (The core of the card) */}
+        <div className="absolute inset-0 z-0">
+          <video 
+            autoPlay loop muted playsInline 
+            className={`w-full h-full object-cover transition-all duration-[2s]
+              ${isHovered ? "scale-105 contrast-[1.1] grayscale-0" : "scale-110 contrast-100 grayscale-[0.4]"}
+            `}
+          >
+            <source src={monk.video} type="video/mp4" />
+          </video>
           
-          {/* IMAGE PORTAL */}
-          <div className="absolute top-4 left-4 right-4 bottom-24 rounded-[20px] overflow-hidden grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700">
-             <img src={mystic.image} alt="" className="w-full h-full object-cover" />
-             <div className={`absolute inset-0 mix-blend-overlay ${isNight ? "bg-indigo-900/40" : "bg-amber-100/20"}`} />
-          </div>
-
-          {/* TYPE INDICATOR */}
-          <div className={`absolute top-8 left-8 p-2 rounded-full backdrop-blur-md ${isNight ? "bg-indigo-500/20 text-indigo-200" : "bg-white/40 text-amber-600"}`}>
-             {isNight ? <Moon size={20} /> : <Sun size={20} />}
-          </div>
-
-          {/* CONTENT AREA */}
-          <div className="absolute bottom-0 left-0 w-full h-24 flex flex-col items-center justify-center text-center p-4">
-            <h3 className={`text-xl font-serif font-bold ${isNight ? "text-white" : "text-amber-950"}`}>
-               {mystic.name[language]}
-            </h3>
-            <p className={`text-[10px] uppercase tracking-[0.2em] font-medium mt-1 ${isNight ? "text-indigo-300/70" : "text-amber-700/70"}`}>
-               {mystic.title[language]}
-            </p>
-            
-            <motion.div 
-               initial={{ y: 10, opacity: 0 }}
-               whileHover={{ y: 0, opacity: 1 }}
-               className={`mt-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-tighter ${isNight ? "text-indigo-400" : "text-amber-600"}`}
-            >
-               {btnText} <ArrowUpRight size={12} />
-            </motion.div>
-          </div>
-
-          {/* SPECIAL FX: Night gets stars, Heavenly gets shimmer */}
-          {isNight ? (
-            <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-              <Sparkles size={10} className="absolute top-10 right-10 text-white animate-pulse" />
-              <Sparkles size={8} className="absolute bottom-20 left-10 text-white animate-bounce" />
-            </div>
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:animate-[shine_1.5s_ease-in-out] pointer-events-none" />
-          )}
+          {/* Majestic Overlays */}
+          <div className={`absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 transition-opacity duration-700 ${isHovered ? "opacity-90" : "opacity-40"}`} />
+          
+          {/* Shimmer / Glare Effect */}
+          <motion.div 
+            style={{ 
+                background: `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.15) 0%, transparent 60%)` 
+            }}
+            className="absolute inset-0 z-10 pointer-events-none"
+          />
         </div>
+
+        {/* ORNATE FRAME ELEMENTS */}
+        <div className="absolute inset-4 border border-amber-500/20 rounded-[15px] z-20 pointer-events-none" />
+        <GoldCorner className="top-2 left-2" />
+        <GoldCorner className="top-2 right-2 rotate-90" />
+        <GoldCorner className="bottom-2 left-2 -rotate-90" />
+        <GoldCorner className="bottom-2 right-2 rotate-180" />
+
+        {/* ARCANA BADGE */}
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
+            <motion.div 
+              animate={isHovered ? { y: 5, scale: 1.1 } : { y: 0, scale: 1 }}
+              className="text-amber-400 font-serif text-3xl font-bold tracking-[0.5em] drop-shadow-lg"
+            >
+              {monk.arcana}
+            </motion.div>
+            <div className="w-8 h-[1px] bg-amber-500/50 mt-2" />
+        </div>
+
+        {/* HOVER CONTENT: GHOSTLY TITLES */}
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-end pb-16 px-8 pointer-events-none">
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="text-center"
+              >
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="h-[1px] w-8 bg-amber-500" />
+                  <Sparkles size={16} className="text-amber-500 animate-pulse" />
+                  <div className="h-[1px] w-8 bg-amber-500" />
+                </div>
+                
+                <h3 className="text-3xl font-serif text-white font-bold tracking-wide mb-2 uppercase drop-shadow-2xl">
+                  {monk.name[language]}
+                </h3>
+                
+                <p className="text-amber-400 font-medium tracking-[0.2em] text-[10px] uppercase">
+                  {monk.title[language]}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* MOUSE TRACKER ICON */}
+        <motion.div
+            style={{ x, y }}
+            className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+            <div className="w-12 h-12 border border-amber-500/50 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <div className="w-1 h-1 bg-amber-500 rounded-full animate-ping" />
+            </div>
+        </motion.div>
       </motion.div>
 
-      <style jsx global>{`
-        @keyframes shine {
-          100% { transform: translateX(200%); }
-        }
-      `}</style>
+      {/* CARD UNDERGLOW */}
+      <div className={`absolute -bottom-12 left-1/2 -translate-x-1/2 w-3/4 h-20 bg-amber-600/20 blur-[100px] rounded-full transition-opacity duration-1000 ${isHovered ? "opacity-100" : "opacity-0"}`} />
     </motion.div>
   );
 }

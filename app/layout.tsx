@@ -3,6 +3,9 @@ import { Playfair_Display, Lato } from 'next/font/google'
 import './globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { ThemeProvider } from 'next-themes'
+import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 
 const playfair = Playfair_Display({ 
   subsets: ['latin'],
@@ -25,9 +28,13 @@ export default function RootLayout({
   return (
   <ClerkProvider>
     <LanguageProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
       <body className={`${playfair.variable} ${lato.variable} font-sans`}>
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Navbar />
+          {children}
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
     </LanguageProvider>

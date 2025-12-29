@@ -70,9 +70,9 @@ const DayAtmosphere = () => (
             key={i}
             initial={{ y: "110%", opacity: 0 }}
             animate={{ y: "-10%", opacity: [0, 0.5, 0], scale: [0, 1.5, 0] }}
-            transition={{ duration: 15 + Math.random() * 10, repeat: Infinity, delay: i * 0.5, ease: "linear" }}
+            transition={{ duration: 15 + (i % 10), repeat: Infinity, delay: i * 0.5, ease: "linear" }}
             className="absolute bottom-0 w-1 h-1 bg-amber-400 rounded-full blur-[1px]"
-            style={{ left: `${Math.random() * 100}%` }}
+            style={{ left: `${(i * 7) % 100}%` }}
         />
         ))}
     </div>
@@ -105,9 +105,9 @@ const NightAtmosphere = () => (
         <motion.div
             key={i}
             animate={{ opacity: [0.1, 1, 0.1], scale: [0.5, 1.5, 0.5] }}
-            transition={{ duration: 2 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 5 }}
+            transition={{ duration: 2 + (i % 4), repeat: Infinity, delay: (i * 0.2) % 5 }}
             className="absolute w-1 h-1 bg-indigo-100 rounded-full shadow-[0_0_4px_white]"
-            style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
+            style={{ top: `${(i * 13) % 100}%`, left: `${(i * 17) % 100}%` }}
         />
         ))}
     </div>
@@ -116,8 +116,12 @@ const NightAtmosphere = () => (
 
 // --- COMPONENT: THE LIVING PORTAL (Image) ---
 const LivingPortal = ({ image, name, quote, isNight }: { image: string, name: string, quote?: string, isNight: boolean }) => {
+  isNight = false;
   return (
     <div className="relative w-full h-full aspect-[3/4] perspective-1000 group">
+       {/* BACK SHADOW */}
+       <div className={`absolute inset-10 rounded-[100px] blur-[100px] opacity-30 -z-10 transition-all duration-700 group-hover:opacity-50 group-hover:scale-110 ${isNight ? 'bg-indigo-900' : 'bg-amber-900'}`} />
+
        {/* 1. OUTER HALO */}
        <div className={`absolute -inset-10 blur-3xl opacity-50 group-hover:opacity-80 transition-opacity duration-1000 ${isNight ? "bg-gradient-to-t from-indigo-500/30 via-purple-900/20 to-transparent" : "bg-gradient-to-t from-amber-500/20 via-transparent to-blue-200/10"}`} />
 

@@ -1,151 +1,132 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
-  Search, 
   Menu, 
   X, 
-  ChevronDown, 
   Flower, 
   Globe,
   User, 
   LayoutDashboard,
-  LogIn 
+  Sun,
+  Moon,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-
-// --- CLERK IMPORTS ---
+import { useTheme } from "next-themes";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useLanguage } from "../contexts/LanguageContext";
 
-// --- CONTENT DATA ---
 const CONTENT = {
   nav: [
-    { 
-      id: "home",
-      name: { mn: "Нүүр хуудас", en: "Home" }, 
-      href: "/", 
-    },
-    { 
-      id: "monks",
-      name: { mn: "Зурхайчид", en: "Astrologers" }, 
-      href: "/monks",
-    },
-    {
-      id: "services",
-      name: { mn: "Үйлчилгээ", en: "Services" }, 
-      href: "/services",
-    },
-    { 
-      id: "about",
-      name: { mn: "Бидний тухай", en: "Our Path" }, 
-      href: "/about", 
-    },
-    { 
-      id: "mission", 
-      name: { mn: "Эрхэм зорилго", en: "Mission" }, 
-      href: "/mission",
-    }
+    { id: "home", name: { mn: "Нүүр хуудас", en: "Home" }, href: "/" },
+    { id: "monks", name: { mn: "Зурхайчид", en: "Astrologers" }, href: "/monks" },
+    { id: "services", name: { mn: "Үйлчилгээ", en: "Services" }, href: "/services" },
+    { id: "about", name: { mn: "Бидний тухай", en: "Our Path" }, href: "/about" },
+    { id:  "mission", name: { mn: "Алсын хараа", en: "Vision" }, href: "/mission" },
   ],
   logo: { mn: "Гандан", en: "Nirvana" },
   login: { mn: "Нэвтрэх", en: "Sign In" },
   register: { mn: "Бүртгүүлэх", en: "Register" },
   dashboard: { mn: "Хяналтын самбар", en: "Dashboard" },
-  myAccount: { mn: "Миний бүртгэл", en: "My Account" },
-  managedByClerk: { mn: "Clerk-ээр хамгаалагдсан", en: "Managed by Clerk" }
 };
 
 export default function OverlayNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   
   const { language: lang, setLanguage } = useLanguage();
-  
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const { scrollY } = useScroll();
 
-  // Scroll Detection Logic
+  useEffect(() => setMounted(true), []);
+
   useMotionValueEvent(scrollY, "change", (latest) => {
-    const shouldBeScrolled = latest > 50;
-    if (isScrolled !== shouldBeScrolled) setIsScrolled(shouldBeScrolled);
+    setIsScrolled(latest > 50);
   });
 
   const toggleLanguage = () => setLanguage(lang === "mn" ? "en" : "mn");
+  
+  // Divine Toggle Logic
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
+
+  if (!mounted) return null; // Prevent flickering
+
+  const isDark = resolvedTheme === "dark";
 
   return (
     <>
       <motion.header
         className="fixed z-50 left-0 right-0 flex justify-center pointer-events-none"
-        initial={{ y: 0 }}
-        animate={{ y: isScrolled ? 10 : 0 }}
-        transition={{ duration: 0.5, ease: "circOut" }}
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: isScrolled ? 10 : 0, opacity: 1 }}
       >
         <motion.nav
           layout
           className={`
             pointer-events-auto relative flex items-center justify-between
-            transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
+            transition-all duration-700 ease-in-out
             ${
               isScrolled
-                ? "w-[95%] lg:w-[1250px] mt-2 py-3 px-6 rounded-full bg-[#FFFBEB]/90 backdrop-blur-xl border border-[#FDE68A]/60 shadow-lg shadow-amber-900/5"
-                : "w-full max-w-[1450px] py-6 px-8 bg-transparent border-transparent"
+                ? "w-[95%] lg:w-[1250px] mt-2 py-3 px-8 rounded-full shadow-2xl backdrop-blur-md border"
+                : "w-full max-w-[1450px] py-6 px-10 bg-transparent border-transparent"
             }
+            ${/* Heavenly Buddha vs Night God Styles */ ""}
+            ${isScrolled && !isDark ? "bg-orange-50/80 border-amber-200 shadow-amber-900/10 text-amber-900" : ""}
+            ${isScrolled && isDark ? "bg-indigo-950/80 border-indigo-500/30 shadow-purple-900/40 text-indigo-100" : ""}
           `}
         >
-          {/* Noise Texture Overlay */}
-          <div className={`absolute inset-0 rounded-full opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] pointer-events-none transition-opacity duration-500 ${isScrolled ? 'opacity-100' : 'opacity-0'}`} />
-
-          {/* --- 1. LEFT: LOGO --- */}
-          <div className="flex items-center">
+          {/* --- 1. LOGO --- */}
+          <div className="flex items-center flex-shrink-0">
             <Link href="/" className="group flex items-center gap-3 relative z-10">
               <motion.div
-                whileHover={{ rotate: 180, scale: 1.1 }}
-                transition={{ duration: 0.8, ease: "anticipate" }}
-                className={`
-                   w-10 h-10 rounded-full flex items-center justify-center
-                   border transition-colors duration-500
-                   ${isScrolled 
-                      ? "bg-gradient-to-br from-[#FFFBEB] to-[#FEF3C7] border-[#FDE68A] text-[#D97706] shadow-sm" 
-                      : "bg-white/10 border-white/20 text-white backdrop-blur-sm"}
-                `}
+                whileHover={{ rotate: 360, scale: 1.1 }}
+                transition={{ duration: 1 }}
+                className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-500 ${
+                  isDark 
+                    ? "bg-indigo-900/50 border-indigo-400 text-amber-300 shadow-[0_0_15px_rgba(165,180,252,0.5)]" 
+                    : "bg-amber-100 border-amber-300 text-amber-600 shadow-[0_0_15px_rgba(251,191,36,0.3)]"
+                }`}
               >
-                <Flower size={18} strokeWidth={1.5} />
+                <Flower size={20} />
               </motion.div>
-
               <div className="flex flex-col">
-                <span className={`font-serif font-bold text-lg leading-none tracking-wide transition-colors duration-500 ${isScrolled ? "text-[#451a03]" : "text-white"}`}>
+                <span className={`font-serif font-bold text-xl tracking-tight transition-colors duration-500 ${
+                  isScrolled ? (isDark ? "text-amber-200" : "text-amber-950") : "text-white"
+                }`}>
                    {CONTENT.logo[lang]}
                 </span>
-                <span className={`text-[10px] uppercase tracking-[0.25em] font-medium transition-colors duration-500 ${isScrolled ? "text-[#92400E]" : "text-white/60"}`}>
-                   Monastery
+                <span className={`text-[9px] uppercase tracking-[0.3em] font-bold ${
+                  isScrolled ? (isDark ? "text-indigo-300" : "text-amber-700/60") : "text-white/60"
+                }`}>
+                   {isDark ? "Celestial Path" : "Monastery"}
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* --- 2. CENTER: NAVIGATION --- */}
+          {/* --- 2. CENTER NAVIGATION --- */}
           <div className="hidden md:flex items-center gap-2">
             {CONTENT.nav.map((item) => (
-              <div
-                key={item.id}
-                className="relative"
-                onMouseEnter={() => setHoveredNav(item.id)}
-                onMouseLeave={() => setHoveredNav(null)}
-              >
+              <div key={item.id} className="relative" onMouseEnter={() => setHoveredNav(item.id)} onMouseLeave={() => setHoveredNav(null)}>
                 <Link
                   href={item.href}
-                  className={`
-                    relative px-5 py-2 rounded-full text-sm font-medium transition-colors duration-300 flex items-center gap-1.5 z-10
-                    ${isScrolled ? "text-[#572718] hover:text-[#451a03]" : "text-[#FDFBF7]/90 hover:text-white"}
-                  `}
+                  className={`relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 z-10 ${
+                    isScrolled 
+                      ? (isDark ? "text-indigo-100 hover:text-amber-300" : "text-amber-900 hover:text-amber-600") 
+                      : "text-white hover:text-amber-200"
+                  }`}
                 >
-                  {/* Magnetic Hover Pill */}
                   {hoveredNav === item.id && (
-                    <motion.div
-                      layoutId="nav-pill"
-                      className={`absolute inset-0 rounded-full ${isScrolled ? "bg-[#F59E0B]/10" : "bg-white/10"}`}
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    <motion.div 
+                      layoutId="nav-pill" 
+                      className={`absolute inset-0 rounded-full ${isDark ? "bg-indigo-500/20" : "bg-amber-500/10"}`} 
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} 
                     />
                   )}
                   {item.name[lang]}
@@ -154,210 +135,125 @@ export default function OverlayNavbar() {
             ))}
           </div>
 
-          {/* --- 3. RIGHT: ACTIONS & AUTH --- */}
-          <div className="flex items-center gap-3 relative z-20">
+          {/* --- 3. RIGHT ACTIONS --- */}
+          <div className="flex items-center gap-3">
              
-             {/* Language Toggler */}
+             {/* THE DIVINE TOGGLER */}
+             <motion.button 
+               whileTap={{ scale: 0.9 }}
+               onClick={toggleTheme}
+               className={`relative flex items-center justify-center w-11 h-11 rounded-full border transition-all duration-500 overflow-hidden ${
+                 isScrolled 
+                  ? (isDark ? "border-indigo-400 bg-indigo-900/40 text-amber-300" : "border-amber-300 bg-amber-50 text-amber-600") 
+                  : "border-white/20 bg-white/5 text-white"
+               }`}
+             >
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={isDark ? "moon" : "sun"}
+                        initial={{ y: 20, opacity: 0, rotate: 45 }}
+                        animate={{ y: 0, opacity: 1, rotate: 0 }}
+                        exit={{ y: -20, opacity: 0, rotate: -45 }}
+                        transition={{ duration: 0.4, ease: "backOut" }}
+                    >
+                        {isDark ? <Moon size={20} fill="currentColor" /> : <Sun size={20} fill="currentColor" />}
+                    </motion.div>
+                </AnimatePresence>
+                
+                {/* Floating particles for Star Mode */}
+                {isDark && (
+                  <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute inset-0 pointer-events-none">
+                     <Sparkles size={8} className="absolute top-1 right-2 text-white" />
+                  </motion.div>
+                )}
+             </motion.button>
+
+             {/* Language */}
              <button 
                onClick={toggleLanguage}
-               className={`
-                  group relative flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-300
-                  ${isScrolled ? "border-[#D97706]/10 hover:border-[#D97706]/40 hover:bg-[#FDE68A]/20 text-[#78350F]" : "border-white/10 hover:border-white/30 hover:bg-white/10 text-white"}
-               `}
+               className={`w-11 h-11 rounded-full border flex items-center justify-center transition-all ${
+                 isScrolled 
+                 ? (isDark ? "border-indigo-400/30 text-indigo-200" : "border-amber-200 text-amber-800") 
+                 : "border-white/20 text-white"
+               }`}
              >
-                <motion.div 
-                   key={lang}
-                   initial={{ rotateY: 90, opacity: 0 }}
-                   animate={{ rotateY: 0, opacity: 1 }}
-                   transition={{ duration: 0.3 }}
-                >
-                   <Globe size={16} strokeWidth={1.5} />
-                </motion.div>
+                <Globe size={18} />
              </button>
 
-             {/* Search Button */}
-            
-             {/* Divider */}
-             <div className={`h-4 w-[1px] ${isScrolled ? "bg-[#78350F]/10" : "bg-white/20"} hidden md:block`} />
-
-             {/* --- AUTHENTICATION AREA (DESKTOP) --- */}
-             <div className="hidden md:flex items-center gap-3">
-                
+             <div className="hidden md:flex items-center gap-3 ml-2">
                 <SignedOut>
-                    {/* Login Button */}
-                    <Link href="/sign-in">
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className={`
-                                flex items-center gap-2 pl-3 pr-4 py-1.5 rounded-full border transition-all duration-300
-                                ${isScrolled 
-                                    ? "border-transparent bg-transparent text-[#78350F] hover:bg-[#FDE68A]/20" 
-                                    : "border-transparent bg-transparent text-white hover:bg-white/10"}
-                            `}
-                        >
-                            <span className="text-xs font-bold tracking-wide uppercase">{CONTENT.login[lang]}</span>
-                        </motion.button>
-                    </Link>
-
-                    {/* Register Button (Highlighted) */}
-                    <Link href="/sign-up">
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className={`
-                                flex items-center gap-2 pl-3 pr-4 py-1.5 rounded-full border shadow-sm transition-all duration-300
-                                ${isScrolled 
-                                    ? "border-[#D97706]/20 bg-[#FDE68A]/30 text-[#78350F]" 
-                                    : "border-white/20 bg-white/10 text-white backdrop-blur-md"}
-                            `}
-                        >
-                           <div className={`p-1 rounded-full ${isScrolled ? "bg-[#D97706] text-white" : "bg-white text-[#451a03]"}`}>
-                                <User size={12} strokeWidth={3} />
-                            </div>
-                            <span className="text-xs font-bold tracking-wide uppercase">{CONTENT.register[lang]}</span>
-                        </motion.button>
-                    </Link>
+                  <Link href="/sign-up">
+                      <motion.button
+                          whileHover={{ scale: 1.05, boxShadow: isDark ? "0 0 20px rgba(129, 140, 248, 0.4)" : "0 0 20px rgba(251, 191, 36, 0.2)" }}
+                          className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all ${
+                              isDark 
+                              ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20" 
+                              : "bg-amber-600 text-white hover:bg-amber-700"
+                          }`}
+                      >
+                          {CONTENT.register[lang]}
+                      </motion.button>
+                  </Link>
                 </SignedOut>
 
                 <SignedIn>
-                    {/* Dashboard Button */}
-                    <Link href="/dashboard">
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className={`
-                                flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all duration-300
-                                ${isScrolled 
-                                    ? "border-[#D97706] bg-[#D97706] text-white hover:bg-[#B45309] hover:border-[#B45309]" 
-                                    : "border-white bg-white/10 text-white hover:bg-white/20"}
-                            `}
-                        >
-                            <LayoutDashboard size={14} strokeWidth={2} />
-                            <span className="text-xs font-bold tracking-wide uppercase">{CONTENT.dashboard[lang]}</span>
-                        </motion.button>
-                    </Link>
-                    
-                    {/* Clerk Avatar - Invert colors when on dark background for visibility */}
-                    <div className={isScrolled ? "" : "brightness-0 invert hover:brightness-100 hover:invert-0 transition-all"}>
-                         <UserButton afterSignOutUrl="/" />
+                    <div className="flex items-center gap-4">
+                        <Link href="/dashboard">
+                            <button className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                                isDark ? "border-indigo-400 text-indigo-100 bg-indigo-500/10" : "border-amber-600 text-amber-600"
+                            }`}>
+                                {CONTENT.dashboard[lang]}
+                            </button>
+                        </Link>
+                        <UserButton appearance={{ elements: { userButtonAvatarBox: "w-9 h-9 border-2 border-amber-400" } }} />
                     </div>
                 </SignedIn>
              </div>
 
-             {/* Mobile Menu Toggle */}
-             <button 
-               onClick={() => setIsMobileMenuOpen(true)}
-               className={`md:hidden p-1 ${isScrolled ? "text-[#78350F]" : "text-white"}`}
-             >
-                <Menu size={24} />
+             {/* Mobile Menu */}
+             <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2">
+                <Menu size={28} className={isScrolled ? (isDark ? "text-indigo-200" : "text-amber-900") : "text-white"} />
              </button>
           </div>
         </motion.nav>
       </motion.header>
 
-      {/* --- 4. MOBILE MENU OVERLAY --- */}
+      {/* MOBILE OVERLAY */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-           <motion.div
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             exit={{ opacity: 0 }}
-             className="fixed inset-0 z-[60] bg-[#1a0a05] text-[#FFFBEB]"
+           <motion.div 
+            initial={{ x: "100%" }} 
+            animate={{ x: 0 }} 
+            exit={{ x: "100%" }} 
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className={`fixed inset-0 z-[60] flex flex-col p-8 ${isDark ? "bg-[#05051a] text-amber-100" : "bg-[#fffdfa] text-amber-950"}`}
            >
-              {/* Texture & Decor */}
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] opacity-10 mix-blend-overlay pointer-events-none" />
-              <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#F59E0B] rounded-full blur-[150px] opacity-20 pointer-events-none" />
-
-              {/* Close Button */}
-              <div className="absolute top-6 right-6 z-20">
-                 <button 
-                   onClick={() => setIsMobileMenuOpen(false)} 
-                   className="p-2 text-[#FDE68A] hover:rotate-90 transition-transform duration-300"
-                 >
-                    <X size={32} />
-                 </button>
+              <div className="flex justify-between items-center mb-12">
+                 <div className="flex items-center gap-2">
+                    <Flower size={24} className="text-amber-500" />
+                    <span className="font-serif font-bold text-2xl">{CONTENT.logo[lang]}</span>
+                 </div>
+                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2"><X size={32} /></button>
               </div>
 
-              {/* Menu Content */}
-              <div className="h-full flex flex-col items-center justify-center p-8 space-y-8 relative z-10">
-                 
-                 {/* Nav Links */}
-                 <div className="flex flex-col items-center gap-6">
-                    {CONTENT.nav.map((item, i) => (
-                        <motion.div
-                            key={item.id}
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.1 + (i * 0.1) }}
-                        >
-                            <Link 
-                                href={item.href} 
-                                onClick={() => setIsMobileMenuOpen(false)} 
-                                className="text-4xl font-serif text-[#FFFBEB] hover:text-[#F59E0B] transition-colors"
-                            >
-                                {item.name[lang]}
-                            </Link>
-                        </motion.div>
-                    ))}
-                 </div>
+              <div className="space-y-6">
+                {CONTENT.nav.map((item) => (
+                  <Link key={item.id} href={item.href} onClick={() => setIsMobileMenuOpen(false)} className="block text-4xl font-serif border-b border-current/10 pb-4">
+                    {item.name[lang]}
+                  </Link>
+                ))}
+              </div>
 
-                 {/* Divider */}
-                 <motion.div 
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    className="w-12 h-[1px] bg-[#FDE68A]/30"
-                 />
-
-                 {/* Mobile Actions & Auth */}
-                 <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="flex flex-col items-center gap-5 w-full max-w-xs"
-                 >
-                    {/* Language */}
-                    <button onClick={toggleLanguage} className="flex items-center gap-2 text-[#FDE68A]/70 uppercase tracking-widest text-xs border border-[#FDE68A]/30 px-4 py-2 rounded-full hover:bg-[#FDE68A]/10">
-                       <Globe size={14} />
-                       {lang === 'mn' ? 'Switch to English' : 'Монгол хэл'}
-                    </button>
-                    
-                    {/* MOBILE AUTHENTICATION LOGIC */}
-                    <SignedOut>
-                        <div className="grid grid-cols-2 gap-4 w-full">
-                            <Link href="/sign-in" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 border border-[#FDE68A]/30 text-[#FDE68A] py-3 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-[#FDE68A]/10 transition-colors">
-                                <LogIn size={16} />
-                                {CONTENT.login[lang]}
-                            </Link>
-                            <Link href="/sign-up" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 bg-[#D97706] text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-[#B45309] shadow-lg transition-colors">
-                                <User size={16} />
-                                {CONTENT.register[lang]}
-                            </Link>
-                        </div>
-                    </SignedOut>
-
-                    <SignedIn>
-                        <div className="w-full flex flex-col items-center gap-4 p-6 bg-[#2a1209] rounded-2xl border border-[#FDE68A]/10">
-                            {/* User Profile Area */}
-                            <div className="flex items-center gap-3">
-                                <div className="scale-125">
-                                    <UserButton afterSignOutUrl="/" />
-                                </div>
-                                <div className="flex flex-col text-left">
-                                    <span className="text-sm font-bold text-[#FDE68A]">{CONTENT.myAccount[lang]}</span>
-                                    <span className="text-xs text-[#FDE68A]/50">{CONTENT.managedByClerk[lang]}</span>
-                                </div>
-                            </div>
-                            
-                            {/* Dashboard Button */}
-                            <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full flex items-center justify-center gap-2 bg-[#F59E0B] text-[#451a03] py-3 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-[#D97706] hover:text-white transition-colors">
-                                <LayoutDashboard size={16} />
-                                {CONTENT.dashboard[lang]}
-                            </Link>
-                        </div>
-                    </SignedIn>
-
-                 </motion.div>
+              <div className="mt-auto flex flex-col gap-4">
+                 <button onClick={toggleTheme} className="w-full py-4 rounded-2xl flex items-center justify-center gap-3 border border-current/20">
+                    {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                    <span className="font-bold uppercase tracking-widest text-xs">
+                      {isDark ? "Switch to Buddha Mode" : "Switch to Star Mode"}
+                    </span>
+                 </button>
+                 <button onClick={toggleLanguage} className="w-full py-4 rounded-2xl bg-amber-500 text-white font-bold uppercase tracking-widest text-xs">
+                    {lang === 'mn' ? 'English' : 'Монгол'}
+                 </button>
               </div>
            </motion.div>
         )}

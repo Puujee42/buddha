@@ -105,7 +105,7 @@ export default function Hero() {
   return (
     <section 
       ref={containerRef} 
-      className="relative h-screen w-full overflow-hidden bg-[#FDFBF7] font-serif"
+      className="relative h-screen w-full overflow-hidden transparent font-serif"
     >
       {/* ================= BACKGROUND LAYERS ================= */}
       
@@ -113,13 +113,13 @@ export default function Hero() {
       <div className="absolute inset-0 bg-[#FFFBEB] z-0" />
 
       {/* 2. THE VIDEO - Styled for Bright Aesthetics */}
-      <div className="absolute inset-0 z-0 opacity-40 mix-blend-multiply">
+      <div className="absolute inset-0 z-0 opacity-40 ">
         <video 
           autoPlay 
           loop 
           muted 
           playsInline 
-          className="w-full h-full object-cover scale-110 grayscale"
+          className="w-full h-full object-cover "
         >
           <source src="/video.mp4" type="video/mp4" />
         </video>
@@ -145,15 +145,7 @@ export default function Hero() {
       />
       
       {/* ================= LANGUAGE SWITCHER ================= */}
-      <div className="absolute top-8 right-8 z-50">
-         <button 
-           onClick={() => setLanguage(language === 'mn' ? 'en' : 'mn')}
-           className="px-5 py-2 rounded-full border border-amber-900/10 bg-white/60 backdrop-blur-md text-[#78350F] text-xs font-bold tracking-[0.2em] uppercase hover:bg-white shadow-sm transition-all"
-         >
-           [{language}]
-         </button>
-      </div>
-
+      
       {/* ================= MAIN CONTENT ================= */}
       <motion.div 
         // style={{ y: textY, opacity: opacityFade }}
@@ -224,7 +216,7 @@ export default function Hero() {
             transition={{ delay: 1 }}
             className="flex flex-col md:flex-row gap-6 items-center"
         >
-            <Link href="/booking">
+            <Link href="/services">
                 <motion.button 
                    whileHover={{ scale: 1.05 }}
                    whileTap={{ scale: 0.95 }}
