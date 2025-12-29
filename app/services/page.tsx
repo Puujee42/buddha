@@ -206,7 +206,7 @@ function ServiceCard({ service, index, language }: { service: Service, index: nu
   const desc = service.desc?.[language] || "";
 
   // Theme Detection based on DB 'type' field
-  const isNight = service.type === "divination"; 
+  const isNight = false;
   
   const x = useMotionValue(0);
   const y = useMotionValue(0);

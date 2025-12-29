@@ -176,8 +176,7 @@ function DivineCard({ monk, index, language, btnText }: { monk: Monk, index: num
   
   // LOGIC: Determine Aesthetic based on keywords
   const keywords = [...(monk.specialties || []), monk.title?.en || ""].join(" ").toLowerCase();
-  const isNight = keywords.includes("tarot") || keywords.includes("star") || keywords.includes("divination") || keywords.includes("astrology") || keywords.includes("oracle");
-
+  const isNight =false;
   // Physics
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -213,7 +212,7 @@ function DivineCard({ monk, index, language, btnText }: { monk: Monk, index: num
       shadow: "shadow-[0_20px_40px_-10px_rgba(75,50,30,0.1)] group-hover:shadow-[0_40px_80px_-10px_rgba(245,158,11,0.3)]",
       textColor: "text-[#451a03]",
       accentText: "text-[#92400e]/80",
-      imageMix: "mix-blend-multiply opacity-90", // Classic parchment look
+      imageMix: "", // Classic parchment look
       particles: false,
       buttonColor: "text-amber-600 group-hover:text-amber-800 border-amber-200",
       icon: <Sun size={16} />,

@@ -231,7 +231,7 @@ export default function BookingPage() {
   // --- UI THEME CONFIG ---
   // We define themes here but don't return early to avoid hook errors later if we used hooks in theme objects.
   // Although styling variables are safe.
-  const isNight = service?.type === "divination";
+  const isNight = false;
   const theme = isNight ? {
       textColor: "text-indigo-100",
       accentColor: "text-indigo-400",

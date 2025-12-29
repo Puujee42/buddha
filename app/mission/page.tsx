@@ -63,19 +63,19 @@ export default function MissionPage() {
     missionTitle: t({ mn: "Сэтгэл бүрд Амар амгалангийн үрийг тарих.", en: "Planting Seeds of Peace in every heart." }),
     missionDesc: t({
       mn: "\"Бидний эрхэм зорилго бол хүн бүрийн сэтгэлд амар амгалангийн үрийг тарьж, амьдралын аливаа асуултад нь Бурхны шашны гүн ухаанаар дамжуулан хариулт өгөхөд оршино.\"",
-      en: "\"Our mission is to plant seeds of peace in everyone's soul and provide answers to life's questions through Buddhist philosophy.\""
+      en: "\" We aim to provide the opportunity to meet with masters online face-to-face, get answers to the questions you carry in your heart, and receive spiritual services directly via video call. Using technological advancements, we bring mental peace right to your side. .\""
     }),
     pillar1: {
-      title: t({ mn: "Үрийг Тарих", en: "Planting Seeds" }),
-      desc: t({ mn: "Хүн бүрийн сэтгэлд амар амгалангийн үрийг тарих.", en: "Planting Seeds of Peace in every heart." })
+      title: t({ mn: "Гэрээсээ холбогд", en: "Contact from your home" }),
+      desc: t({ mn: " Очиж дугаарлах шаардлагагүй, багштайгаа видео дуудлагаар шууд уулз.", en: "No need to go and take a number, meet directly with your teacher via video call." })
     },
     pillar2: {
-      title: t({ mn: "Гүн Ухаан", en: "Philosophy" }),
-      desc: t({ mn: "Амьдралын асуултуудад Бурхны шашны гүн ухаанаар хариулах.", en: "Answering life's questions through Buddhist philosophy." })
+      title: t({ mn: "Асуултдаа хариулт авах", en: "Guidance" }),
+      desc: t({ mn: "Сэтгэлдээ тээж явсан асуултаа асууж, мэргэжлийн зөвлөгөө ав..", en: "Ask the questions you have carried in your heart and get professional advice." })
     },
     pillar3: {
-      title: t({ mn: "Хүн Бүрд", en: "For Everyone" }),
-      desc: t({ mn: "Хаана ч, хэн бүхэнд хүртээмжтэй байх.", en: "Accessible to everyone, everywhere." })
+      title: t({ mn: "Засал ном", en: "Service  " }),
+      desc: t({ mn: "Уламжлалт зан үйл, засал номыг байгаа газраасаа авах боломж.", en: "The opportunity to receive traditional rituals and remedies at your location." })
     },
     impactTitle: t({ mn: "Дижитал Сангха", en: "Digital Sangha" }),
     impactSubtitle: t({ mn: "\"Гандантэгчинлэн хийд таны гарт\"", en: "\"Gandantegchinlen Monastery in your hand\"" }),

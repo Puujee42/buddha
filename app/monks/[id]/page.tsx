@@ -252,8 +252,7 @@ export default function MonkDetailPage() {
 
   // --- THEME DETECTION ---
   const keywords = [...(monk.specialties || []), monk.title?.en || ""].join(" ").toLowerCase();
-  const isNight = keywords.includes("tarot") || keywords.includes("star") || keywords.includes("divination") || keywords.includes("astrology") || keywords.includes("oracle");
-
+  const isNight =false;
   const theme = isNight ? {
       textColor: "text-indigo-100",
       accentColor: "text-indigo-400",

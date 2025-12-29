@@ -176,10 +176,7 @@ export default function OverlayNavbar() {
              </button>
 
              {/* Search Button */}
-             <button className={`p-2 rounded-full transition-colors hover:scale-110 active:scale-95 duration-200 hidden sm:block ${isScrolled ? "text-[#78350F]" : "text-white"}`}>
-                <Search size={18} />
-             </button>
-
+            
              {/* Divider */}
              <div className={`h-4 w-[1px] ${isScrolled ? "bg-[#78350F]/10" : "bg-white/20"} hidden md:block`} />
 
