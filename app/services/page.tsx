@@ -179,7 +179,6 @@ export default function CelestialServices() {
           )}
         </div>
       </main>
-      <GoldenNirvanaFooter />
     </>
   );
 }
