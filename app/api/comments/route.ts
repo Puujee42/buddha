@@ -19,9 +19,12 @@ export async function POST(request: Request) {
   try {
     const { db } = await connectToDatabase();
     const body = await request.json();
+
+    // Remove _id from body if present to avoid type conflicts with MongoDB ObjectId
+    const { _id, ...commentData } = body;
     
-    const newComment: Comment = {
-      ...body,
+    const newComment = {
+      ...commentData,
       createdAt: new Date(),
       karma: 1, // Start with 1 merit
     };

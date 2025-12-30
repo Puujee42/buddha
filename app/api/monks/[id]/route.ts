@@ -2,48 +2,54 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { ObjectId } from "mongodb";
 
-// Define the type for the route props
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 export async function GET(request: Request, props: Props) {
   try {
-    // 1. AWAIT THE PARAMS (This is the fix)
     const params = await props.params;
     const { id } = params;
 
-    console.log("🔍 Searching for Monk ID:", id); // This will now show the correct ID
-
     const { db } = await connectToDatabase();
 
-    let query = {};
+    // 1. Build a robust query
+    // We check if 'id' matches the MongoDB _id OR the clerkId
+    let query: any = {
+      $or: [
+        { clerkId: id },           // Match Clerk ID
+        { _id: id }                // Match String _id
+      ]
+    };
 
-    // 2. SEARCH LOGIC (Robust check for both ObjectId and String formats)
+    // Only attempt to convert to ObjectId if the string is valid 24-char hex
     if (ObjectId.isValid(id)) {
-      query = {
-        $or: [
-          { _id: new ObjectId(id) }, // Check as standard ObjectId
-          { _id: id }                // Check as String (just in case)
-        ]
-      };
-    } else {
-      query = { _id: id };
+      query.$or.push({ _id: new ObjectId(id) });
     }
 
-    // 3. EXECUTE QUERY
-    const monk = await db.collection("monks").findOne(query);
+    // 2. IMPORTANT: Search in the "users" collection (not "monks")
+    // We also enforce that the role must be "monk"
+    const monk = await db.collection("users").findOne({
+      $and: [
+        query,
+        { role: "monk" } 
+      ]
+    });
 
     if (!monk) {
-      console.error("❌ Monk not found in DB for ID:", id);
       return NextResponse.json(
-        { message: "Monk not found" },
+        { message: "Monk profile not found" },
         { status: 404 }
       );
     }
 
-    // 4. SUCCESS
-    return NextResponse.json(monk);
+    // 3. Serialize _id to string before returning
+    const serializedMonk = {
+      ...monk,
+      _id: monk._id.toString()
+    };
+
+    return NextResponse.json(serializedMonk);
 
   } catch (error: any) {
     console.error("🔥 Server Error:", error);

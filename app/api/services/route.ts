@@ -1,14 +1,41 @@
+import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
-import { NextResponse } from "next/server";// Import from your new helper
 
 export async function GET() {
   try {
-    const {db} = await connectToDatabase();
+    const { db } = await connectToDatabase();
     
-    // Fetch all services
-    const services = await db.collection("services").find({}).toArray();
+    // 1. Fetch "Official" Services from the 'services' collection
+    const standardServices = await db.collection("services").find({}).toArray();
 
-    return NextResponse.json(services, { status: 200 });
+    // 2. Fetch "Monk" Services from the 'users' collection
+    // We only want users who are monks and actually have services listed
+    const monks = await db.collection("users").find({
+      role: "monk",
+      services: { $exists: true, $not: { $size: 0 } }
+    }).toArray();
+
+    // 3. Extract and Flatten Monk Services
+    // We map over the monks, then map over their services to add context (like monk name/ID)
+    const monkServices = monks.flatMap((monk) => {
+      if (!monk.services || !Array.isArray(monk.services)) return [];
+      
+      return monk.services.map((svc: any) => ({
+        ...svc,
+        _id: svc.id, // Ensure it has a top-level _id (using the UUID generated in the form)
+        source: "monk", // Flag to help UI distinguish
+        monkId: monk._id.toString(),
+        providerName: monk.name, // Pass the monk's name object
+        type: "Monk Service", // Fallback type
+        // Ensure price is a number
+        price: Number(svc.price)
+      }));
+    });
+
+    // 4. Combine both lists
+    const allServices = [...standardServices, ...monkServices];
+
+    return NextResponse.json(allServices, { status: 200 });
   } catch (error) {
     console.error("Database Error:", error);
     return NextResponse.json({ error: "Failed to fetch services" }, { status: 500 });
@@ -18,9 +45,8 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const {db} = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
-    // Basic validation
     if (!body.title || !body.type || !body.price) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }

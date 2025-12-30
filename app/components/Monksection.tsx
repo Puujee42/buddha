@@ -21,7 +21,7 @@ const sectionStyles = `
 
 interface LanguageContent { mn: string; en: string; }
 interface MonkData {
-  id: number;
+  id: string | number;
   arcana: string;
   name: LanguageContent;
   title: LanguageContent;
@@ -89,18 +89,41 @@ const VikingCorner: React.FC<{ theme: ThemeConfig; className?: string }> = ({ th
   </svg>
 );
 
-const MONKS_DATA: MonkData[] = [
-  { id: 1, arcana: "ᚠ", name: { mn: "Данзанравжаа", en: "The Great Danzan" }, title: { mn: "Говийн Догшин Ноён Хутагт", en: "Saint of the Gobi" }, video: "/num1.mp4" },
-  { id: 2, arcana: "ᚢ", name: { mn: "Занабазар", en: "Holy Zanabazar" }, title: { mn: "Өндөр Гэгээн", en: "The High Creator" }, video: "/num4.mp4" },
-  { id: 3, arcana: "ᚦ", name: { mn: "Богд Жавзандамба", en: "8th Bogd Khan" }, title: { mn: "Монголын Шашны Тэргүүн", en: "Supreme Oracle" }, video: "/num3.mp4" },
-];
+import { Monk } from "@/database/types";
+
+const RUNES = ["ᚠ", "ᚢ", "ᚦ", "ᚨ", "ᚱ", "ᚲ", "ᚷ", "ᚹ"];
+
+const MONKS_DATA: MonkData[] = []; // Placeholder to avoid breaking other parts if referenced, though we replace usage.
 
 export default function MajesticTarotSection() {
   const { language, t } = useLanguage();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [monks, setMonks] = useState<MonkData[]>([]);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    async function fetchMonks() {
+      try {
+        const res = await fetch('/api/monks');
+        const data: Monk[] = await res.json();
+        
+        const mappedMonks: MonkData[] = data.map((m, i) => ({
+          id: m._id?.toString() || `temp-${i}`,
+          arcana: RUNES[i % RUNES.length],
+          name: m.name,
+          title: m.title,
+          video: m.video || "/num1.mp4"
+        }));
+        
+        setMonks(mappedMonks);
+      } catch (e) {
+        console.error("Failed to fetch monks for section", e);
+      }
+    }
+    fetchMonks();
+  }, []);
+
   if (!mounted) return <div className="h-screen bg-[#05051a]" />;
 
   const isNight = resolvedTheme === "dark";
@@ -163,7 +186,7 @@ export default function MajesticTarotSection() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-20 max-w-7xl mx-auto">
-           {MONKS_DATA.map((monk, index) => (
+           {monks.map((monk, index) => (
               <MajesticCard 
                 key={monk.id} 
                 monk={monk} 

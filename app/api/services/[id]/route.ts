@@ -8,30 +8,47 @@ type Props = {
 
 export async function GET(request: Request, props: Props) {
   try {
-    // 1. Await params (Required in Next.js 15)
     const params = await props.params;
     const { id } = params;
 
-    // 2. Connect
-    const {db} = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
+    // --- STRATEGY 1: Check 'services' collection (Standard Services) ---
     let query = {};
-
-    // 3. Robust Search (Matches either ObjectId or String ID)
-    // This allows your fallback data ("1") and real DB data (ObjectId) to both work
     if (ObjectId.isValid(id)) {
-      query = {
-        $or: [
-          { _id: new ObjectId(id) }, 
-          { _id: id } 
-        ]
-      };
+      query = { $or: [{ _id: new ObjectId(id) }, { _id: id }] };
     } else {
       query = { _id: id };
     }
 
-    const service = await db.collection("services").findOne(query);
+    let service = await db.collection("services").findOne(query);
 
+    // --- STRATEGY 2: If not found, check 'users' collection (Monk Services) ---
+    if (!service) {
+      // We look for a user where the 'services' array contains an item with id matching our param
+      const monk = await db.collection("users").findOne({
+        role: "monk",
+        "services.id": id 
+      });
+
+      if (monk && monk.services) {
+        // We found the monk, now find the specific service object from their array
+        const embeddedService = monk.services.find((s: any) => s.id === id);
+        
+        if (embeddedService) {
+          service = {
+            ...embeddedService,
+            _id: embeddedService.id, // map internal id to root _id
+            source: "monk",
+            monkId: monk._id.toString(),
+            providerName: monk.name,
+            description: `Service provided by ${monk.name.en || monk.name.mn}`, // Fallback description
+          };
+        }
+      }
+    }
+
+    // --- RESULT ---
     if (!service) {
       return NextResponse.json(
         { message: "Service not found" },

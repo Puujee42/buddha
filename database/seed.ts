@@ -1,11 +1,23 @@
 import { connectToDatabase } from "./db";
-import { Monk, Comment } from "./types";
+import { Monk, Comment, User } from "./types";
 
-const MONKS: Monk[] = [
+// Combine Monk and User interfaces for seeding
+type MonkUser = Monk & User;
+
+const MONKS: MonkUser[] = [
    {
+    clerkId: "seed_monk_1",
+    email: "dorje@nirvana.mn",
+    role: "monk",
+    karma: 1000,
+    meditationDays: 3650,
+    totalMerits: 5000,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     name: { mn: "Лам Дорж", en: "Mahasiddha Dorje" },
     title: { mn: "Наран мандлаас заларсан", en: "Descended from the Sun Realm" },
     image: "https://images.unsplash.com/photo-1524230659092-07f99a75c013?q=80&w=2070&auto=format&fit=crop",
+    video: "/num1.mp4",
     specialties: ["Astrology", "Sun Meditation"],
     bio: { 
       mn: "Тэрээр мянган нарны илчийг тээж явдаг. Түүнтэй уулзах нь амин хувиа хичээх үзлийн бохирдлыг шатааж арилгахтай адил юм.", 
@@ -30,13 +42,19 @@ const MONKS: Monk[] = [
       { id: "9star_ki", name: { mn: "Мэнгэ Голлох", en: "9-Star Ki" }, price: 25000, duration: "20 min" }
     ]
   },
-  // ... (Existing Tenzin, Altansukh, Nyima) ...
-  
-  // --- NEW TAROT/ORACLE MASTER ---
   {
+    clerkId: "seed_monk_2",
+    email: "saruul@nirvana.mn",
+    role: "monk",
+    karma: 800,
+    meditationDays: 2000,
+    totalMerits: 3000,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     name: { mn: "Удган Саруул", en: "Oracle Saruul" },
     title: { mn: "Оддын нууцыг тайлагч", en: "The Weaver of Starlight" },
-    image: "https://images.unsplash.com/photo-1594751543129-6701ad444259?q=80&w=2574&auto=format&fit=crop", // Mystical female or stylized portrait
+    image: "https://images.unsplash.com/photo-1594751543129-6701ad444259?q=80&w=2574&auto=format&fit=crop", 
+    video: "/num2.mp4",
     specialties: ["Tarot", "Mirror Divination", "Ancestral Healing"],
     bio: { 
       mn: "Тэрээр харагдахгүй ертөнцтэй ярилцаж, ирээдүйн бүрхэг мананг нэвт хардаг. Түүний мэлмий оддын хэлээр уншдаг.", 
@@ -64,25 +82,32 @@ const MONKS: Monk[] = [
         duration: "40 min"
       },
       {
-        id: "mirror_scrying", // New unique service
+        id: "mirror_scrying", 
         name: { mn: "Тольдох Мэргэ", en: "Mirror Scrying" },
         price: 60000,
         duration: "50 min"
       }
     ]
   },
-  
-  // --- ANOTHER DIVINATION MASTER ---
   {
+    clerkId: "seed_monk_3",
+    email: "bat@nirvana.mn",
+    role: "monk",
+    karma: 1200,
+    meditationDays: 5000,
+    totalMerits: 8000,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     name: { mn: "Зурхайч Бат", en: "Astrologer Bat" },
     title: { mn: "Цаг хугацааны эзэн", en: "Keeper of Time" },
     image: "https://images.unsplash.com/photo-1597175960098-b6360c7f0b99?q=80&w=2670&auto=format&fit=crop",
+    video: "/num3.mp4",
     specialties: ["I Ching", "Lunar Calendar"],
     bio: { 
       mn: "Тэрээр гараг эрхсийн хөдөлгөөнийг алган дээрээ тавьсан мэт хардаг. Түүний тооцоолол алдаа мадаггүй.", 
       en: "He sees the movement of planets as clearly as lines on his palm. His calculations are flawless." 
     },
-    isAvailable: false, // Example of busy status
+    isAvailable: false, 
     quote: {
       mn: "Зөв цагт хийсэн үйл бүтэх тавилантай.",
       en: "Action taken at the right time is destined to succeed."
@@ -104,7 +129,7 @@ const MONKS: Monk[] = [
         duration: "45 min"
       },
       {
-        id: "date_selection", // New Service
+        id: "date_selection", 
         name: { mn: "Ивээл Өдөр Сонгох", en: "Ausipicious Date Selection" },
         price: 20000,
         duration: "15 min"
@@ -112,47 +137,18 @@ const MONKS: Monk[] = [
     ]
   },
   {
-    name: { mn: "Лам Дорж", en: "Mahasiddha Dorje" },
-    title: { mn: "Наран мандлаас заларсан", en: "Descended from the Sun Realm" },
-    image: "https://images.unsplash.com/photo-1524230659092-07f99a75c013?q=80&w=2070&auto=format&fit=crop",
-    specialties: ["Astrology", "Sun Meditation"],
-    bio: { 
-      mn: "Тэрээр мянган нарны илчийг тээж явдаг. Түүнтэй уулзах нь амин хувиа хичээх үзлийн бохирдлыг шатааж арилгахтай адил юм.", 
-      en: "He carries the warmth of a thousand suns. To meet him is to burn away the impurities of the ego." 
-    },
-    isAvailable: true,
-    quote: {
-      mn: "Нарны гэрэл таны оюун ухаанд гэрэлтэн, таны замыг тодруулна.",
-      en: "May the light of the sun illuminate your mind and brighten your path."
-    },
-    yearsOfExperience: 30,
-    education: {
-      mn: "Сэра хийдэд Калачакра тарнийн ёсонд мэргэшсэн.",
-      en: "Master of Kalachakra Tantra studies at Sera Monastery."
-    },
-    philosophy: {
-      mn: "Гадаад ертөнцийн нар бол дотоод сэтгэлийн гэрлийн тусгал юм.",
-      en: "The outer sun is merely a reflection of the inner clear light of the mind."
-    },
-    services: [
-      {
-        id: "natal_astrology",
-        name: { mn: "Зурхайн зөвлөгөө", en: "Astrology Reading" },
-        price: 50000,
-        duration: "45 min"
-      },
-      {
-        id: "9star_ki",
-        name: { mn: "Мэнгэ Голлох", en: "9-Star Ki" },
-        price: 25000,
-        duration: "20 min"
-      }
-    ]
-  },
-  {
+    clerkId: "seed_monk_4",
+    email: "tenzin@nirvana.mn",
+    role: "monk",
+    karma: 900,
+    meditationDays: 2500,
+    totalMerits: 4500,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     name: { mn: "Мастер Тэнзин", en: "Dakini Tenzin" },
     title: { mn: "Огторгуйн үүлэн дээгүүр явагч", en: "Walker of the Sky Clouds" },
     image: "https://images.unsplash.com/photo-1606733276632-0c653063f256?q=80&w=2574&auto=format&fit=crop",
+    video: "/num4.mp4",
     specialties: ["Sky Healing", "Silence"],
     bio: { 
       mn: "Тэрээр өндөр оргилуудын дундуур нам гүм мэт хөдөлдөг. Түүний мэргэн ухаан дэлхийг тэтгэгч мөрөн мэт урсдаг.", 
@@ -178,76 +174,6 @@ const MONKS: Monk[] = [
         name: { mn: "Таро Мэргэ", en: "Tarot Reading" },
         price: 45000,
         duration: "40 min"
-      }
-    ]
-  },
-  {
-    name: { mn: "Эрдэмтэн Алтансүх", en: "Arhat Altansukh" },
-    title: { mn: "Алтан уул", en: "The Golden Mountain" },
-    image: "https://images.unsplash.com/photo-1542385958-89c02111d08e?q=80&w=2574&auto=format&fit=crop",
-    specialties: ["Earth Stability", "Ancient Texts"],
-    bio: { 
-      mn: "Тууштай, үл хөдлөх, мөнхийн. Тэрээр тэнүүчлэх сүнсийг газардуулж, тогтвортой байдлын адислалыг хайрладаг.", 
-      en: "Solid, unmoving, eternal. He grounds the wandering spirit and grants the blessing of stability." 
-    },
-    isAvailable: true,
-    quote: {
-      mn: "Таны үндэс газар шиг бат бөх байг.",
-      en: "May your roots be as firm as the earth."
-    },
-    yearsOfExperience: 45,
-    education: {
-      mn: "Гандантэгчинлэн хийдэд Абхидхармын гүн ухаан судалсан.",
-      en: "Scholar of Abhidharma (Higher Knowledge) at Gandan Monastery."
-    },
-    philosophy: {
-      mn: "Сахилга бат бол мэргэн ухааныг ургуулах хөрс юм.",
-      en: "Discipline is the fertile ground where wisdom grows."
-    },
-    services: [
-      {
-        id: "sutra_chanting",
-        name: { mn: "Гандангийн Ном", en: "Sutra Chanting" },
-        price: 30000,
-        duration: "30 min"
-      }
-    ]
-  },
-  {
-    name: { mn: "Лам Нима", en: "Lama Nyima" },
-    title: { mn: "Ариун цагаан бадамлянхуа", en: "The Pure White Lotus" },
-    image: "https://images.unsplash.com/photo-1623946221523-286a110a12c8?q=80&w=2670&auto=format&fit=crop",
-    specialties: ["Compassion", "Heart Sutra"],
-    bio: { 
-      mn: "Шавраас төрсөн ч буртаглагдаагүй. Түүний энэрэл нигүүлсэл арван зүгт хүчин чармайлтгүйгээр түгдэг.", 
-      en: "Born from the mud but unstained. His compassion radiates in all ten directions effortlessly." 
-    },
-    isAvailable: true,
-    quote: {
-      mn: "Таны зүрх бадмаар дүүрэн байг.",
-      en: "May your heart bloom like the lotus."
-    },
-    yearsOfExperience: 15,
-    education: {
-      mn: "Бодьсадвын явдал, Ламрим сургаалд суралцсан.",
-      en: "Dedicated student of the Bodhisattva Path and Lamrim teachings."
-    },
-    philosophy: {
-      mn: "Бусдыг энэрэх нь өөрийгөө аврах цор ганц зам мөн.",
-      en: "Cherishing others is the only path to saving oneself."
-    },
-    services: [
-      {
-        id: "dharma_counseling",
-        name: { mn: "Сэтгэл Зүйн Зөвлөгөө", en: "Dharma Counseling" },
-        price: 80000,
-        duration: "60 min"
-      },
-      {
-        id: "meditation_guide",
-        name: { mn: "Бясалгал", en: "Meditation Guide" },
-        price: 35000,
-        duration: "60 min"
       }
     ]
   }
@@ -322,24 +248,24 @@ const ALL_SERVICES = [
   },
    {
     id: "mirror_scrying",
-    type: "divination", // This triggers the Night/Cosmic theme
+    type: "divination", 
     title: { mn: "Тольдох Мэргэ", en: "Mirror Scrying" },
     subtitle: { mn: "Далд Ертөнц", en: "Spirit Vision" },
     desc: { mn: "Эртний тольдох аргаар далд ертөнцийн мэдээллийг авах.", en: "Gazing into the sacred mirror to receive messages from the spirit realm." },
     duration: "50 min",
     price: 60000,
-    image: "https://images.unsplash.com/photo-1596468138722-19e9929737ae?q=80&w=2670&auto=format&fit=crop", // Mystical reflection image
+    image: "https://images.unsplash.com/photo-1596468138722-19e9929737ae?q=80&w=2670&auto=format&fit=crop", 
     quote: { mn: "Үнэн толинд тусдаг.", en: "Truth is reflected in the silence." }
   },
   {
     id: "date_selection",
-    type: "divination", // Also Night theme because it's calculation/astrology
+    type: "divination", 
     title: { mn: "Ивээл Өдөр", en: "Auspicious Dates" },
     subtitle: { mn: "Цаг Хугацаа", en: "Time Mastery" },
     desc: { mn: "Хурим, нүүдэл, шинэ ажил эхлэхэд ээлтэй сайн өдрийг сонгох.", en: "Selecting the perfect cosmic alignment for weddings, moving, or new ventures." },
     duration: "15 min",
     price: 20000,
-    image: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=2668&auto=format&fit=crop", // Calendar/Time image
+    image: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=2668&auto=format&fit=crop", 
     quote: { mn: "Цаг нь ирэхэд бүх зүйл бүтнэ.", en: "When the time is right, all things align." }
   }
 ];
@@ -360,14 +286,20 @@ export async function seedDatabase() {
   console.log("🌱 Starting spiritual seeding...");
   const { db } = await connectToDatabase();
 
-  await db.collection("monks").deleteMany({}); 
-  await db.collection("monks").insertMany(MONKS);
+  // Clear existing data (optional, but good for clean slate during dev)
+  // We're moving monks to 'users' collection with role='monk'
+  // Be careful if you have real users! In dev, it's fine.
+  
+  // NOTE: This will delete ALL users including potential 'clients'. 
+  // For a safer seed, we should delete only those with role 'monk'.
+  await db.collection("users").deleteMany({ role: "monk" }); 
+  await db.collection("users").insertMany(MONKS as any);
 
   await db.collection("comments").deleteMany({}); 
-  await db.collection("comments").insertMany(INITIAL_COMMENTS);
+  await db.collection("comments").insertMany(INITIAL_COMMENTS as any);
 
   await db.collection("services").deleteMany({});
-  await db.collection("services").insertMany(ALL_SERVICES);
+  await db.collection("services").insertMany(ALL_SERVICES as any);
 
   console.log("🌟 Seeding complete.");
   return { monksCount: MONKS.length, commentsCount: INITIAL_COMMENTS.length , servicesCount: ALL_SERVICES.length};
@@ -376,7 +308,7 @@ export async function seedDatabase() {
 if (require.main === module) {
   seedDatabase()
     .then((res) => {
-      console.log(`✨ Seeding complete. Monks: ${res.monksCount}, Comments: ${res.commentsCount}, Services: ${res.servicesCount}`);
+      console.log(`✨ Seeding complete. Monks (in Users): ${res.monksCount}, Comments: ${res.commentsCount}, Services: ${res.servicesCount}`);
       process.exit(0);
     })
     .catch((err) => {

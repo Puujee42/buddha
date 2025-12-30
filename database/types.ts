@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 
 export interface User {
-  _id?: ObjectId;
+  _id?: ObjectId | string;
   clerkId: string; // Links to Clerk Auth
   email: string;
   firstName?: string;
@@ -19,7 +19,7 @@ export interface User {
 }
 
 export interface Monk {
-  _id?: ObjectId;
+  _id?: ObjectId | string;
   name: {
     mn: string;
     en: string;
@@ -63,9 +63,9 @@ export interface Monk {
 }
 
 export interface Booking {
-  _id?: ObjectId;
+  _id?: ObjectId | string;
   userId: string; // Clerk ID
-  monkId: ObjectId;
+  monkId: ObjectId | string;
   date: Date;
   type: "Astrology" | "Counseling" | "Prayer" | "Ritual";
   status: "pending" | "confirmed" | "completed" | "cancelled";
@@ -74,7 +74,7 @@ export interface Booking {
 }
 
 export interface Comment {
-  _id?: ObjectId;
+  _id?: ObjectId | string;
   userId?: string; // Optional if guest
   authorName: string;
   authorRole: string;
@@ -85,7 +85,7 @@ export interface Comment {
   createdAt: Date;
 }
 export interface Service{
-  _id?: ObjectId;
+  _id?: ObjectId | string;
   id: string;
   name: {
     mn: string;

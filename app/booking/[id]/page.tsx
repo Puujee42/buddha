@@ -8,12 +8,13 @@ import {
   Sun, Orbit, Star, Users, Sparkles
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useUser } from "@clerk/nextjs"; 
 import OverlayNavbar from "../../components/Navbar";
 import GoldenNirvanaFooter from "../../components/Footer";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { Service, Monk } from "@/database/types";
+import { Service, Monk } from "@/database/types"; 
 
-// --- MAXIMIZED ZODIAC GEOMETRIC FRAME WITH ADVANCED ANIMATIONS ---
+// --- ALTAR FRAME (Unchanged) ---
 const AltarFrame = ({ color }: { color: string }) => (
   <div className="absolute inset-0 pointer-events-none z-30">
     <svg className="w-full h-full" viewBox="0 0 500 800" fill="none" preserveAspectRatio="none">
@@ -23,7 +24,6 @@ const AltarFrame = ({ color }: { color: string }) => (
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
       </defs>
-      {/* Animated Geometric Corner Brackets with Dash Effect */}
       <motion.path
         initial={{ pathLength: 0, strokeDashoffset: 0 }}
         animate={{ pathLength: 1, strokeDashoffset: [0, 1] }}
@@ -31,7 +31,6 @@ const AltarFrame = ({ color }: { color: string }) => (
         d="M60 100 L60 60 L100 60 M400 60 L440 60 L440 100 M440 700 L440 740 L400 740 M100 740 L60 740 L60 700"
         stroke={color} strokeWidth="1.5" strokeOpacity="0.5" strokeDasharray="5 5"
       />
-      {/* Pulsing and Fading Celestial Symbols Side Bar */}
       <g fill={color} className="opacity-20" style={{ fontSize: '14px' }} filter="url(#zodiac-glow)">
         <motion.text
           x="25" y="300" className="[writing-mode:vertical-rl] font-serif tracking-[1em]"
@@ -44,7 +43,6 @@ const AltarFrame = ({ color }: { color: string }) => (
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         >♎ ♏ ♐ ♑ ♒ ♓</motion.text>
       </g>
-      {/* Rotating and Pulsing Central Orbit Rings */}
       <motion.circle
         cx="250" cy="60" r="30"
         stroke={color} strokeWidth="0.5" strokeOpacity="0.2"
@@ -66,49 +64,133 @@ export default function RitualBookingPage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { t, language } = useLanguage();
   const { resolvedTheme } = useTheme();
+  const { user } = useUser(); 
+
   const [mounted, setMounted] = useState(false);
-  const [service, setService] = useState<Service | null>(null);
+  const [service, setService] = useState<any | null>(null); 
   const [monks, setMonks] = useState<Monk[]>([]);
   const [selectedMonk, setSelectedMonk] = useState<Monk | null>(null);
+  
   const [loading, setLoading] = useState(true);
   const [isBooked, setIsBooked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDateIndex, setSelectedDateIndex] = useState<number | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState(user?.fullName || ""); 
+  const [userEmail, setUserEmail] = useState(user?.primaryEmailAddress?.emailAddress || ""); 
   const [userNote, setUserNote] = useState("");
   const [showMonkSelector, setShowMonkSelector] = useState(false);
+  const [takenSlots, setTakenSlots] = useState<string[]>([]); 
+
+  // --- MOVED 'dates' HERE (Before useEffect) ---
+  const dates = useMemo(() => {
+    const arr = [];
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      arr.push({
+        day: d.getDate(),
+        week: d.toLocaleDateString(language === 'mn' ? 'mn' : 'en', { weekday: 'short' }),
+        fullDate: d
+      });
+    }
+    return arr;
+  }, [language]);
+  // -------------------------------------------
+
+  useEffect(() => {
+    if (user && user.fullName) setUserName(user.fullName);
+    if (user && user.primaryEmailAddress?.emailAddress) setUserEmail(user.primaryEmailAddress.emailAddress);
+  }, [user]);
 
   useEffect(() => {
     setMounted(true);
     async function loadData() {
       if (!id) return;
+      
       try {
         setLoading(true);
-        const servicesRes = await fetch('/api/services');
-        if (servicesRes.ok) {
-          const services: Service[] = await servicesRes.json();
-          const found = services.find((s) => String(s._id) === id);
-          if (found) setService(found);
+        
+        // 1. Fetch Service
+        let fetchedService = null; // Store locally to use immediately
+        
+        const serviceRes = await fetch(`/api/services/${id}`);
+        if (serviceRes.ok) {
+          fetchedService = await serviceRes.json();
+          setService(fetchedService);
+        } else {
+            // Fallback: Fetch all
+            const allRes = await fetch('/api/services');
+            const allData = await allRes.json();
+            const found = allData.find((s: any) => String(s._id) === id || String(s.id) === id);
+            if (found) {
+                fetchedService = found;
+                setService(found);
+            }
         }
+
+        // 2. Fetch Monks
         const monksRes = await fetch('/api/monks');
         if (monksRes.ok) {
           const allMonks: Monk[] = await monksRes.json();
           setMonks(allMonks);
-          if (allMonks.length > 0) setSelectedMonk(allMonks[0]);
+
+          // 3. Set Default Monk (Using the LOCAL variable 'fetchedService', not the state)
+          if (fetchedService && fetchedService.monkId) {
+             const preSelected = allMonks.find(m => String(m._id) === fetchedService.monkId);
+             if (preSelected) setSelectedMonk(preSelected);
+          } else if (allMonks.length > 0) {
+             // Only default to first monk if no specific monk was required
+             setSelectedMonk(allMonks[0]);
+          }
         }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     }
     loadData();
+    
+    // REMOVED 'service' from dependencies to stop the loop
   }, [id]);
+  // --- FETCH TAKEN SLOTS (Now 'dates' is defined above) ---
+  useEffect(() => {
+    async function fetchTakenSlots() {
+      if (selectedMonk && selectedDateIndex !== null) {
+        const selectedDate = dates[selectedDateIndex].fullDate.toISOString().split('T')[0]; // YYYY-MM-DD
+        try {
+          const res = await fetch(`/api/bookings?monkId=${selectedMonk._id?.toString()}&date=${selectedDate}`);
+          if (res.ok) {
+            const data = await res.json();
+            setTakenSlots(data);
+          } else {
+            setTakenSlots([]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch taken slots:", error);
+          setTakenSlots([]);
+        }
+      } else {
+        setTakenSlots([]); 
+      }
+    }
+    fetchTakenSlots();
+  }, [selectedMonk, selectedDateIndex, dates]);
+
 
   const isDark = resolvedTheme === "dark";
 
-  // --- MAXIMIZED THEME WITH ADDITIONAL EFFECTS ---
+  // --- SAFE DATA ACCESS HELPER ---
+  const displayTitle = service 
+    ? (service.title?.[language] || service.name?.[language] || (language === 'mn' ? "Нэргүй" : "Untitled")) 
+    : "";
+
+  const displayDesc = service 
+    ? (service.desc?.[language] || service.description || "") 
+    : "";
+
   const theme = isDark ? {
-    accent: "#50F2CE", // Cyan
-    secondary: "#C72075", // Magenta
+    accent: "#50F2CE", 
+    secondary: "#C72075", 
     bg: "bg-[#05051a]",
     card: "bg-[#0C164F]/80 border-cyan-400/10 backdrop-blur-3xl",
     text: "text-white",
@@ -134,40 +216,78 @@ export default function RitualBookingPage() {
     selectorBg: "bg-stone-100"
   };
 
-  const dates = useMemo(() => {
-    const arr = [];
-    const today = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      arr.push({
-        day: d.getDate(),
-        week: d.toLocaleDateString(language === 'mn' ? 'mn' : 'en', { weekday: 'short' }),
-        fullDate: d
-      });
-    }
-    return arr;
-  }, [language]);
-
   const times = ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
 
   const handleBooking = async () => {
-    if (!userName || !selectedTime || !selectedMonk) return;
+    if (!userName || !userEmail || !selectedTime || !selectedMonk || selectedDateIndex === null || !service) {
+      alert("Please fill all required fields and select a monk and time.");
+      return;
+    }
+
     setIsSubmitting(true);
-    // Simulated API call
-    setTimeout(() => {
-      setIsBooked(true);
+    const selectedDate = dates[selectedDateIndex].fullDate.toISOString().split('T')[0]; 
+
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          monkId: selectedMonk._id?.toString(),
+          date: selectedDate,
+          time: selectedTime,
+          userName: userName,
+          userEmail: userEmail,
+          note: userNote,
+          serviceId: service._id || service.id, 
+        }),
+      });
+
+      if (response.ok) {
+        setIsBooked(true);
+        if (selectedMonk && selectedDateIndex !== null) {
+            const res = await fetch(`/api/bookings?monkId=${selectedMonk._id?.toString()}&date=${selectedDate}`);
+            if (res.ok) setTakenSlots(await res.json());
+        }
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || "Failed to book session. Please try again.");
+      }
+    } catch (error) {
+      console.error("Booking error:", error);
+      alert("An unexpected error occurred. Please try again later.");
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   if (!mounted) return null;
+  if (loading) { 
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${theme.bg}`}>
+        <Loader2 className="animate-spin text-amber-600" size={48} />
+      </div>
+    );
+  }
+  if (!service) {
+    return (
+      <div className={`min-h-screen flex flex-col items-center justify-center p-6 ${theme.bg} ${theme.text}`}>
+        <h1 className="text-4xl font-serif mb-4">{t({mn: "Үйлчилгээ олдсонгүй", en: "Service Not Found"})}</h1>
+        <p className="mb-8 opacity-70">{t({mn: "Уучлаарай, таны хайсан үйлчилгээ олдсонгүй эсвэл устагдсан байна.", en: "Sorry, the ritual you are looking for could not be found."})}</p>
+        <Link href="/services" className={`px-8 py-3 rounded-full font-bold ${theme.button}`}>
+          <ArrowLeft size={16} className="inline-block mr-2" /> {t({mn: "Буцах", en: "Return to Services"})}
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <>
       <OverlayNavbar />
       <div className={`min-h-screen transition-colors duration-1000 pt-32 pb-20 px-6 overflow-hidden ${theme.bg}`}>
-        {/* --- MAXIMIZED NEBULA ATMOSPHERE WITH MORE PARTICLES AND ANIMATIONS --- */}
+        
+        {/* --- BACKGROUND (Unchanged) --- */}
         <div className="fixed inset-0 pointer-events-none z-0">
           {isDark && (
             <>
@@ -181,31 +301,6 @@ export default function RitualBookingPage() {
                 animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.9, 0.2], rotate: [0, -180, -360] }}
                 transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 3 }}
               />
-              {/* Enhanced Floating Particles with varied animations */}
-              {[...Array(30)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className={`absolute rounded-full ${theme.particle}`}
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
-                    width: `${Math.random() * 2 + 1}px`,
-                    height: `${Math.random() * 2 + 1}px`,
-                  }}
-                  animate={{
-                    y: [0, -30 + Math.random() * 20, 0],
-                    x: [0, Math.random() * 10 - 5, 0],
-                    opacity: [0, 1, 0],
-                    scale: [1, 1.5 + Math.random(), 1]
-                  }}
-                  transition={{
-                    duration: Math.random() * 4 + 2,
-                    repeat: Infinity,
-                    delay: Math.random() * 6,
-                    ease: "easeInOut"
-                  }}
-                />
-              ))}
             </>
           )}
           <div className={`absolute inset-0 opacity-[0.05] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] ${isDark ? 'invert' : ''}`} />
@@ -217,8 +312,10 @@ export default function RitualBookingPage() {
               <ArrowLeft size={14} /> {t({ mn: "Буцах", en: "Return to Path" })}
             </Link>
           </motion.div>
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            {/* LEFT: SERVICE ARCANA WITH MAXIMIZED ANIMATIONS */}
+            
+            {/* LEFT: INFO */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -231,21 +328,24 @@ export default function RitualBookingPage() {
               >
                 {theme.icon}
               </motion.div>
+              
               <motion.h1
                 className={`text-6xl md:text-8xl font-serif font-black leading-[0.9] mb-8 tracking-tighter ${theme.text}`}
                 animate={{ scale: [1, 1.05, 1], opacity: [1, 0.8, 1] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               >
-                {service?.title[language]}
+                {displayTitle}
               </motion.h1>
+
               <motion.p
                 className={`text-lg leading-relaxed mb-10 opacity-70 ${isDark ? 'text-cyan-50' : theme.text} max-w-md`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.7 }}
                 transition={{ delay: 0.5, duration: 1 }}
               >
-                {service?.desc[language]}
+                {displayDesc}
               </motion.p>
+
               <div className="flex gap-10">
                 <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity }}>
                   <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-2 ${theme.subText}`}>Cycle</p>
@@ -254,11 +354,11 @@ export default function RitualBookingPage() {
                 <div className="w-px h-12 bg-current opacity-10" />
                 <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 1 }}>
                   <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-2 ${theme.subText}`}>Offering</p>
-                  <p className={`text-3xl font-serif ${theme.text}`}>{service?.price.toLocaleString()}₮</p>
+                  <p className={`text-3xl font-serif ${theme.text}`}>{Number(service?.price || 0).toLocaleString()}₮</p>
                 </motion.div>
               </div>
               
-              {/* Monk Selector Button */}
+              {/* MONK SELECTOR */}
               <motion.button
                 onClick={() => setShowMonkSelector(!showMonkSelector)}
                 className={`mt-12 flex items-center gap-3 px-6 py-3 rounded-xl border transition-all ${isDark ? 'border-cyan-400/30 hover:bg-cyan-950/30' : 'border-amber-200 hover:bg-amber-50'}`}
@@ -291,7 +391,6 @@ export default function RitualBookingPage() {
                         whileHover={{ x: 5 }}
                       >
                         <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${isDark ? 'border-cyan-400/30' : 'border-amber-200'}`}>
-                          {/* Use a placeholder if image is missing, though type says it has image */}
                           <img src={monk.image} alt={monk.name[language]} className="w-full h-full object-cover" />
                         </div>
                         <div>
@@ -309,7 +408,6 @@ export default function RitualBookingPage() {
                 )}
               </AnimatePresence>
 
-              {/* Selected Monk Display (if selector hidden) */}
               {!showMonkSelector && selectedMonk && (
                  <motion.div 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -326,7 +424,7 @@ export default function RitualBookingPage() {
               )}
             </motion.div>
 
-            {/* RIGHT: THE RITUAL ALTAR (BOOKING FORM) */}
+            {/* RIGHT: BOOKING FORM */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -395,22 +493,29 @@ export default function RitualBookingPage() {
                             <Clock size={14} /> II. {t({mn: "Цаг Сонгох", en: "Choose Time"})}
                           </h2>
                           <div className="grid grid-cols-3 gap-3">
-                            {times.map((time, idx) => (
-                              <motion.button
-                                key={time}
-                                onClick={() => setSelectedTime(time)}
-                                className={`py-3 rounded-xl font-black text-[10px] transition-all border-2
-                                  ${selectedTime === time
-                                    ? `${isDark ? 'bg-cyan-400 text-[#05051a] border-cyan-400' : 'bg-amber-700 text-white border-amber-700'}`
-                                    : `border-transparent ${isDark ? 'bg-cyan-950/40 text-cyan-200/40 hover:bg-cyan-950/60' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}`}
-                                whileHover={{ scale: 1.05 }}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                              >
-                                {time}
-                              </motion.button>
-                            ))}
+                            {times.map((time, idx) => {
+                                const isTaken = takenSlots.includes(time);
+                                return (
+                                <motion.button
+                                    key={time}
+                                    onClick={() => !isTaken && setSelectedTime(time)} // Only select if not taken
+                                    disabled={isTaken} // Disable if taken
+                                    className={`py-3 rounded-xl font-black text-[10px] transition-all border-2
+                                    ${selectedTime === time
+                                        ? `${isDark ? 'bg-cyan-400 text-[#05051a] border-cyan-400' : 'bg-amber-700 text-white border-amber-700'}`
+                                        : isTaken // Style for taken slots
+                                            ? `bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed`
+                                            : `border-transparent ${isDark ? 'bg-cyan-950/40 text-cyan-200/40 hover:bg-cyan-950/60' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`
+                                    }`}
+                                    whileHover={!isTaken ? { scale: 1.05 } : {}}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                >
+                                    {time} {isTaken && (language === 'mn' ? "(Завгүй)" : "(Taken)")}
+                                </motion.button>
+                                );
+                            })}
                           </div>
                         </motion.div>
                       )}
@@ -434,6 +539,14 @@ export default function RitualBookingPage() {
                             onChange={(e) => setUserName(e.target.value)}
                             whileFocus={{ scale: 1.01 }}
                           />
+                          <motion.input
+                            type="email"
+                            className={`w-full p-4 rounded-2xl border-2 outline-none transition-all font-serif text-lg ${theme.input} focus:border-opacity-100`}
+                            placeholder={t({mn: "Таны И-мэйл", en: "Your Email"})}
+                            value={userEmail}
+                            onChange={(e) => setUserEmail(e.target.value)}
+                            whileFocus={{ scale: 1.01 }}
+                          />
                           <motion.textarea
                             className={`w-full p-4 rounded-2xl border-2 outline-none h-24 resize-none transition-all font-serif text-lg ${theme.input} focus:border-opacity-100`}
                             placeholder={t({mn: "Тэмдэглэл (заавал биш)", en: "Notes (Optional)"})}
@@ -442,7 +555,7 @@ export default function RitualBookingPage() {
                             whileFocus={{ scale: 1.01 }}
                           />
                           <motion.button
-                            disabled={!userName || isSubmitting || !selectedMonk}
+                            disabled={!userName || !userEmail || !selectedMonk || selectedDateIndex === null || !selectedTime || isSubmitting}
                             onClick={handleBooking}
                             className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 disabled:opacity-30 shadow-xl ${theme.button}`}
                             whileHover={{ scale: 1.02 }}
@@ -462,7 +575,6 @@ export default function RitualBookingPage() {
           </div>
         </main>
       </div>
-      <GoldenNirvanaFooter />
     </>
   );
 }
