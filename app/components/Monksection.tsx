@@ -126,7 +126,7 @@ export default function MajesticTarotSection() {
 
   if (!mounted) return <div className="h-screen bg-[#05051a]" />;
 
-  const isNight = resolvedTheme === "dark";
+  const isNight = false;
 
   // --- ZODIAC GALAXY THEME CONFIG ---
   const theme: ThemeConfig = isNight ? {
