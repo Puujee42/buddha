@@ -81,7 +81,7 @@ export interface Comment {
   avatar: string;
   text: string;
   karma: number; // Likes/Upvotes
-  element: "gold" | "saffron" | "ochre" | "light"; // Visual theme
+  element: "gold" | "saffron" | "ochre" | "light"|"earth"|"wind"|"water"|"fire"|"air"|"dark"; // Visual theme
   createdAt: Date;
 }
 export interface Service{
