@@ -338,11 +338,7 @@ export default function DashboardPage() {
                 </motion.div>
               </div>
 
-              {userRole === 'client' && (
-                <motion.button whileHover={{ scale: 1.05 }} className="bg-[#F59E0B] text-[#451a03] px-8 py-4 rounded-full font-bold shadow-lg hover:bg-[#D97706] hover:text-white transition-all flex items-center gap-3">
-                    <Calendar size={20} /> {content.bookNow}
-                </motion.button>
-              )}
+             
             </div>
           </div>
         </section>

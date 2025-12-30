@@ -104,13 +104,13 @@ export default function CelestialRiverComments() {
   const mouseX = useSpring(0, { stiffness: 40, damping: 20 });
   const mouseY = useSpring(0, { stiffness: 40, damping: 20 });
 
-  useEffect(() => { setMounted(true); }, []);
-
-  if (!mounted) return <div className="min-h-screen bg-[#05051a]" />;
-
   const isDark = resolvedTheme === "dark";
   const glowColor = isDark ? 'rgba(199, 32, 117, 0.3)' : 'rgba(251, 191, 36, 0.3)';
   const glowTemplate = useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, ${glowColor}, transparent 70%)`;
+
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!mounted) return <div className="min-h-screen bg-[#05051a]" />;
 
   const handleMouseMove = ({ clientX, clientY, currentTarget }: React.MouseEvent) => {
     const { left, top } = currentTarget.getBoundingClientRect();

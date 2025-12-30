@@ -4,11 +4,10 @@ import React, { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plus, Trash2, Save, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, Upload, ImageIcon, X } from "lucide-react";
 
 // --- THE INTERFACE ---
 export interface Monk {
-  // _id is handled by DB
   name: { mn: string; en: string };
   title: { mn: string; en: string };
   image: string;
@@ -32,6 +31,7 @@ export default function MonkOnboarding() {
   const { user } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false); // New state for image upload
 
   // --- FORM STATE ---
   const [formData, setFormData] = useState<Monk>({
@@ -49,10 +49,59 @@ export default function MonkOnboarding() {
     services: [],
   });
 
+  // --- CLOUDINARY UPLOAD HANDLER ---
+  // --- CLOUDINARY UPLOAD HANDLER ---
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      alert("Cloudinary configuration missing in .env");
+      setUploadingImage(false);
+      return;
+    }
+
+    const data = new FormData();
+    data.append("file", file);
+    data.append("upload_preset", uploadPreset);
+
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: data,
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Cloudinary Error:", errorData); // <--- Check Console for this!
+        throw new Error(errorData.error?.message || "Image upload failed");
+      }
+
+      const fileData = await res.json();
+      setFormData((prev) => ({ ...prev, image: fileData.secure_url }));
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      alert(`Upload failed: ${error.message}`);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+  const removeImage = () => {
+    setFormData((prev) => ({ ...prev, image: "" }));
+  };
+
   // --- HELPERS ---
   const handleInputChange = (
     section: keyof Monk,
-    subField: string | null, // e.g., 'mn' or 'en'
+    subField: string | null,
     value: any
   ) => {
     setFormData((prev) => {
@@ -126,6 +175,11 @@ export default function MonkOnboarding() {
     e.preventDefault();
     if (!user) return;
     
+    if (!formData.image) {
+        alert("Please upload a profile image.");
+        return;
+    }
+
     setLoading(true);
 
     try {
@@ -141,14 +195,11 @@ export default function MonkOnboarding() {
         body: JSON.stringify(payload) 
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to save profile");
-      }
+      if (!res.ok) throw new Error("Failed to save profile");
       
       router.push("/dashboard");
     } catch (error) {
       console.error(error);
-      // Optional: Add toast error here
     } finally {
       setLoading(false);
     }
@@ -192,20 +243,58 @@ export default function MonkOnboarding() {
             </div>
           </section>
 
-          {/* 2. Media */}
+          {/* 2. Media (UPDATED WITH CLOUDINARY) */}
           <section className="space-y-4">
             <h3 className="text-xl font-bold border-b border-[#D97706]/20 pb-2">Media</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input 
-                 placeholder="Profile Image URL" 
-                 className="p-3 rounded-xl bg-white border border-[#D97706]/20 focus:outline-[#D97706]"
-                 value={formData.image} onChange={(e) => handleInputChange("image", null, e.target.value)} required
-              />
-              <input 
-                 placeholder="Intro Video URL (Optional)" 
-                 className="p-3 rounded-xl bg-white border border-[#D97706]/20 focus:outline-[#D97706]"
-                 value={formData.video} onChange={(e) => handleInputChange("video", null, e.target.value)}
-              />
+              
+              {/* Image Upload Area */}
+              <div className="relative">
+                <label className="block text-xs font-bold text-[#D97706] mb-2 uppercase">Profile Picture</label>
+                
+                {formData.image ? (
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden border-2 border-[#D97706] group">
+                        <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button 
+                                type="button" 
+                                onClick={removeImage} 
+                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="relative w-full h-40 rounded-xl border-2 border-dashed border-[#D97706]/40 bg-white hover:bg-[#FFFBEB] transition-colors flex flex-col items-center justify-center cursor-pointer">
+                        <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            disabled={uploadingImage}
+                        />
+                        {uploadingImage ? (
+                            <Loader2 className="animate-spin text-[#D97706]" size={30} />
+                        ) : (
+                            <>
+                                <ImageIcon className="text-[#D97706]/60 mb-2" size={30} />
+                                <span className="text-xs text-[#D97706] font-bold uppercase tracking-widest">Click to Upload</span>
+                            </>
+                        )}
+                    </div>
+                )}
+              </div>
+
+              {/* Video URL (Kept as text input) */}
+              <div>
+                <label className="block text-xs font-bold text-[#D97706] mb-2 uppercase">Intro Video URL (Optional)</label>
+                <input 
+                    placeholder="e.g. YouTube or Vimeo link" 
+                    className="w-full p-3 rounded-xl bg-white border border-[#D97706]/20 focus:outline-[#D97706]"
+                    value={formData.video} onChange={(e) => handleInputChange("video", null, e.target.value)}
+                />
+              </div>
             </div>
           </section>
 
@@ -345,7 +434,7 @@ export default function MonkOnboarding() {
           <div className="pt-6">
             <button 
               type="submit" 
-              disabled={loading}
+              disabled={loading || uploadingImage}
               className="w-full py-4 bg-[#D97706] text-white rounded-2xl font-bold text-lg hover:bg-[#B45309] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? <Loader2 className="animate-spin" /> : <Save size={20} />}

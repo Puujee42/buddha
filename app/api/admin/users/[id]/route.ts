@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { ObjectId } from "mongodb";
+import { clerkClient } from "@clerk/nextjs/server"; // 1. Import Clerk Client
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -13,7 +14,7 @@ export async function DELETE(request: Request, props: Props) {
 
     const { db } = await connectToDatabase();
 
-    // Construct query: Try to match by ObjectId (MongoDB ID) OR String (Clerk ID)
+    // Construct query to find the specific user
     let query = {};
     if (ObjectId.isValid(id)) {
       query = { _id: new ObjectId(id) };
@@ -21,17 +22,37 @@ export async function DELETE(request: Request, props: Props) {
       query = { clerkId: id };
     }
 
-    // Delete the user
-    const result = await db.collection("users").deleteOne(query);
+    // 2. Fetch the user first to get the correct Clerk ID
+    const userToDelete = await db.collection("users").findOne(query);
 
-    if (result.deletedCount === 0) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    if (!userToDelete) {
+      return NextResponse.json({ message: "User not found in database" }, { status: 404 });
     }
 
-    // Optional: Delete associated bookings? 
-    // For now, we'll keep bookings for history, or you could delete them here too.
+    // 3. Delete from Clerk (if a clerkId exists)
+    if (userToDelete.clerkId) {
+      try {
+        const client = await clerkClient();
+        await client.users.deleteUser(userToDelete.clerkId);
+        console.log(`User ${userToDelete.clerkId} deleted from Clerk.`);
+      } catch (clerkError: any) {
+        // We log the error but allow the process to continue. 
+        // This handles cases where the user was *already* deleted from Clerk manually.
+        console.error("Clerk deletion failed (or user already missing):", clerkError.message || clerkError);
+      }
+    }
 
-    return NextResponse.json({ message: "User deleted successfully" });
+    // 4. Delete from MongoDB
+    const result = await db.collection("users").deleteOne(query);
+
+    // Optional: Delete their bookings to keep data clean
+    // await db.collection("bookings").deleteMany({ monkId: userToDelete._id.toString() }); // If they were a monk
+    // await db.collection("bookings").deleteMany({ userEmail: userToDelete.email }); // If they were a client
+
+    return NextResponse.json({ 
+      message: "User successfully deleted from Database and Clerk", 
+      dbResult: result 
+    });
 
   } catch (error: any) {
     console.error("Delete User Error:", error);
