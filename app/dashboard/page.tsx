@@ -473,7 +473,6 @@ export default function DashboardPage() {
           
         </section>
       </main>
-      <GoldenNirvanaFooter />
     </>
   );
 }
