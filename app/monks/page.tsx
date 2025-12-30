@@ -106,7 +106,7 @@ export default function DivineTarotShowcase() {
         <div className="container mx-auto px-6 relative z-10">
           <header className="text-center mb-32">
             <h1 className={`text-6xl md:text-8xl font-serif tracking-tighter ${isDark ? 'text-white' : 'text-stone-900'}`}>
-               The Astral <span className="italic font-light text-[#C72075]">Collective</span>
+               {t({ mn: "Багшийн танилцуулгатай танилцаж,", en: "Getting acquainted with the teacher's introduction," })} <span className="italic font-light text-[#C72075]">{t({mn:"өөрт боломжтой цагаа товлоорой",en:"schedule a time that works for you"})}</span>
             </h1>
           </header>
 

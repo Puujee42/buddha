@@ -47,7 +47,7 @@ function ActualSacredAboutContent() {
 
   // --- CONTENT DEFINITIONS ---
   const content = {
-    heroTitle: t({ mn: "Бидний тухай", en: "Our Celestial Path" }),
+    heroTitle: t({ mn: "Цаг хугацаа, орон зайн саадыг арилгаж, оюун санааны дэмжлэгийг технологийн тусламжтайгаар танд хүргэж байна.", en: "We are bringing you mental support through technology, removing the barriers of time and space." }),
     heroSubtitle: t({
       mn: "Цаг хугацаа, орон зайг үл хамааран оюун санааны амар амгаланг танд түгээнэ.",
       en: "Whispering spiritual peace across the infinite zodiac of time and space."
@@ -180,7 +180,7 @@ function ActualSacredAboutContent() {
           </motion.div>
           
           <h1 className="text-7xl md:text-[10rem] font-black uppercase text-white tracking-tighter leading-none italic drop-shadow-2xl">
-            Nirvana
+            {t({ mn: "Онлайн зөвлөгөө – Таны байгаа газарт", en: "Online Consultation – Wherever You Are" })}
           </h1>
           
           <div className="h-[1px] w-24 bg-white mx-auto my-8 opacity-60" />

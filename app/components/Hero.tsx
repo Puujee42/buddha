@@ -87,21 +87,21 @@ export default function Hero() {
     mn: {
       arcana: "Одот Аркана I",
       main: isDark ? "ГЭГЭЭН ОД" : "АМАР АМГАЛАН",
-      sub: isDark ? "Celestial Zodiac" : "The Pure Land",
+      sub: isDark ? "Celestial Zodiac" : "Туршлагатай багш, мэргэжлийн зөвлөхүүдтэй онлайнаар холбогдож, эргэлзээгээ тайлан, ирээдүйн замаа итгэлтэйгээр тодорхойлоорой.",
       desc: isDark
         ? "Одот тэнгэрийн доорх нууцад нэвтэрч, хувь тавилангийн хүрдийг эргүүлэгч."
         : "Бурханы энэрэл нигүүлслээр ариуссан, дотоод сэтгэлийн гэрэлт ертөнц.",
-      btn: isDark ? "Хувь тавилан" : "Ариусал эрэх",
+      btn: isDark ? "Хувь тавилан" : "Цаг захиалах",
       mantra: "OM MANI PADME HUM"
     },
     en: {
       arcana: "Cosmic Arcana I",
       main: isDark ? "THE STAR" : "ENLIGHTENMENT",
-      sub: isDark ? "Celestial Zodiac" : "The Pure Land",
+      sub: isDark ? "Celestial Zodiac" : "Connect online with experienced teachers and professional advisors, clear your doubts, and confidently determine your future path.",
       desc: isDark
         ? "A guide through the cosmic nebula, charting the ancient movements of destiny."
         : "A sacred sanctuary for the soul, illuminated by the ancient light of Buddha.",
-      btn: isDark ? "Chart Destiny" : "Seek Peace",
+      btn: isDark ? "Chart Destiny" : "Book Now",
       mantra: "OM MANI PADME HUM"
     }
   });
@@ -143,13 +143,7 @@ export default function Hero() {
         </div>
         {/* Title Section */}
         <div className="space-y-4 mb-12">
-          <motion.div
-            initial={{ letterSpacing: "0.2em", opacity: 0 }}
-            animate={{ letterSpacing: "0.8em", opacity: 1 }}
-            className={`text-[10px] font-black uppercase tracking-[0.8em] ${isDark ? "text-[#C72075]" : "text-amber-600"}`}
-          >
-            The Major Arcana
-          </motion.div>
+         
           <h1 className={`text-6xl md:text-9xl font-serif font-black tracking-tighter transition-colors drop-shadow-[0_0_25px_rgba(255,255,255,0.2)] ${
             isDark ? "text-white" : "text-[#451a03]"
           }`}>
@@ -193,7 +187,7 @@ export default function Hero() {
             <motion.button className={`flex items-center gap-3 font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:gap-5 ${
               isDark ? "text-cyan-400 hover:text-cyan-200" : "text-amber-900"
             }`}>
-              The Path <ArrowRight size={14} />
+              {t({mn:"Бидний тухай",en:"About us"})}<ArrowRight size={14} />
             </motion.button>
           </Link>
         </div>

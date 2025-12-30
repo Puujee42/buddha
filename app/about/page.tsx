@@ -112,37 +112,37 @@ export default function AboutPage() {
   };
 
   const content = {
-    heroTitle: t({ mn: "Бидний тухай", en: "Our Celestial Path" }),
+    heroTitle: t({ mn: "Уламжлалт соёл ба Орчин үеийн шийдэл", en: "Traditional Culture and Modern Solutions" }),
     heroSubtitle: t({
-      mn: "\"Цаг хугацаа, орон зайг үл хамааран оюун санааны амар амгаланг танд түгээнэ.\"",
-      en: "\"Whispering spiritual peace across the infinite zodiac of time and space.\""
+      mn: "\"Бид Монголчуудын олон зуун жилийн оюун санааны өв соёлыг технологийн дэвшилтэй холбож, хүн бүрт амар амгаланг түгээх зорилготой шинэ үеийн дижитал платформ юм. Гэрээсээ гаралгүйгээр эрдэм чадалтай багш нараас зөвлөгөө авч, засал номын үйлчилгээг видео дуудлагаар шууд хүртэх боломжийг бид бүрдүүллээ.\"",
+      en: "\"We are a new generation digital platform aimed at combining the centuries-old intellectual and cultural heritage of Mongolians with technological advancements, spreading peace and well-being to everyone. We have created the opportunity to receive advice from knowledgeable teachers and access healing and spiritual services via video calls without leaving your home.\""
     }),
     missionTag: t({ mn: "Бидний Эхлэл", en: "First Inception" }),
-    missionTitle: t({ mn: "Оюун санааны холбоос", en: "The Astral Connection" }),
-    whyUsTitle: t({ mn: "Яагаад бид гэж?", en: "Why This Path?" }),
+    missionTitle: t({ mn: "Уламжлалт соёлыг технологиор дамжуулан таны гарт", en: "Traditional culture in your hands through technology" }),
+    whyUsTitle: t({ mn: "Манай давуу тал?", en: "What is our advantage?" }),
     cards: [
       {
         number: "IX",
-        title: t({ mn: "Чадварлаг Багш нар", en: "Zodiac Masters" }),
-        desc: t({ mn: "Гандантэгчинлэн болон бусад томоохон хийдүүдийн дээд боловсролтой багш нар.", en: "Masters of the ancient lineage and celestial alignments." }),
+        title: t({ mn: "Мэргэжлийн баг хамт олон", en: "Professional team" }),
+        desc: t({ mn: "Мэргэжлийн зурхайч, зөвлөхүүд танд үйлчилнэ.", en: "Professional astrologers and consultants are at your service." }),
         icon: <Users />
       },
       {
         number: "XVII",
-        title: t({ mn: "Нууцлал & Аюулгүй", en: "Seal of Silence" }),
-        desc: t({ mn: "Таны яриа, хувийн мэдээлэл зөвхөн та болон багш хоёрын хооронд үлдэнэ.", en: "Your spiritual consultation is protected by the stars, fully confidential." }),
+        title: t({ mn: "Орон зай, цаг хугацаа", en: "Space, time" }),
+        desc: t({ mn: "Та дэлхийн хаанаас ч, өөрт боломжтой цагтаа видео дуудлагаар холбогдож, зөвлөгөөгөө авах боломжтой.", en: "You can connect via video call from anywhere in the world at a time that is convenient for you and receive your consultation." }),
         icon: <ShieldCheck />
       },
       {
         number: "XXI",
-        title: t({ mn: "Эрхэм Зорилго", en: "The Grand Mission" }),
-        desc: t({ mn: "Хүн бүрийн сэтгэлд амар амгалангийн үрийг тарьж, гүн ухаанаар замчлах.", en: "To plant seeds of awakening and guide every seeker through the void." }),
+        title: t({ mn: "Бүрэн нууцлал ба Аюулгүй байдал", en: "Full Privacy and Security" }),
+        desc: t({ mn: " Таны хувийн мэдээлэл болон зөвлөхтэй ярилцсан яриа бүрэн нууцлагдсан орчинд явагдах бөгөөд бид хэрэглэгчийн нууцыг дээд зэргээр эрхэмлэдэг.", en: "Your personal information and every conversation with the advisor will take place in a fully confidential environment, and we highly value user privacy." }),
         icon: <Compass />
       },
       {
         number: "I",
-        title: t({ mn: "Хялбар Шийдэл", en: "Instant Access" }),
-        desc: t({ mn: "Цаг алдалгүй өөрт хэрэгцээт засал номоо гэрээсээ, амар амгалан орчинд авах.", en: "Access rituals and wisdom from your sanctuary, through the digital ether." }),
+        title: t({ mn: "Технологийн хялбар шийдэл", en: "Simple technology solution" }),
+        desc: t({ mn: "Ойлгомжтой вэб систем, цахим төлбөрийн хэрэгслээр төлбөрөө хормын дотор шийдэж, үйлчилгээгээ түргэн шуурхай авах боломжийг бүрдүүлсэн.", en: "A user-friendly web system that allows you to make payments instantly with electronic payment tools and receive services quickly and efficiently." }),
         icon: <Sparkles />
       }
     ]

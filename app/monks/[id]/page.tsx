@@ -229,7 +229,7 @@ export default function MonkDetailPage() {
                         <div className="text-center py-20">
                             <CheckCircle2 className="mx-auto w-20 h-20 text-green-500 mb-6" />
                             <h3 className={`text-4xl font-celestial mb-4 ${theme.textColor}`}>Fate Sealed</h3>
-                            <button onClick={() => setIsBooked(false)} className="text-xs font-black uppercase tracking-widest underline text-amber-600">Book Another</button>
+                            <button onClick={() => setIsBooked(false)} className="text-xs font-black uppercase tracking-widest underline text-amber-600">{t({mn: "Цаг авах", en: "Make an appointment"})}</button>
                         </div>
                     ) : (
                         <>
