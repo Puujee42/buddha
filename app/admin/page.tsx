@@ -38,7 +38,7 @@ export default function AdminDashboard() {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const isAdmin = user?.publicMetadata?.role === "admin";
-  const isDark = resolvedTheme === "dark";
+  const isDark = false;
 
   // --- FETCH DATA ---
   useEffect(() => {

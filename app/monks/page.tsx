@@ -91,7 +91,7 @@ export default function DivineTarotShowcase() {
   }, []);
 
   if (!mounted) return null;
-  const isDark = resolvedTheme === "dark";
+  const isDark = false;
 
   return (
     <>

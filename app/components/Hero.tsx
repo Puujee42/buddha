@@ -82,7 +82,7 @@ export default function Hero() {
     window.addEventListener("mousemove", handleMove);
     return () => window.removeEventListener("mousemove", handleMove);
   }, [mouseX, mouseY]);
-  const isDark = resolvedTheme === "dark";
+  const isDark = false;
   const content = t({
     mn: {
       arcana: "Одот Аркана I",

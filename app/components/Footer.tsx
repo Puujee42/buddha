@@ -35,7 +35,7 @@ export default function GoldenNirvanaFooter() {
 
   if (!mounted) return null;
 
-  const isDark = resolvedTheme === "dark";
+  const isDark =false;
 
   const content = {
     newsletterTag: t({ mn: "Одот тамга", en: "Zodiac Alignment" }),

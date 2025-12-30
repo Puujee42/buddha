@@ -177,7 +177,7 @@ export default function RitualBookingPage() {
   }, [selectedMonk, selectedDateIndex, dates]);
 
 
-  const isDark = resolvedTheme === "dark";
+  const isDark = false;
 
   // --- SAFE DATA ACCESS HELPER ---
   const displayTitle = service 

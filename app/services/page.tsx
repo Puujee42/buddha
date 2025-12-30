@@ -83,7 +83,7 @@ export default function CelestialServices() {
 
   if (!mounted) return null;
 
-  const isDark = resolvedTheme === "dark";
+  const isDark = false;
 
   return (
     <>
