@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { ObjectId } from "mongodb";
-import { sendBookingStatusUpdate } from "@/lib/mail"; // Import the new helper
+import { sendBookingStatusUpdate } from "@/lib/mail"; 
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
-// PATCH: Update booking status (Accept/Reject)
+// PATCH: Update booking status (Accept/Reject/Complete)
 export async function PATCH(request: Request, props: Props) {
   try {
     const params = await props.params;
@@ -16,7 +16,10 @@ export async function PATCH(request: Request, props: Props) {
     const body = await request.json();
     const { status } = body;
 
-    if (!status || !['confirmed', 'rejected', 'pending'].includes(status)) {
+    // 1. FIX: Add 'completed' to the valid statuses list
+    const validStatuses = ['confirmed', 'rejected', 'pending', 'completed'];
+
+    if (!status || !validStatuses.includes(status)) {
       return NextResponse.json({ message: "Invalid status" }, { status: 400 });
     }
 
@@ -27,15 +30,14 @@ export async function PATCH(request: Request, props: Props) {
     const { db } = await connectToDatabase();
     const bookingId = new ObjectId(id);
 
-    // 1. FETCH BOOKING DETAILS FIRST
-    // We need this data to send the email (email, names, dates)
+    // 2. Fetch booking details
     const booking = await db.collection("bookings").findOne({ _id: bookingId });
 
     if (!booking) {
       return NextResponse.json({ message: "Booking not found" }, { status: 404 });
     }
 
-    // 2. UPDATE THE STATUS IN DB
+    // 3. Update the status in DB
     await db.collection("bookings").updateOne(
       { _id: bookingId },
       { 
@@ -46,22 +48,19 @@ export async function PATCH(request: Request, props: Props) {
       }
     );
 
-    // 3. FETCH MONK DETAILS (Optional, for better email name)
-    // If your booking doesn't store monkName, fetch it from users
-    let monkName = "The Monk";
-    if (booking.monkId) {
-        // Handle monkId being string or ObjectId
-        const monkQuery = ObjectId.isValid(booking.monkId) ? new ObjectId(booking.monkId) : booking.monkId;
-        // @ts-ignore - Assuming you handle the type check
-        const monk = await db.collection("users").findOne({ _id: monkQuery });
-        if (monk) {
-            monkName = monk.name?.en || monk.name?.mn || "The Monk";
+    // 4. Send Email Notification (ONLY for Confirmed or Rejected)
+    // We skip 'completed' to avoid sending unnecessary emails or breaking the mail helper
+    if (['confirmed', 'rejected'].includes(status) && booking.userEmail) {
+        
+        let monkName = "The Monk";
+        if (booking.monkId) {
+            const monkQuery = ObjectId.isValid(booking.monkId) ? new ObjectId(booking.monkId) : booking.monkId;
+            const monk = await db.collection("users").findOne({ _id: monkQuery });
+            if (monk) {
+                monkName = monk.name?.en || monk.name?.mn || "The Monk";
+            }
         }
-    }
 
-    // 4. SEND EMAIL NOTIFICATION
-    if (booking.userEmail) {
-        // Resolve Service Name (It might be an object {en, mn} or a string)
         const serviceName = typeof booking.serviceName === 'object' 
             ? (booking.serviceName.en || booking.serviceName.mn) 
             : booking.serviceName;
@@ -73,12 +72,12 @@ export async function PATCH(request: Request, props: Props) {
             serviceName: serviceName || "Spiritual Session",
             date: booking.date,
             time: booking.time,
-            status: status
+            status: status as 'confirmed' | 'rejected'
         });
     }
 
     return NextResponse.json({ 
-      message: `Booking ${status} successfully`, 
+      message: `Booking marked as ${status}`, 
       success: true
     });
 
@@ -91,7 +90,7 @@ export async function PATCH(request: Request, props: Props) {
   }
 }
 
-// DELETE remains the same...
+// DELETE remains the same
 export async function DELETE(request: Request, props: Props) {
   try {
     const params = await props.params;

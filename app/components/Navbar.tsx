@@ -2,14 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   Menu, 
   X, 
-  Flower, 
   Globe,
   Sun,
   Moon,
-  Sparkles
+  Sparkles,
+  Flower
 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -50,7 +51,7 @@ export default function OverlayNavbar() {
 
   if (!mounted) return null;
 
-  const isDark = resolvedTheme === "dark";
+  const isDark =false;
 
   return (
     <>
@@ -87,7 +88,7 @@ export default function OverlayNavbar() {
                     : "bg-amber-100 border-amber-300 text-amber-600 shadow-[0_0_15px_rgba(251,191,36,0.3)]"
                 }`}
               >
-                <Flower size={20} />
+                <Image src="/logo.png" alt="Logo" width={40} height={40} className="rounded-full object-cover" />
               </motion.div>
               <div className="flex flex-col">
                 <span className={`font-serif font-bold text-xl tracking-tight transition-colors duration-500 ${
@@ -133,33 +134,7 @@ export default function OverlayNavbar() {
           <div className="flex items-center gap-3">
              
              {/* THE THEME TOGGLER */}
-             <motion.button 
-               whileTap={{ scale: 0.9 }}
-               onClick={toggleTheme}
-               className={`relative flex items-center justify-center w-11 h-11 rounded-full border transition-all duration-500 overflow-hidden ${
-                 isScrolled 
-                  ? (isDark ? "border-cyan-400/40 bg-[#0C164F] text-cyan-300 shadow-[0_0_10px_rgba(80,242,206,0.2)]" : "border-amber-300 bg-amber-50 text-amber-600") 
-                  : "border-white/20 bg-white/5 text-white"
-               }`}
-             >
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={isDark ? "moon" : "sun"}
-                        initial={{ y: 20, opacity: 0, rotate: 45 }}
-                        animate={{ y: 0, opacity: 1, rotate: 0 }}
-                        exit={{ y: -20, opacity: 0, rotate: -45 }}
-                        transition={{ duration: 0.4, ease: "backOut" }}
-                    >
-                        {isDark ? <Moon size={20} fill="currentColor" className="text-cyan-300" /> : <Sun size={20} fill="currentColor" />}
-                    </motion.div>
-                </AnimatePresence>
-                
-                {isDark && (
-                  <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute inset-0 pointer-events-none">
-                     <Sparkles size={8} className="absolute top-1 right-2 text-white" />
-                  </motion.div>
-                )}
-             </motion.button>
+            
 
              {/* Language */}
              <button 

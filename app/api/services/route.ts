@@ -27,6 +27,7 @@ export async function GET() {
         monkId: monk._id.toString(),
         providerName: monk.name, // Pass the monk's name object
         type: "Monk Service", // Fallback type
+        
         // Ensure price is a number
         price: Number(svc.price)
       }));

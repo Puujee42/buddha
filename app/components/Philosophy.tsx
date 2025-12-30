@@ -7,9 +7,11 @@ import {
   useTransform,
   useSpring,
 } from "framer-motion";
-import { Flower, ShieldCheck, Users, Sparkles, Compass, Sun, Moon, Star } from "lucide-react";
+import { Flower, ShieldCheck, Users, Sparkles, Compass, Sun, Moon, Star, Orbit } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
+import OverlayNavbar from "../components/Navbar";
+import GoldenNirvanaFooter from "../components/Footer";
 
 // --- 1. THE PERMANENT RITUAL FRAME (Screen Edges) ---
 const RitualViewportFrame = ({ theme }: { theme: any }) => (
@@ -17,6 +19,9 @@ const RitualViewportFrame = ({ theme }: { theme: any }) => (
     <div className={`w-full h-full border-[1px] opacity-30 rounded-lg lg:rounded-[3rem] transition-colors duration-1000 ${theme.borderColor}`} />
     <div className="absolute top-10 left-1/2 -translate-x-1/2 flex gap-12">
         <span className={`text-[8px] tracking-[1em] opacity-40 font-bold uppercase ${theme.textColor}`}>ᚦᛅᛏ᛫ᛋᚴᛅᛚ᛫ᚢᛖᚱᚦᛅ</span>
+    </div>
+    <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+        <Flower size={20} className={`animate-[spin_10s_linear_infinite] opacity-50 ${theme.accentText}`} />
     </div>
   </div>
 );
@@ -26,15 +31,73 @@ export default function SacredAboutPage() {
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return <div className="min-h-screen bg-[#05051a]" />;
 
-  return <ActualSacredAboutContent />;
+  return (
+    <>
+      <OverlayNavbar />
+      <ActualSacredAboutContent />
+      <GoldenNirvanaFooter />
+    </>
+  );
 }
 
 function ActualSacredAboutContent() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { resolvedTheme } = useTheme();
   const isNight = resolvedTheme === "dark";
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // --- CONTENT DEFINITIONS ---
+  const content = {
+    heroTitle: t({ mn: "Бидний тухай", en: "Our Celestial Path" }),
+    heroSubtitle: t({
+      mn: "Цаг хугацаа, орон зайг үл хамааран оюун санааны амар амгаланг танд түгээнэ.",
+      en: "Whispering spiritual peace across the infinite zodiac of time and space."
+    }),
+    missionTag: t({ mn: "Бидний Эхлэл", en: "First Inception" }),
+    missionTitle: t({ mn: "Оюун санааны холбоос", en: "The Astral Connection" }),
+    missionDesc1: t({
+        mn: "Бид Монголын Бурхан шашны олон зуун жилийн түүхтэй зан үйл, сургаал номлолыг цаг хугацаа, орон зайнаас үл хамааран хүн бүрт хүртээмжтэй болгох зорилготой.",
+        en: "We breathe life into centuries of Buddhist lineage, making ancient rites accessible through the cosmic ether, transcending physical bounds."
+    }),
+    missionDesc2: t({
+        mn: "Цаг алдах шаардлагагүйгээр өөрт хэрэгцээт засал ном, зөвлөгөөг гэрээсээ, амар амгалан орчинд авах боломжийг бид бүрдүүллээ.",
+        en: "By bridging the physical and astral, we allow you to welcome the Dharma into your home, finding stillness beneath the stars."
+    }),
+    whyUsTitle: t({ mn: "Яагаад бид гэж?", en: "Why This Path?" }),
+    whyUsSub: t({ mn: "Зурхайн дөрвөн үндэс", en: "Four Foundations of the Zodiac" }),
+    cards: [
+      {
+        number: "IX",
+        title: t({ mn: "Чадварлаг Багш нар", en: "Zodiac Masters" }),
+        desc: t({ mn: "Гандантэгчинлэн болон бусад томоохон хийдүүдийн дээд боловсролтой багш нар.", en: "Masters of the ancient lineage and celestial alignments." }),
+        icon: <Users />,
+        color: isNight ? "#50F2CE" : "#10b981" // Cyan / Emerald
+      },
+      {
+        number: "XVII",
+        title: t({ mn: "Нууцлал & Аюулгүй", en: "Seal of Silence" }),
+        desc: t({ mn: "Таны яриа, хувийн мэдээлэл зөвхөн та болон багш хоёрын хооронд үлдэнэ.", en: "Your spiritual consultation is protected by the stars, fully confidential." }),
+        icon: <ShieldCheck />,
+        color: isNight ? "#C72075" : "#3b82f6" // Magenta / Blue
+      },
+      {
+        number: "XXI",
+        title: t({ mn: "Эрхэм Зорилго", en: "The Grand Mission" }),
+        desc: t({ mn: "Хүн бүрийн сэтгэлд амар амгалангийн үрийг тарьж, гүн ухаанаар замчлах.", en: "To plant seeds of awakening and guide every seeker through the void." }),
+        icon: <Compass />,
+        color: isNight ? "#BA68C8" : "#f59e0b" // Purple / Amber
+      },
+      {
+        number: "I",
+        title: t({ mn: "Хялбар Шийдэл", en: "Instant Access" }),
+        desc: t({ mn: "Цаг алдалгүй өөрт хэрэгцээт засал номоо гэрээсээ, амар амгалан орчинд авах.", en: "Access rituals and wisdom from your sanctuary, through the digital ether." }),
+        icon: <Sparkles />,
+        color: isNight ? "#9575CD" : "#ef4444" // Violet / Red
+      }
+    ]
+  };
+
+  // --- ANIMATIONS ---
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"]
@@ -53,22 +116,26 @@ function ActualSacredAboutContent() {
   const theme = isNight ? {
       mainBg: "bg-[#05051a]",
       textColor: "text-cyan-50",
+      accentText: "text-cyan-400",
+      mutedText: "text-cyan-50/70",
       borderColor: "border-cyan-400/20",
       altarBg: "bg-[#0C164F]/80 backdrop-blur-2xl border-cyan-400/10",
       glowColorPrimary: "#C72075", // Magenta Nebula
       glowColorSecondary: "#50F2CE", // Cyan Star
       primaryBtn: "bg-gradient-to-r from-[#C72075] to-[#7B337D] text-white shadow-[#C72075]/20",
-      icon: <Sparkles className="text-cyan-400" size={32} />,
+      icon: <Orbit className="text-cyan-400 animate-pulse" size={32} />,
       accent: "text-[#C72075]" // Magenta accent
   } : {
       mainBg: "bg-[#FDFBF7]",
       textColor: "text-[#451a03]",
+      accentText: "text-amber-600",
+      mutedText: "text-[#78350F]/80",
       borderColor: "border-amber-200",
       altarBg: "bg-white/80 backdrop-blur-2xl border-amber-200",
       glowColorPrimary: "rgba(251,191,36,0.15)",
       glowColorSecondary: "rgba(251,191,36,0.15)",
       primaryBtn: "bg-amber-600 text-white shadow-amber-900/20",
-      icon: <Sun className="text-amber-500" size={32} />,
+      icon: <Sun className="text-amber-500 animate-spin-slow" size={32} />,
       accent: "text-amber-600"
   };
 
@@ -104,36 +171,32 @@ function ActualSacredAboutContent() {
           <motion.div animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} className="mb-10 flex justify-center">
              <Flower size={80} strokeWidth={0.5} className="text-white" />
           </motion.div>
-          <h1 className="text-7xl md:text-[11rem] font-black uppercase text-white tracking-tighter leading-none italic">
+          <h1 className="text-5xl md:text-[9rem] font-black uppercase text-white tracking-tighter leading-none italic">
             Nirvana
           </h1>
           <div className="h-[1px] w-24 bg-white mx-auto my-8 opacity-40" />
-          <p className="text-white font-sans tracking-[0.8em] text-[10px] uppercase font-bold opacity-80">
-             Zodiac • Lineage • Stillness
+          <p className="text-white font-sans tracking-[0.2em] md:tracking-[0.8em] text-[10px] uppercase font-bold opacity-80">
+             {content.heroTitle}
           </p>
         </motion.div>
       </section>
 
-      {/* --- SECTION 2: EDITORIAL CONTENT --- */}
+      {/* --- SECTION 2: EDITORIAL CONTENT (Mission) --- */}
       <section className="relative z-20 py-64 container mx-auto px-6 max-w-6xl">
         <motion.div style={{ y: contentY }} className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
           <div>
             <span className={`text-[10px] font-black tracking-[0.6em] uppercase mb-8 block px-6 py-2 border rounded-full w-fit ${theme.altarBg} ${isNight ? 'text-cyan-400' : theme.accent}`}>
-              Founders of the Path
+              {content.missionTag}
             </span>
-            <h2 className="text-6xl md:text-8xl leading-[0.85] mb-12 tracking-tighter">
-               The <span className={`italic ${isNight ? 'text-cyan-300' : theme.accent}`}>Celestial</span> <br/>
-               <span className="italic">Manifesto</span>
+            <h2 className="text-5xl md:text-8xl leading-[0.85] mb-12 tracking-tighter">
+               {language === 'mn' ? "Оюун Санааны" : "The"} <span className={`italic ${isNight ? 'text-cyan-300' : theme.accent}`}>{language === 'mn' ? "Холбоос" : "Astral"}</span> <br/>
+               <span className="italic">{language === 'mn' ? "" : "Connection"}</span>
             </h2>
-            <div className={`text-xl leading-relaxed space-y-8 font-medium ${isNight ? 'text-cyan-50/70' : 'text-stone-800/80'}`}>
-               <p>
-                 {t({
-                   mn: "Бидний эхлэл бол орон зайг үл хамааран ариун мэдлэгийг түгээх дижитал гүүр юм.",
-                   en: "Nirvana bridges the ancestral stillness of the East with the cosmic void of the West, digitizing the Sacred Zodiac Arcana."
-                 })}
-               </p>
+            <div className={`text-xl leading-relaxed space-y-8 font-medium ${theme.mutedText}`}>
+               <p>"{content.missionDesc1}"</p>
+               <p>{content.missionDesc2}</p>
                <button className={`px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.5em] transition-all flex items-center gap-4 group ${theme.primaryBtn}`}>
-                  Consult the Void <Star size={14} className="group-hover:rotate-180 transition-transform duration-500" />
+                  {language === 'mn' ? "Зөвлөгөө Авах" : "Consult the Void"} <Star size={14} className="group-hover:rotate-180 transition-transform duration-500" />
                </button>
             </div>
           </div>
@@ -153,22 +216,30 @@ function ActualSacredAboutContent() {
         </motion.div>
       </section>
 
-      {/* --- SECTION 3: THE FOUNDATIONS --- */}
+      {/* --- SECTION 3: THE FOUNDATIONS (Cards) --- */}
       <section className="relative py-48">
         <div className="container mx-auto px-6 max-w-7xl">
            <div className={`flex flex-col md:flex-row items-end justify-between mb-24 border-b pb-12 ${theme.borderColor}`}>
               <div className="flex items-center gap-4">
                   {theme.icon}
-                  <h2 className="text-5xl italic font-serif">Celestial Altar</h2>
+                  <h2 className="text-5xl italic font-serif">{content.whyUsTitle}</h2>
               </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30">Selection Protocol</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 mt-4 md:mt-0">{content.whyUsSub}</span>
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <TruthCard num="I" title="Lineage" icon={<Users />} color={isNight ? "#50F2CE" : "#10b981"} theme={theme} isNight={isNight} />
-              <TruthCard num="II" title="Shield" icon={<ShieldCheck />} color={isNight ? "#C72075" : "#3b82f6"} theme={theme} isNight={isNight} />
-              <TruthCard num="III" title="Aura" icon={<Sparkles />} color={isNight ? "#BA68C8" : "#f59e0b"} theme={theme} isNight={isNight} />
-              <TruthCard num="IV" title="Ritual" icon={<Compass />} color={isNight ? "#9575CD" : "#ef4444"} theme={theme} isNight={isNight} />
+              {content.cards.map((card, idx) => (
+                  <TruthCard 
+                    key={idx}
+                    num={card.number} 
+                    title={card.title} 
+                    desc={card.desc}
+                    icon={card.icon} 
+                    color={card.color} 
+                    theme={theme} 
+                    isNight={isNight} 
+                  />
+              ))}
            </div>
         </div>
       </section>
@@ -179,7 +250,7 @@ function ActualSacredAboutContent() {
 }
 
 // --- SUB-COMPONENT: TRUTH CARD ---
-function TruthCard({ num, title, icon, color, theme, isNight }: any) {
+function TruthCard({ num, title, desc, icon, color, theme, isNight }: any) {
   return (
     <motion.div 
       whileHover={{ y: -15, boxShadow: isNight ? `0 20px 40px ${color}15` : "" }}
@@ -193,9 +264,9 @@ function TruthCard({ num, title, icon, color, theme, isNight }: any) {
       </div>
 
       <div className="mt-12">
-        <h4 className="text-4xl font-black uppercase tracking-tighter mb-4" style={{ color }}>{title}</h4>
-        <p className={`text-[11px] font-bold uppercase tracking-widest ${isNight ? 'text-cyan-50/50' : 'text-stone-600'} leading-relaxed`}>
-          Encapsulated within the {title} protocol of our sacred zodiac sangha.
+        <h4 className="text-2xl font-black uppercase tracking-tighter mb-4 leading-none" style={{ color }}>{title}</h4>
+        <p className={`text-[11px] font-bold uppercase tracking-widest ${theme.mutedText} leading-relaxed`}>
+          {desc}
         </p>
       </div>
       
