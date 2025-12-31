@@ -1,245 +1,271 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useSpring,
-} from "framer-motion";
-import { Flower, ShieldCheck, Users, Sparkles, Compass, Sun, Moon, Star, Orbit, ArrowDown } from "lucide-react";
+import Link from "next/link";
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import CountUp from "react-countup";
+import { TypeAnimation } from "react-type-animation";
+import { Flower, Users, Globe, ArrowDown, ShieldCheck, Sparkles, Star, ArrowRight, Quote, Heart, Sun, Feather } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
-import OverlayNavbar from "../components/Navbar";
+import OverlayNavbar from "../components/Navbar"; 
 import GoldenNirvanaFooter from "../components/Footer";
 
-// --- 1. THE PERMANENT RITUAL FRAME (Screen Edges) ---
 const RitualViewportFrame = ({ theme }: { theme: any }) => (
-  <div className="fixed inset-0 pointer-events-none z-[100] p-2 md:p-4 lg:p-8">
-    <div className={`w-full h-full border-[1px] opacity-30 rounded-xl md:rounded-[2rem] lg:rounded-[3rem] transition-colors duration-1000 ${theme.borderColor}`} />
-    
-    {/* Top Symbol */}
-    <div className="absolute top-6 md:top-10 left-1/2 -translate-x-1/2 flex gap-12">
-        <span className={`text-[6px] md:text-[8px] tracking-[0.5em] md:tracking-[1em] opacity-40 font-bold uppercase ${theme.textColor}`}>ᚦᛅᛏ᛫ᛋᚴᛅᛚ᛫ᚢᛖᚱᚦᛅ</span>
+  <div className="fixed inset-0 pointer-events-none z-[100] p-4 md:p-8">
+    <div className={`w-full h-full border-[1px] opacity-20 rounded-[2rem] md:rounded-[3rem] transition-colors duration-1000 ${theme.borderColor}`} />
+    <div className="absolute left-10 top-1/2 -rotate-90 origin-left hidden lg:block">
+        <span className={`text-[8px] tracking-[1em] opacity-30 font-bold uppercase ${theme.textColor}`}>
+          SPIRITUAL HERITAGE • TECHNOLOGY • PEACE
+        </span>
     </div>
-    
-    {/* Bottom Spinner */}
-    <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2">
-        <Flower size={16} className={`md:w-5 md:h-5 animate-[spin_10s_linear_infinite] opacity-50 ${theme.accentText}`} />
+    <div className="absolute top-10 left-1/2 -translate-x-1/2 flex items-center gap-6">
+        <div className={`h-[1px] w-12 bg-current opacity-20 ${theme.textColor}`} />
+        <span className={`text-[8px] tracking-[1em] opacity-40 font-bold uppercase ${theme.textColor}`}>EST. 2025</span>
+        <div className={`h-[1px] w-12 bg-current opacity-20 ${theme.textColor}`} />
     </div>
   </div>
 );
 
-export default function SacredAboutPage() {
+export default function AboutUsHero() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return <div className="min-h-screen bg-[#05051a]" />;
-
   return (
     <>
       <OverlayNavbar />
-      <ActualSacredAboutContent />
+      <ActualAboutContent />
+      <GoldenNirvanaFooter />
     </>
   );
 }
 
-function ActualSacredAboutContent() {
-  const { t, language } = useLanguage();
+function ActualAboutContent() {
+  const { language } = useLanguage();
   const { resolvedTheme } = useTheme();
-  const isNight = false;
+  const isNight = false; 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // --- CONTENT DEFINITIONS ---
+  // --- FULLY POPULATED MONGOLIAN & ENGLISH CONTENT ---
   const content = {
-    heroMain: t({ mn: "Онлайн зөвлөгөө", en: "Online Consultation" }),
-    heroSub: t({ mn: "Таны байгаа газарт", en: "Wherever You Are" }),
-    heroDesc: t({ 
-      mn: "Цаг хугацаа, орон зайн саадыг арилгаж, оюун санааны дэмжлэгийг технологийн тусламжтайгаар танд хүргэж байна.", 
-      en: "We are bringing you mental support through technology, removing the barriers of time and space." 
-    }),
-    missionTag: t({ mn: "Бидний Эхлэл", en: "The Origin" }),
-    missionDesc1: t({
-        mn: "Бид Монголын Бурхан шашны олон зуун жилийн түүхтэй зан үйл, сургаал номлолыг цаг хугацаа, орон зайнаас үл хамааран хүн бүрт хүртээмжтэй болгох зорилготой.",
-        en: "We breathe life into centuries of Buddhist lineage, making ancient rites accessible through the cosmic ether, transcending physical bounds."
-    }),
-    missionDesc2: t({
-        mn: "Цаг алдах шаардлагагүйгээр өөрт хэрэгцээт засал ном, зөвлөгөөг гэрээсээ, амар амгалан орчинд авах боломжийг бид бүрдүүллээ.",
-        en: "By bridging the physical and astral, we allow you to welcome the Dharma into your home, finding stillness beneath the stars."
-    }),
-    whyUsTitle: t({ mn: "Яагаад бид гэж?", en: "Why This Path?" }),
-    cards: [
-      {
-        number: "IX",
-        title: t({ mn: "Чадварлаг Багш нар", en: "Zodiac Masters" }),
-        desc: t({ mn: "Гандантэгчинлэн болон бусад томоохон хийдүүдийн дээд боловсролтой багш нар.", en: "Masters of the ancient lineage and celestial alignments." }),
-        icon: <Users />,
-        color: isNight ? "#50F2CE" : "#059669" 
-      },
-      {
-        number: "XVII",
-        title: t({ mn: "Нууцлал & Аюулгүй", en: "Seal of Silence" }),
-        desc: t({ mn: "Таны яриа, хувийн мэдээлэл зөвхөн та болон багш хоёрын хооронд үлдэнэ.", en: "Your spiritual consultation is protected by the stars, fully confidential." }),
-        icon: <ShieldCheck />,
-        color: isNight ? "#C72075" : "#2563eb" 
-      },
-      {
-        number: "XXI",
-        title: t({ mn: "Эрхэм Зорилго", en: "The Grand Mission" }),
-        desc: t({ mn: "Хүн бүрийн сэтгэлд амар амгалангийн үрийг тарьж, гүн ухаанаар замчлах.", en: "To plant seeds of awakening and guide every seeker through the void." }),
-        icon: <Compass />,
-        color: isNight ? "#BA68C8" : "#d97706" 
-      },
-      {
-        number: "I",
-        title: t({ mn: "Хялбар Шийдэл", en: "Instant Access" }),
-        desc: t({ mn: "Цаг алдалгүй өөрт хэрэгцээт засал номоо гэрээсээ, амар амгалан орчинд авах.", en: "Access rituals and wisdom from your sanctuary, through the digital ether." }),
-        icon: <Sparkles />,
-        color: isNight ? "#9575CD" : "#dc2626" 
-      }
-    ]
+    mn: {
+      badge: "Бидний Эрхэм Зорилго",
+      typeSequence: ["Уламжлалт Соёлыг", 1500, "Орчин үеийн Технологиор", 1500, "Таны Гартаа", 2000],
+      subheadline: "Монголчуудын олон зуун жилийн оюун санааны өв соёлыг дижитал шилжилттэй холбож, хүн бүрт амар амгаланг хүртээмжтэй түгээх нь бидний зорилго юм.",
+      cta: "Үйлчилгээ үзэх",
+      masters: "120+ Багш нар",
+      philosophyTitle: "Бидний Баримтлах",
+      philosophySubtitle: "Гурван Тулгуур",
+      philosophyDesc: "Эртний мэргэн ухааныг гэрлийн хурдтай холбож, орчин үеийн хүмүүсийн сэтгэл зүйд нийцүүлэх нь бидний гүүр юм.",
+      philosophies: [
+        { title: "Оюун санаа", desc: "Дотоод амар амгаланг олоход тань туслах зөвлөгөө.", icon: <Star /> },
+        { title: "Уламжлал", desc: "Монгол зан заншил, өв соёлоо дижитал хэлбэрт хадгалах.", icon: <Flower /> },
+        { title: "Технологи", desc: "Дэлхийн хаанаас ч холбогдох хязгааргүй боломжийг нээх.", icon: <Globe /> }
+      ],
+      marquee: ["МОНГОЛ ӨВ СОЁЛ", "ДИЖИТАЛ АМАР АМГАЛАН", "УЛАМЖЛАЛТ МЭРГЭН УХААН"],
+      stats: [
+        { label: "Мэргэжлийн Багш нар", end: 120, icon: <Users /> },
+        { label: "Нийт Хамрах Хүрээ", end: 21, icon: <Globe /> },
+        { label: "Амар Амгаланг Эрэлхийлэгчид", end: 5000, icon: <Heart /> }
+      ],
+      storyTitle: "Мэргэн Ухааны Зам",
+      storyText: "Бид зөвхөн вэбсайт биш, энэ бол оюун санааны аялал юм. Технологийн тусламжтайгаар орон зай, цаг хугацааны саадыг даван туулж, таныг жинхэнэ өөртэйгөө уулзахад тусална.",
+      liveText: "Шуд дамжуулалт"
+    },
+    en: {
+      badge: "Our Noble Mission",
+      typeSequence: ["Traditional Heritage", 1500, "Modern Technology", 1500, "In Your Hands", 2000],
+      subheadline: "Our mission is to bridge centuries of Mongolian spiritual wisdom with digital innovation, making inner peace accessible to everyone, everywhere.",
+      cta: "Explore Services",
+      masters: "120+ Masters",
+      philosophyTitle: "Our Philosophy",
+      philosophySubtitle: "Three Pillars",
+      philosophyDesc: "Merging ancient wisdom with the speed of light to serve the modern soul through accessible connection.",
+      philosophies: [
+        { title: "Mindset", desc: "Guiding you toward inner stillness and mental clarity.", icon: <Star /> },
+        { title: "Heritage", desc: "Preserving sacred Mongolian traditions for the digital age.", icon: <Flower /> },
+        { title: "Innovation", desc: "Unlocking borderless access to spiritual guidance via tech.", icon: <Globe /> }
+      ],
+      marquee: ["MONGOLIAN HERITAGE", "DIGITAL PEACE", "TRADITIONAL WISDOM"],
+      stats: [
+        { label: "Trusted Masters", end: 120, icon: <Users /> },
+        { label: "Global Coverage", end: 21, icon: <Globe /> },
+        { label: "Peace Seekers", end: 5000, icon: <Heart /> }
+      ],
+      storyTitle: "The Wisdom Path",
+      storyText: "We are more than just a platform; we are a spiritual vessel. Through technology, we dissolve the barriers of time and distance, connecting you to the source of peace.",
+      liveText: "Live Atmosphere"
+    }
   };
 
-  // --- ANIMATIONS ---
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  });
+  const t = content[language as keyof typeof content] || content.en;
+  const { scrollYProgress } = useScroll();
+  const mantraX = useTransform(scrollYProgress, [0, 1], [0, -500]);
 
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 80, damping: 25 });
-  const yParallax = useTransform(smoothProgress, [0, 1], [0, -100]);
-
-  // --- ZODIAC GALAXY THEME SYNC ---
   const theme = isNight ? {
-      mainBg: "bg-[#05051a]",
-      textColor: "text-cyan-50",
-      accentText: "text-cyan-400",
-      mutedText: "text-cyan-100/60",
-      borderColor: "border-cyan-400/20",
-      altarBg: "bg-[#0C164F]/40 backdrop-blur-md border-cyan-400/10",
-      glowColorPrimary: "#C72075", 
-      glowColorSecondary: "#50F2CE", 
-      gradientBottom: "to-[#05051a]" 
+      mainBg: "bg-[#05051a]", textColor: "text-amber-50", accentText: "text-amber-500",
+      mutedText: "text-amber-100/40", borderColor: "border-amber-500/20",
+      altarBg: "bg-amber-950/20 backdrop-blur-xl border-amber-500/10",
+      btnPrimary: "bg-amber-600 text-[#05051a] shadow-amber-900/40",
   } : {
-      mainBg: "bg-[#FDFBF7]",
-      textColor: "text-[#451a03]",
-      accentText: "text-amber-600",
-      mutedText: "text-[#78350F]/70",
-      borderColor: "border-amber-900/10",
-      altarBg: "bg-white/60 backdrop-blur-md border-amber-900/5",
-      glowColorPrimary: "rgba(251,191,36,0.2)",
-      glowColorSecondary: "rgba(245,158,11,0.2)",
-      gradientBottom: "to-[#FDFBF7]" 
+      mainBg: "bg-[#FDFBF7]", textColor: "text-[#451a03]", accentText: "text-amber-600",
+      mutedText: "text-[#78350F]/50", borderColor: "border-amber-900/10",
+      altarBg: "bg-white/80 backdrop-blur-md border-amber-900/5",
+      btnPrimary: "bg-[#451a03] text-white shadow-orange-900/20",
   };
 
   return (
     <div ref={containerRef} className={`relative w-full ${theme.mainBg} ${theme.textColor} transition-colors duration-1000 font-serif overflow-hidden`}>
       <RitualViewportFrame theme={theme} />
       
-      {/* BACKGROUND ATMOSPHERE (Nebula Effects) */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-         <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] rounded-full blur-[120px] md:blur-[160px] opacity-20" style={{ backgroundColor: theme.glowColorPrimary }} />
-         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full blur-[100px] md:blur-[140px] opacity-10" style={{ backgroundColor: theme.glowColorSecondary }} />
-         <div className={`absolute inset-0 opacity-[0.05] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] ${isNight ? 'invert' : ''}`} />
+      {/* FLOATING BACKGROUND TEXT */}
+      <div className="absolute top-40 left-0 w-full whitespace-nowrap pointer-events-none opacity-[0.03] z-0 select-none">
+        <motion.h2 style={{ x: mantraX }} className="text-[20vw] font-black uppercase tracking-tighter">
+          Peace Wisdom Harmony Compassion Tradition Modernity
+        </motion.h2>
       </div>
 
-      {/* --- SECTION 1: THE FULL VIDEO HERO --- */}
-      <section className="relative h-[100dvh] flex items-center justify-center overflow-hidden">
-        
-        {/* VIDEO BACKGROUND */}
-        <div className="absolute inset-0 z-0">
-          <video 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
-            className="w-full h-full object-cover opacity-80"
-          >
-            <source src="/num2.mp4" type="video/mp4" />
-          </video>
-          
-          {/* Aesthetic Overlays */}
-          <div className={`absolute inset-0 bg-black/40 mix-blend-multiply`} /> 
-          <div className={`absolute inset-0 bg-gradient-to-b from-transparent via-transparent ${theme.gradientBottom}`} />
+      {/* --- HERO SECTION --- */}
+      <section className="relative min-h-screen flex items-center pt-32 pb-20">
+        <div className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+            
+            <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1 }}>
+              <div className="flex items-center gap-4 mb-8">
+                 <div className={`h-[1px] w-12 ${theme.accentText} bg-current`} />
+                 <span className="text-[10px] uppercase tracking-[0.4em] font-black">{t.badge}</span>
+              </div>
+              
+              <h1 className="text-5xl sm:text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85] italic mb-10">
+                 <TypeAnimation sequence={t.typeSequence} wrapper="span" speed={50} repeat={Infinity} />
+              </h1>
+              
+              <p className={`max-w-md text-base md:text-xl font-sans tracking-wide leading-relaxed mb-12 ${theme.mutedText}`}>
+                 {t.subheadline}
+              </p>
+
+              <div className="flex flex-wrap gap-6">
+                <Link href="/services">
+                  <motion.button whileHover={{ scale: 1.05 }} className={`px-10 py-5 rounded-full font-black uppercase tracking-[0.2em] text-[10px] flex items-center gap-3 ${theme.btnPrimary}`}>
+                    <Sparkles size={16} /> {t.cta}
+                  </motion.button>
+                </Link>
+                <div className="flex items-center gap-4 px-6 border-l border-current opacity-30">
+                   <div className="flex -space-x-3">
+                      {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-amber-400" />)}
+                   </div>
+                   <span className="text-[10px] font-bold">{t.masters}</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative group">
+              <div className={`absolute -inset-8 border border-current opacity-5 rounded-full animate-[spin_30s_linear_infinite]`} />
+              <div className={`relative aspect-[4/5] overflow-hidden rounded-[4rem] border-[12px] ${theme.altarBg} shadow-2xl`}>
+                <video autoPlay loop muted playsInline className="w-full h-full object-cover">
+                  <source src="/num2.mp4" type="video/mp4" />
+                </video>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end text-white">
+                   <div>
+                      <p className="text-[8px] uppercase tracking-widest opacity-60">{t.liveText}</p>
+                      <h4 className="text-lg font-bold">Divine Wisdom</h4>
+                   </div>
+                   <div className="w-12 h-12 rounded-full border border-white/30 flex items-center justify-center backdrop-blur-md">
+                      <Flower size={20} className="animate-pulse" />
+                   </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
-
-        {/* HERO CONTENT */}
-        <motion.div 
-          style={{ y: yParallax }}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          className="relative z-10 text-center px-4 md:px-6 max-w-7xl mx-auto flex flex-col items-center"
-        >
-          <motion.div 
-            animate={{ rotate: 360 }} 
-            transition={{ duration: 60, repeat: Infinity, ease: "linear" }} 
-            className="mb-8 md:mb-12"
-          >
-             <Flower size={40} strokeWidth={0.5} className="w-10 h-10 md:w-16 md:h-16 text-white/90 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
-          </motion.div>
-          
-          <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black uppercase text-white tracking-tighter leading-[0.9] italic drop-shadow-2xl mb-4 md:mb-8">
-            {content.heroMain}
-            <span className="block text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-light tracking-normal opacity-90 mt-2 font-serif not-italic">
-              {content.heroSub}
-            </span>
-          </h1>
-          
-          <div className="h-[1px] w-16 md:w-32 bg-white mx-auto my-6 md:my-10 opacity-60" />
-          
-          <p className="max-w-xl mx-auto text-white/90 font-sans tracking-[0.1em] md:tracking-[0.2em] text-[10px] sm:text-xs md:text-sm uppercase font-bold drop-shadow-md leading-relaxed px-4">
-             {content.heroDesc}
-          </p>
-
-          <motion.div 
-            animate={{ y: [0, 10, 0], opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="absolute bottom-12 md:bottom-20 left-1/2 -translate-x-1/2"
-          >
-            <ArrowDown className="text-white/50 w-6 h-6" />
-          </motion.div>
-        </motion.div>
       </section>
 
-    </div>
-  );
-}
+      {/* --- PHILOSOPHY SECTION --- */}
+      <section className="relative py-32 bg-current/[0.02]">
+        <div className="container mx-auto px-6">
+           <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-20">
+              <div className="max-w-2xl">
+                <Quote size={40} className={`mb-6 opacity-20 ${theme.accentText}`} />
+                <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">
+                  {t.philosophyTitle} <br/> <span className={theme.accentText}>{t.philosophySubtitle}</span>
+                </h2>
+              </div>
+              <p className={`max-w-xs text-xs uppercase tracking-widest leading-loose font-bold ${theme.mutedText}`}>
+                {t.philosophyDesc}
+              </p>
+           </div>
 
-// --- SUB-COMPONENT: TRUTH CARD ---
-function TruthCard({ num, title, desc, icon, color, theme, isNight, index }: any) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.8, delay: index * 0.1 }}
-      whileHover={{ y: -10 }}
-      className={`relative group p-8 md:p-10 min-h-[400px] md:aspect-[3/4.5] flex flex-col justify-between transition-all duration-700 rounded-3xl border overflow-hidden ${theme.altarBg}`}
-    >
-      {/* Background Glow on Hover */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-700 bg-gradient-to-br from-current to-transparent" style={{ color }} />
-      
-      {/* Top Section */}
-      <div className="flex justify-between items-start w-full">
-         <div className="p-4 rounded-2xl border transition-all duration-500 group-hover:scale-110" style={{ borderColor: `${color}30`, color }}>
-           {React.cloneElement(icon, { size: 28, strokeWidth: 1.5 })}
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              {t.philosophies.map((p, i) => (
+                <div key={i} className="group p-8 rounded-[2rem] border border-transparent hover:border-current/10 transition-all duration-500">
+                   <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-all duration-500 group-hover:bg-current group-hover:text-white border ${theme.borderColor}`}>
+                      {React.cloneElement(p.icon as React.ReactElement, { size: 28, strokeWidth: 1 } as any)}
+                   </div>
+                   <h3 className="text-2xl font-bold mb-4 uppercase tracking-tight">{p.title}</h3>
+                   <div className="h-[1px] w-12 bg-current opacity-20 mb-4" />
+                   <p className={`text-sm leading-relaxed ${theme.mutedText}`}>{p.desc}</p>
+                </div>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* --- STORY SECTION (Added to fill space) --- */}
+      <section className="py-32 px-6">
+         <div className="container mx-auto max-w-5xl">
+            <div className={`p-12 md:p-24 rounded-[4rem] relative overflow-hidden border ${theme.borderColor} ${theme.altarBg}`}>
+               <div className="absolute top-0 right-0 p-12 opacity-10">
+                  <Feather size={200} />
+               </div>
+               <div className="relative z-10 text-center">
+                  <Sun size={48} className={`mx-auto mb-8 ${theme.accentText}`} />
+                  <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-8">{t.storyTitle}</h2>
+                  <p className="text-lg md:text-2xl leading-relaxed italic opacity-80 max-w-3xl mx-auto">
+                    "{t.storyText}"
+                  </p>
+               </div>
+            </div>
          </div>
-         <span className="text-4xl italic font-black opacity-10 font-serif" style={{ color }}>{num}</span>
-      </div>
+      </section>
 
-      {/* Bottom Content */}
-      <div className="relative z-10 mt-12">
-        <h4 className="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4 leading-none transition-colors duration-300" style={{ color }}>
-          {title}
-        </h4>
-        <div className={`h-[1px] w-12 mb-6 opacity-30`} style={{ backgroundColor: color }} />
-        <p className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.mutedText} leading-relaxed`}>
-          {desc}
-        </p>
-      </div>
-      
-      {/* Bottom Decoration Line */}
-      <div className="absolute bottom-0 left-0 w-0 group-hover:w-full h-[4px] transition-all duration-700 ease-in-out opacity-60" style={{ backgroundColor: color }} />
-    </motion.div>
+      {/* --- MARQUEE --- */}
+      <section className="py-24 border-y border-current/10 overflow-hidden">
+        <div className="flex gap-20 animate-[marquee_40s_linear_infinite] whitespace-nowrap">
+           {[...Array(4)].map((_, i) => (
+             <div key={i} className="flex gap-20 items-center">
+                <span className="text-6xl md:text-8xl font-black opacity-10 italic">{t.marquee[0]}</span>
+                <Flower className="opacity-20" size={40} />
+                <span className="text-6xl md:text-8xl font-black opacity-10 italic">{t.marquee[1]}</span>
+                <Sparkles className="opacity-20" size={40} />
+             </div>
+           ))}
+        </div>
+      </section>
+
+      {/* --- STATS SECTION --- */}
+      <section className="relative py-32 px-6">
+         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+            {t.stats.map((stat, i) => (
+              <motion.div key={i} whileHover={{ y: -10 }} className={`p-12 rounded-[3rem] text-center border ${theme.altarBg} ${theme.borderColor}`}>
+                <div className={`mx-auto w-12 h-12 flex items-center justify-center mb-6 ${theme.accentText}`}>
+                  {React.cloneElement(stat.icon as React.ReactElement, { size: 32 } as any)}
+                </div>
+                <div className="text-5xl md:text-7xl font-black tracking-tighter mb-4">
+                  <CountUp end={stat.end} duration={3} />+
+                </div>
+                <p className="text-[10px] uppercase tracking-[0.3em] font-black opacity-50">{stat.label}</p>
+              </motion.div>
+            ))}
+         </div>
+      </section>
+
+      <style jsx global>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
   );
 }

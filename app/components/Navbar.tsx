@@ -2,17 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { 
-  Menu, 
-  X, 
+  Home,
+  Users,
+  Sparkles,
+  LayoutGrid,
+  Compass,
   Globe,
   Sun,
   Moon,
-  Sparkles,
-  Flower,
-  ArrowRight,
-  User
+  Menu,
+  X,
+  Flower
 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -20,12 +23,6 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const CONTENT = {
-  nav: [
-    { id: "home", name: { mn: "Нүүр хуудас", en: "Home" }, href: "/" },
-    { id: "monks", name: { mn: "Зурхайчид", en: "Astrologers" }, href: "/monks" },
-    { id: "services", name: { mn: "Үйлчилгээ", en: "Services" }, href: "/services" },
-    { id: "about", name: { mn: "Бидний тухай", en: "Our Path" }, href: "/about" },
-  ],
   logo: { mn: "", en: "Nirvana" },
   login: { mn: "Нэвтрэх", en: "Sign In" },
   register: { mn: "Бүртгүүлэх", en: "Register" },
@@ -34,12 +31,13 @@ const CONTENT = {
 
 export default function OverlayNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false); // For Language/Theme on mobile
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   
+  const pathname = usePathname();
   const { language: lang, setLanguage } = useLanguage();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const { scrollY } = useScroll();
 
   useEffect(() => setMounted(true), []);
@@ -53,13 +51,33 @@ export default function OverlayNavbar() {
 
   if (!mounted) return null;
 
-  // FIX: Make this dynamic so the UI updates
-  const isDark = resolvedTheme === "dark";
+  const isDark = false;
+
+  // --- DESKTOP NAV ITEMS ---
+  const desktopNav = [
+    { id: "home", name: { mn: "Нүүр", en: "Home" }, href: "/" },
+    { id: "monks", name: { mn: "Үзмэрч", en: "Astrologers" }, href: "/monks" },
+    { id: "services", name: { mn: "Үйлчилгээ", en: "Services" }, href: "/services" },
+    { id: "about", name: { mn: "Бидний тухай", en: "Our Path" }, href: "/about" },
+  ];
+
+  // --- MOBILE DOCK ITEMS ---
+  // Matches the style: Home | Monks | SERVICES (Center) | Dashboard | About
+  const mobileNav = [
+    { id: "home", icon: Home, href: "/", label: "Home" },
+    { id: "monks", icon: Users, href: "/monks", label: "Monks" },
+    { id: "services", icon: Sparkles, href: "/services", label: "Rituals", isMain: true }, // Center Button
+    { id: "dashboard", icon: LayoutGrid, href: "/dashboard", label: "Grid" },
+    { id: "about", icon: Compass, href: "/about", label: "Path" },
+  ];
 
   return (
     <>
+      {/* ========================================================= */}
+      {/* DESKTOP HEADER (Floating Pill)                            */}
+      {/* ========================================================= */}
       <motion.header
-        className="fixed z-50 left-0 right-0 flex justify-center pointer-events-none"
+        className="fixed z-50 left-0 right-0 hidden md:flex justify-center pointer-events-none"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: isScrolled ? 10 : 0, opacity: 1 }}
       >
@@ -73,222 +91,162 @@ export default function OverlayNavbar() {
                 ? "w-[95%] lg:w-[1250px] mt-2 py-3 px-8 rounded-full shadow-2xl backdrop-blur-xl border"
                 : "w-full max-w-[1450px] py-6 px-10 bg-transparent border-transparent"
             }
-            ${/* Light Mode: Warm Buddha */ ""}
             ${isScrolled && !isDark ? "bg-orange-50/80 border-amber-200 shadow-amber-900/10 text-black" : ""}
-            ${/* Dark Mode: Zodiac Galaxy Theme */ ""}
             ${isScrolled && isDark ? "bg-[#0C164F]/80 border-indigo-400/30 shadow-[0_0_30px_rgba(123,51,125,0.3)] text-white" : ""}
           `}
         >
-          {/* --- 1. LOGO --- */}
+          {/* Logo */}
           <div className="flex items-center flex-shrink-0">
             <Link href="/" className="group flex items-center gap-3 relative z-10">
-              <motion.div
-                whileHover={{ rotate: 360, scale: 1.1 }}
-                transition={{ duration: 1.5, ease: "easeInOut" }}
-                className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-500 ${
-                  isDark 
-                    ? "bg-gradient-to-tr from-[#2E1B49] to-[#C72075] border-cyan-400/50 text-cyan-300 shadow-[0_0_15px_rgba(80,242,206,0.5)]" 
-                    : "bg-amber-100 border-amber-300 text-amber-600 shadow-[0_0_15px_rgba(251,191,36,0.3)]"
-                }`}
-              >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-500 ${isDark ? "bg-gradient-to-tr from-[#2E1B49] to-[#C72075] border-cyan-400/50" : "bg-amber-100 border-amber-300"}`}>
                 <Image src="/logo.png" alt="Logo" width={40} height={40} className="rounded-full object-cover" />
-              </motion.div>
+              </div>
               <div className="flex flex-col">
-                <span className={`font-serif font-bold text-xl tracking-tight transition-colors duration-500 ${
-                  isScrolled ? (isDark ? "text-cyan-50" : "text-amber-950") : "text-white"
-                }`}>
-                   {CONTENT.logo[lang]}
-                </span>
-                <span className={`text-[9px] uppercase tracking-[0.3em] font-bold ${
-                  isScrolled ? (isDark ? "text-[#C72075]" : "text-amber-700/60") : "text-white/60"
-                }`}>
-                   {isDark ? "Celestial Zodiac" : "Sacred Path"}
-                </span>
+                <span className={`font-serif font-bold text-xl tracking-tight ${isScrolled ? (isDark ? "text-cyan-50" : "text-amber-950") : "text-white"}`}>{CONTENT.logo[lang]}</span>
               </div>
             </Link>
           </div>
 
-          {/* --- 2. CENTER NAVIGATION (Desktop) --- */}
-          <div className="hidden md:flex items-center gap-2">
-            {CONTENT.nav.map((item) => (
+          {/* Links */}
+          <div className="flex items-center gap-2">
+            {desktopNav.map((item) => (
               <div key={item.id} className="relative" onMouseEnter={() => setHoveredNav(item.id)} onMouseLeave={() => setHoveredNav(null)}>
-                <Link
-                  href={item.href}
-                  className={`relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 z-10 ${
-                    isScrolled 
-                      ? (isDark ? "text-indigo-100 hover:text-cyan-300" : "text-black hover:text-amber-600") 
-                      : "text-white hover:text-cyan-200"
-                  }`}
-                >
-                  {hoveredNav === item.id && (
-                    <motion.div 
-                      layoutId="nav-pill" 
-                      className={`absolute inset-0 rounded-full ${isDark ? "bg-gradient-to-r from-[#C72075]/20 to-[#7B337D]/30" : "bg-white/20"}`} 
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} 
-                    />
-                  )}
+                <Link href={item.href} className={`relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 z-10 ${isScrolled ? (isDark ? "text-indigo-100 hover:text-cyan-300" : "text-black hover:text-amber-600") : "text-white hover:text-cyan-200"}`}>
+                  {hoveredNav === item.id && <motion.div layoutId="nav-pill" className={`absolute inset-0 rounded-full ${isDark ? "bg-white/10" : "bg-black/5"}`} />}
                   {item.name[lang]}
                 </Link>
               </div>
             ))}
           </div>
 
-          {/* --- 3. RIGHT ACTIONS --- */}
+          {/* Actions */}
           <div className="flex items-center gap-3">
-             {/* Language (Desktop) */}
-             <button 
-               onClick={toggleLanguage}
-               className={`hidden md:flex w-11 h-11 rounded-full border items-center justify-center transition-all ${
-                 isScrolled 
-                 ? (isDark ? "border-indigo-400/30 text-cyan-100 bg-indigo-500/10" : "border-amber-200 text-black") 
-                 : "border-white/20 text-white"
-               }`}
-             >
-                <Globe size={18} />
-             </button>
-
-            
-
-             <div className="hidden md:flex items-center gap-3 ml-2">
-                <SignedOut>
-                  <Link href="/sign-up">
-                      <motion.button
-                          whileHover={{ scale: 1.05, boxShadow: isDark ? "0 0 20px rgba(199, 32, 117, 0.4)" : "0 0 20px rgba(251, 191, 36, 0.2)" }}
-                          className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all ${
-                              isDark 
-                              ? "bg-gradient-to-r from-[#C72075] to-[#7B337D] text-white shadow-lg" 
-                              : "bg-amber-600 text-white hover:bg-amber-700"
-                          }`}
-                      >
-                          {CONTENT.register[lang]}
-                      </motion.button>
-                  </Link>
-                </SignedOut>
-
-                <SignedIn>
-                    <div className="flex items-center gap-4">
-                        <Link href="/dashboard">
-                            <button className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
-                                isDark ? "border-cyan-400 text-cyan-100 bg-cyan-950/40" : "border-amber-600 text-amber-600"
-                            }`}>
-                                {CONTENT.dashboard[lang]}
-                            </button>
-                        </Link>
-                        <UserButton appearance={{ elements: { userButtonAvatarBox: `w-9 h-9 border-2 ${isDark ? 'border-cyan-400' : 'border-amber-400'}` } }} />
-                    </div>
-                </SignedIn>
-             </div>
-
-             {/* Mobile Menu Toggle */}
-             <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2">
-                <Menu size={28} className={isScrolled ? (isDark ? "text-cyan-200" : "text-black") : "text-white"} />
-             </button>
+             <button onClick={toggleLanguage} className={`w-11 h-11 rounded-full border flex items-center justify-center ${isScrolled ? (isDark ? "border-cyan-400/30 text-cyan-200" : "border-amber-200 text-amber-800") : "border-white/20 text-white"}`}><Globe size={18}/></button>
+             <button onClick={toggleTheme} className={`w-11 h-11 rounded-full border flex items-center justify-center ${isScrolled ? (isDark ? "border-cyan-400/30 text-cyan-200" : "border-amber-200 text-amber-800") : "border-white/20 text-white"}`}>{isDark ? <Sun size={18}/> : <Moon size={18}/>}</button>
+             <SignedOut>
+               <Link href="/sign-up"><button className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all ${isDark ? "bg-gradient-to-r from-[#C72075] to-[#7B337D] text-white" : "bg-amber-600 text-white"}`}>{CONTENT.register[lang]}</button></Link>
+             </SignedOut>
+             <SignedIn>
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard"><button className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest ${isDark ? "border-cyan-400 text-cyan-100" : "border-amber-600 text-amber-600"}`}>{CONTENT.dashboard[lang]}</button></Link>
+                    <UserButton />
+                </div>
+             </SignedIn>
           </div>
         </motion.nav>
       </motion.header>
 
-      {/* MOBILE OVERLAY */}
+
+      {/* ========================================================= */}
+      {/* MOBILE TOP BAR (Logo + Settings + Auth)                   */}
+      {/* ========================================================= */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 px-6 py-4 flex justify-between items-center pointer-events-none">
+         {/* Logo */}
+         <Link href="/" className="pointer-events-auto flex items-center gap-2">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${isDark ? 'bg-[#05051a] border border-cyan-500/30' : 'bg-white border border-amber-200'}`}>
+                <Image src="/logo.png" alt="Logo" width={32} height={32} className="rounded-full" />
+            </div>
+         </Link>
+
+         {/* Right Side: Settings & User */}
+         <div className="pointer-events-auto flex items-center gap-3">
+            <button 
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)} 
+                className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg backdrop-blur-md border ${
+                    isDark ? 'bg-[#05051a]/80 border-cyan-500/30 text-cyan-400' : 'bg-white/80 border-amber-200 text-amber-600'
+                }`}
+            >
+                {isSettingsOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <SignedIn>
+                <UserButton appearance={{ elements: { userButtonAvatarBox: `w-10 h-10 border-2 ${isDark ? 'border-cyan-400' : 'border-amber-400'}` } }} />
+            </SignedIn>
+            <SignedOut>
+                <Link href="/sign-in" className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg border font-bold text-xs ${isDark ? 'bg-[#C72075] border-[#C72075] text-white' : 'bg-amber-500 border-amber-500 text-white'}`}>
+                    IN
+                </Link>
+            </SignedOut>
+         </div>
+      </div>
+
+      {/* --- SETTINGS DROPDOWN (Mobile) --- */}
       <AnimatePresence>
-        {isMobileMenuOpen && (
-           <motion.div 
-            initial={{ x: "100%" }} 
-            animate={{ x: 0 }} 
-            exit={{ x: "100%" }} 
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className={`fixed inset-0 z-[60] flex flex-col p-8 ${
-                isDark 
-                ? "bg-gradient-to-b from-[#0C164F] via-[#2E1B49] to-[#7B337D] text-white" 
-                : "bg-[#fffdfa] text-amber-950"
-            }`}
-           >
-              {/* Mobile Header */}
-              <div className="flex justify-between items-center mb-12">
-                 <div className="flex items-center gap-2">
-                    <Flower size={24} className={isDark ? "text-cyan-400" : "text-amber-500"} />
-                    <span className="font-serif font-bold text-2xl">{CONTENT.logo[lang]}</span>
-                 </div>
-                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-black/5 rounded-full"><X size={28} /></button>
-              </div>
-
-              {/* Mobile Navigation Links */}
-              <div className="space-y-6 flex-1 overflow-y-auto">
-                {CONTENT.nav.map((item) => (
-                  <Link 
-                    key={item.id} 
-                    href={item.href} 
-                    onClick={() => setIsMobileMenuOpen(false)} 
-                    className={`block text-4xl font-serif border-b pb-4 transition-colors ${
-                        isDark ? "border-white/10 hover:text-cyan-300" : "border-black/5 hover:text-amber-600 text-black"
-                    }`}
-                  >
-                    {item.name[lang]}
-                  </Link>
-                ))}
-              </div>
-
-              {/* Mobile Bottom Actions (Refined) */}
-              <div className="mt-8 space-y-6">
-                 
-                 {/* Mobile Auth */}
-                 <SignedOut>
-                    <Link href="/sign-up" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                        <button className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg ${
-                            isDark ? "bg-cyan-500 text-[#0C164F]" : "bg-amber-600 text-white"
-                        }`}>
-                            {CONTENT.register[lang]} <ArrowRight size={16} />
-                        </button>
-                    </Link>
-                    <div className="text-center">
-                        <Link href="/sign-in" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-bold opacity-60 hover:opacity-100 uppercase tracking-widest">
-                            {CONTENT.login[lang]}
-                        </Link>
-                    </div>
-                 </SignedOut>
-
-                 <SignedIn>
-                    <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                        <button className={`w-full py-4 rounded-2xl border-2 font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-3 ${
-                            isDark ? "border-cyan-400 text-cyan-200" : "border-amber-600 text-amber-800"
-                        }`}>
-                            {CONTENT.dashboard[lang]} <User size={16} />
-                        </button>
-                    </Link>
-                 </SignedIn>
-
-                 {/* Divider */}
-                 <div className={`h-px w-full ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
-
-                 {/* Utility Grid (Side by Side) */}
-                 <div className="grid grid-cols-2 gap-4">
-                    <button 
-                        onClick={toggleTheme} 
-                        className={`py-3 rounded-xl flex items-center justify-center gap-2 border transition-all ${
-                            isDark ? 'border-cyan-400/30 bg-cyan-950/30 text-cyan-200' : 'border-black/10 bg-white text-black'
-                        }`}
-                    >
-                        {isDark ? <Sun size={18} /> : <Moon size={18} />}
-                        <span className="font-bold uppercase text-[10px] tracking-widest">
-                            {isDark ? "Light" : "Dark"}
-                        </span>
-                    </button>
-
-                    <button 
-                        onClick={toggleLanguage} 
-                        className={`py-3 rounded-xl flex items-center justify-center gap-2 border transition-all ${
-                            isDark ? 'border-cyan-400/30 bg-cyan-950/30 text-cyan-200' : 'border-black/10 bg-white text-black'
-                        }`}
-                    >
-                        <Globe size={18} />
-                        <span className="font-bold uppercase text-[10px] tracking-widest">
-                            {lang === 'mn' ? 'EN' : 'MN'}
-                        </span>
-                    </button>
-                 </div>
-
-              </div>
-           </motion.div>
+        {isSettingsOpen && (
+            <motion.div 
+                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                className={`fixed top-20 right-6 z-40 p-4 rounded-3xl border shadow-2xl flex flex-col gap-3 w-40 ${
+                    isDark ? 'bg-[#0C164F] border-cyan-500/30' : 'bg-white border-amber-200'
+                }`}
+            >
+                <button onClick={toggleTheme} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isDark ? 'hover:bg-white/10 text-cyan-100' : 'hover:bg-black/5 text-amber-900'}`}>
+                    {isDark ? <Sun size={18} /> : <Moon size={18} />} <span className="text-xs font-bold uppercase">{isDark ? "Light" : "Dark"}</span>
+                </button>
+                <button onClick={toggleLanguage} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isDark ? 'hover:bg-white/10 text-cyan-100' : 'hover:bg-black/5 text-amber-900'}`}>
+                    <Globe size={18} /> <span className="text-xs font-bold uppercase">{lang === 'mn' ? 'English' : 'Монгол'}</span>
+                </button>
+            </motion.div>
         )}
       </AnimatePresence>
+
+
+      {/* ========================================================= */}
+      {/* MOBILE BOTTOM DOCK (The Requested Style)                  */}
+      {/* ========================================================= */}
+      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[400px]">
+         <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className={`flex items-center justify-around px-2 h-[72px] rounded-[2.5rem] shadow-2xl backdrop-blur-2xl border transition-colors duration-500 ${
+                isDark 
+                ? "bg-[#05051a]/80 border-cyan-500/20 shadow-[0_10px_40px_-10px_rgba(80,242,206,0.15)]" 
+                : "bg-white/80 border-white/40 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)]"
+            }`}
+         >
+            {mobileNav.map((item) => {
+                const isActive = pathname === item.href;
+                const isMain = item.isMain;
+
+                return (
+                    <Link key={item.id} href={item.href} className="relative group flex flex-col items-center justify-center w-14">
+                        {isMain ? (
+                            // --- CENTRAL MAIN BUTTON (Services) ---
+                            <div className="relative -top-6">
+                                <motion.div 
+                                    whileTap={{ scale: 0.9 }}
+                                    className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-500 ${
+                                        isDark 
+                                        ? "bg-gradient-to-tr from-[#C72075] to-[#7B337D] text-white shadow-[#C72075]/40" 
+                                        : "bg-gradient-to-tr from-[#F59E0B] to-[#FDE68A] text-[#451a03] shadow-[#F59E0B]/40"
+                                    }`}
+                                >
+                                    <item.icon size={28} strokeWidth={2} />
+                                    {/* Pulse Effect */}
+                                    <div className="absolute inset-0 rounded-full bg-white opacity-20 animate-ping pointer-events-none" />
+                                </motion.div>
+                            </div>
+                        ) : (
+                            // --- STANDARD DOCK ICONS ---
+                            <div className="flex flex-col items-center gap-1">
+                                <div className={`transition-all duration-300 ${
+                                    isActive 
+                                    ? (isDark ? "text-cyan-400 scale-110" : "text-[#D97706] scale-110") 
+                                    : (isDark ? "text-cyan-100/40 group-hover:text-cyan-100" : "text-stone-400 group-hover:text-stone-600")
+                                }`}>
+                                    <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                                </div>
+                                {isActive && (
+                                    <motion.div layoutId="active-dot" className={`w-1 h-1 rounded-full ${isDark ? "bg-cyan-400" : "bg-[#D97706]"}`} />
+                                )}
+                            </div>
+                        )}
+                    </Link>
+                );
+            })}
+         </motion.div>
+      </div>
+
     </>
   );
 }

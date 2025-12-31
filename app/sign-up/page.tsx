@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 
+// --- CUSTOM SVG: The Endless Knot ---
 const EndlessKnot = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={className} fill="none" stroke="currentColor">
      <path d="M30 30 L70 30 L70 70 L30 70 Z" strokeWidth="0.5" className="opacity-50" />
@@ -38,9 +39,9 @@ export default function SignUpPage() {
     identifyDesc: t({ mn: "Таны зорилго юу вэ?", en: "How do you wish to join us?" }),
     roleClient: t({ mn: "Би бол эрэлчин (Үйлчлүүлэгч)", en: "I am a Seeker (Client)" }),
     roleMonk: t({ mn: "Би бол багш (Лам)", en: "I am a Guide (Monk)" }),
-    // UPDATED TEXT HERE
+    // REVERTED TEXT HERE:
     registerBtn: role === "monk" 
-      ? t({ mn: "Багшаар бүртгүүлэх хүсэлт илгээх", en: "Apply as Monk" }) 
+      ? t({ mn: "Багшаар бүртгүүлэх", en: "Register as Monk" }) // Changed text back
       : t({ mn: "Сангхад нэгдэх", en: "Join the Sangha" }),
     loginBtn: t({ mn: "Нэвтрэх", en: "Enter Sanctuary" }),
     or: t({ mn: "- ЭСВЭЛ -", en: "- OR -" }),
@@ -51,7 +52,7 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen w-full flex bg-[#FFFBEB] font-serif selection:bg-[#F59E0B] selection:text-white overflow-hidden">
       
-      {/* --- LEFT SIDE (Same as before) --- */}
+      {/* --- LEFT SIDE (Unchanged) --- */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-[#451a03]">
         <motion.div 
            initial={{ scale: 1.1 }}
@@ -131,10 +132,10 @@ export default function SignUpPage() {
 
           <ClerkLoaded>
             <div className="space-y-6">
-              {/* NOTE: We pass 'requestedRole' instead of 'role' */}
+              {/* IMPORTANT: Reverted to direct role assignment */}
               <SignUpButton 
                 mode="modal"
-                unsafeMetadata={{ requestedRole: role }} 
+                unsafeMetadata={{ role: role }} // Direct role assignment now
                 forceRedirectUrl={role === 'monk' ? "/onboarding/monk" : "/dashboard"}
               >
                 <motion.button 
