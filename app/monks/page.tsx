@@ -123,7 +123,6 @@ export default function DivineTarotShowcase() {
           )}
         </div>
       </section>
-      <GoldenNirvanaFooter />
     </>
   );
 }

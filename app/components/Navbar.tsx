@@ -10,7 +10,9 @@ import {
   Sun,
   Moon,
   Sparkles,
-  Flower
+  Flower,
+  ArrowRight,
+  User
 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -24,7 +26,7 @@ const CONTENT = {
     { id: "services", name: { mn: "Үйлчилгээ", en: "Services" }, href: "/services" },
     { id: "about", name: { mn: "Бидний тухай", en: "Our Path" }, href: "/about" },
   ],
-  logo: { mn: "Гандан", en: "Nirvana" },
+  logo: { mn: "", en: "Nirvana" },
   login: { mn: "Нэвтрэх", en: "Sign In" },
   register: { mn: "Бүртгүүлэх", en: "Register" },
   dashboard: { mn: "Хяналтын самбар", en: "Dashboard" },
@@ -51,7 +53,8 @@ export default function OverlayNavbar() {
 
   if (!mounted) return null;
 
-  const isDark =false;
+  // FIX: Make this dynamic so the UI updates
+  const isDark = resolvedTheme === "dark";
 
   return (
     <>
@@ -105,7 +108,7 @@ export default function OverlayNavbar() {
             </Link>
           </div>
 
-          {/* --- 2. CENTER NAVIGATION --- */}
+          {/* --- 2. CENTER NAVIGATION (Desktop) --- */}
           <div className="hidden md:flex items-center gap-2">
             {CONTENT.nav.map((item) => (
               <div key={item.id} className="relative" onMouseEnter={() => setHoveredNav(item.id)} onMouseLeave={() => setHoveredNav(null)}>
@@ -114,13 +117,13 @@ export default function OverlayNavbar() {
                   className={`relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 z-10 ${
                     isScrolled 
                       ? (isDark ? "text-indigo-100 hover:text-cyan-300" : "text-black hover:text-amber-600") 
-                      : "text-black hover:text-cyan-200"
+                      : "text-white hover:text-cyan-200"
                   }`}
                 >
                   {hoveredNav === item.id && (
                     <motion.div 
                       layoutId="nav-pill" 
-                      className={`absolute inset-0 rounded-full ${isDark ? "bg-gradient-to-r from-[#C72075]/20 to-[#7B337D]/30" : "bg-amber-500/10"}`} 
+                      className={`absolute inset-0 rounded-full ${isDark ? "bg-gradient-to-r from-[#C72075]/20 to-[#7B337D]/30" : "bg-white/20"}`} 
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} 
                     />
                   )}
@@ -132,14 +135,10 @@ export default function OverlayNavbar() {
 
           {/* --- 3. RIGHT ACTIONS --- */}
           <div className="flex items-center gap-3">
-             
-             {/* THE THEME TOGGLER */}
-            
-
-             {/* Language */}
+             {/* Language (Desktop) */}
              <button 
                onClick={toggleLanguage}
-               className={`w-11 h-11 rounded-full border flex items-center justify-center transition-all ${
+               className={`hidden md:flex w-11 h-11 rounded-full border items-center justify-center transition-all ${
                  isScrolled 
                  ? (isDark ? "border-indigo-400/30 text-cyan-100 bg-indigo-500/10" : "border-amber-200 text-black") 
                  : "border-white/20 text-white"
@@ -147,6 +146,8 @@ export default function OverlayNavbar() {
              >
                 <Globe size={18} />
              </button>
+
+            
 
              <div className="hidden md:flex items-center gap-3 ml-2">
                 <SignedOut>
@@ -200,32 +201,90 @@ export default function OverlayNavbar() {
                 : "bg-[#fffdfa] text-amber-950"
             }`}
            >
+              {/* Mobile Header */}
               <div className="flex justify-between items-center mb-12">
                  <div className="flex items-center gap-2">
                     <Flower size={24} className={isDark ? "text-cyan-400" : "text-amber-500"} />
                     <span className="font-serif font-bold text-2xl">{CONTENT.logo[lang]}</span>
                  </div>
-                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2"><X size={32} /></button>
+                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-black/5 rounded-full"><X size={28} /></button>
               </div>
 
-              <div className="space-y-6">
+              {/* Mobile Navigation Links */}
+              <div className="space-y-6 flex-1 overflow-y-auto">
                 {CONTENT.nav.map((item) => (
-                  <Link key={item.id} href={item.href} onClick={() => setIsMobileMenuOpen(false)} className=" text-black block text-4xl font-serif border-b border-current/10 pb-4">
+                  <Link 
+                    key={item.id} 
+                    href={item.href} 
+                    onClick={() => setIsMobileMenuOpen(false)} 
+                    className={`block text-4xl font-serif border-b pb-4 transition-colors ${
+                        isDark ? "border-white/10 hover:text-cyan-300" : "border-black/5 hover:text-amber-600 text-black"
+                    }`}
+                  >
                     {item.name[lang]}
                   </Link>
                 ))}
               </div>
 
-              <div className="mt-auto flex flex-col gap-4">
-                 <button onClick={toggleTheme} className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 border ${isDark ? 'border-cyan-400/30' : 'border-black/10'}`}>
-                    {isDark ? <Sun size={20} className="text-cyan-300" /> : <Moon size={20} />}
-                    <span className="font-bold uppercase tracking-widest text-xs">
-                      {isDark ? "Solar Path" : "Cosmic Path"}
-                    </span>
-                 </button>
-                 <button onClick={toggleLanguage} className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-xs ${isDark ? 'bg-cyan-500 text-[#0C164F]' : 'bg-amber-500 text-white'}`}>
-                    {lang === 'mn' ? 'English' : 'Монгол'}
-                 </button>
+              {/* Mobile Bottom Actions (Refined) */}
+              <div className="mt-8 space-y-6">
+                 
+                 {/* Mobile Auth */}
+                 <SignedOut>
+                    <Link href="/sign-up" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                        <button className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg ${
+                            isDark ? "bg-cyan-500 text-[#0C164F]" : "bg-amber-600 text-white"
+                        }`}>
+                            {CONTENT.register[lang]} <ArrowRight size={16} />
+                        </button>
+                    </Link>
+                    <div className="text-center">
+                        <Link href="/sign-in" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-bold opacity-60 hover:opacity-100 uppercase tracking-widest">
+                            {CONTENT.login[lang]}
+                        </Link>
+                    </div>
+                 </SignedOut>
+
+                 <SignedIn>
+                    <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                        <button className={`w-full py-4 rounded-2xl border-2 font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-3 ${
+                            isDark ? "border-cyan-400 text-cyan-200" : "border-amber-600 text-amber-800"
+                        }`}>
+                            {CONTENT.dashboard[lang]} <User size={16} />
+                        </button>
+                    </Link>
+                 </SignedIn>
+
+                 {/* Divider */}
+                 <div className={`h-px w-full ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
+
+                 {/* Utility Grid (Side by Side) */}
+                 <div className="grid grid-cols-2 gap-4">
+                    <button 
+                        onClick={toggleTheme} 
+                        className={`py-3 rounded-xl flex items-center justify-center gap-2 border transition-all ${
+                            isDark ? 'border-cyan-400/30 bg-cyan-950/30 text-cyan-200' : 'border-black/10 bg-white text-black'
+                        }`}
+                    >
+                        {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                        <span className="font-bold uppercase text-[10px] tracking-widest">
+                            {isDark ? "Light" : "Dark"}
+                        </span>
+                    </button>
+
+                    <button 
+                        onClick={toggleLanguage} 
+                        className={`py-3 rounded-xl flex items-center justify-center gap-2 border transition-all ${
+                            isDark ? 'border-cyan-400/30 bg-cyan-950/30 text-cyan-200' : 'border-black/10 bg-white text-black'
+                        }`}
+                    >
+                        <Globe size={18} />
+                        <span className="font-bold uppercase text-[10px] tracking-widest">
+                            {lang === 'mn' ? 'EN' : 'MN'}
+                        </span>
+                    </button>
+                 </div>
+
               </div>
            </motion.div>
         )}
