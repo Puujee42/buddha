@@ -84,7 +84,7 @@ export default function AboutPage() {
   useEffect(() => { setMounted(true); }, []);
 
   // Correctly handle Theme State
-  const isNight = mounted && resolvedTheme === 'dark';
+  const isNight = false;
   
   // Zodiac Mouse Glow (Magenta/Cyan leak)
   const glowColor = isNight ? 'rgba(199, 32, 117, 0.25)' : 'rgba(251, 191, 36, 0.15)';

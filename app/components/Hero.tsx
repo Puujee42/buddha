@@ -75,7 +75,7 @@ export default function Hero() {
   const [mounted, setMounted] = useState(false);
   
   // Dynamic Theme Detection
-  const isDark = mounted && resolvedTheme === "dark";
+  const isDark = false;
 
   const containerRef = useRef<HTMLDivElement>(null);
   

@@ -39,7 +39,6 @@ export default function SacredAboutPage() {
     <>
       <OverlayNavbar />
       <ActualSacredAboutContent />
-      <GoldenNirvanaFooter />
     </>
   );
 }
@@ -47,7 +46,7 @@ export default function SacredAboutPage() {
 function ActualSacredAboutContent() {
   const { t, language } = useLanguage();
   const { resolvedTheme } = useTheme();
-  const isNight = resolvedTheme === "dark";
+  const isNight = false;
   const containerRef = useRef<HTMLDivElement>(null);
 
   // --- CONTENT DEFINITIONS ---
