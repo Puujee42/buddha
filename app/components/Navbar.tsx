@@ -13,6 +13,8 @@ import {
   Globe,
   Sun,
   Moon,
+  LogIn,
+  UserCircle
 } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -50,7 +52,7 @@ export default function OverlayNavbar() {
 
   const desktopNav = [
     { name: { mn: "Нүүр", en: "Home" }, href: "/" },
-    { name: { mn: "Үзмэрч", en: "Astrologers" }, href: "/monks" },
+    { name: { mn: "Үзмэрч", en: "Monks" }, href: "/monks" },
     { name: { mn: "Үйлчилгээ", en: "Services" }, href: "/services" },
     { name: { mn: "Бидний тухай", en: "About Us" }, href: "/about" },
   ];
@@ -66,68 +68,70 @@ export default function OverlayNavbar() {
   return (
     <>
       {/* ========================================================= */}
-      {/* 1. DESKTOP FLOATING HEADER                                */}
+      {/* 1. DESKTOP HEADER (Extra Rounded Pill)                   */}
       {/* ========================================================= */}
       <motion.header 
         className="fixed z-50 left-0 right-0 hidden md:flex justify-center pointer-events-none"
-        animate={{ y: isScrolled ? 12 : 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        animate={{ y: isScrolled ? 15 : 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 25 }}
       >
         <nav className={`
-          pointer-events-auto flex items-center justify-between transition-all duration-500
+          pointer-events-auto flex items-center justify-between transition-all duration-700
           ${isScrolled 
-            ? "w-[90%] lg:w-[1200px] py-3 px-8 rounded-full border backdrop-blur-xl shadow-2xl" 
-            : "w-full max-w-[1400px] py-6 px-10 bg-transparent border-transparent"}
+            ? "w-[85%] lg:w-[1100px] py-3 px-10 rounded-full border backdrop-blur-2xl shadow-2xl" 
+            : "w-full max-w-[1400px] py-8 px-12 bg-transparent border-transparent"}
           ${isDark 
-            ? "bg-[#1a0505]/80 border-amber-900/30 text-amber-50" 
-            : "bg-white/80 border-amber-100 text-[#451a03] shadow-amber-900/5"}
+            ? "bg-[#1a0505]/80 border-amber-900/40 text-amber-50 shadow-black" 
+            : "bg-white/80 border-amber-100 text-[#451a03] shadow-amber-900/10"}
         `}>
-          {/* Logo Section */}
-          <Link href="/" className="flex items-center gap-3 group">
-             <div className="relative w-10 h-10 overflow-hidden rounded-full border border-amber-500/30">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-4 group">
+             <div className="relative w-11 h-11 overflow-hidden rounded-full border-2 border-amber-500/20 shadow-inner">
                 <Image src="/logo.png" alt="Logo" fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
              </div>
-             <span className="font-serif font-bold text-xl tracking-tight">{CONTENT.logo[lang]}</span>
+             <span className="font-serif font-black text-2xl tracking-tighter">{CONTENT.logo[lang]}</span>
           </Link>
 
-          {/* Center Links */}
-          <div className="flex items-center gap-2">
+          {/* Links */}
+          <div className="flex items-center gap-1 bg-current/5 p-1 rounded-full">
             {desktopNav.map((item) => (
               <Link 
                 key={item.href} 
                 href={item.href} 
-                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all hover:bg-current/5 
-                  ${pathname === item.href ? (isDark ? "text-amber-400" : "text-amber-600") : "opacity-70"}`}
+                className={`px-6 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all
+                  ${pathname === item.href 
+                    ? (isDark ? "bg-amber-600 text-[#1a0505]" : "bg-[#451a03] text-white") 
+                    : "opacity-60 hover:opacity-100"}`}
               >
                 {item.name[lang]}
               </Link>
             ))}
           </div>
 
-          {/* Quick Action Buttons */}
+          {/* Desktop Actions */}
           <div className="flex items-center gap-3">
-             <button onClick={toggleLanguage} className="w-10 h-10 rounded-full border flex items-center justify-center border-current/10 hover:bg-current/10 transition-colors">
+             <button onClick={toggleLanguage} className="w-11 h-11 rounded-full border flex items-center justify-center border-current/10 hover:bg-current/10 transition-all active:scale-90">
                 <Globe size={18}/>
              </button>
-             <button onClick={toggleTheme} className="w-10 h-10 rounded-full border flex items-center justify-center border-current/10 hover:bg-current/10 transition-colors">
+             <button onClick={toggleTheme} className="w-11 h-11 rounded-full border flex items-center justify-center border-current/10 hover:bg-current/10 transition-all active:scale-90">
                 {isDark ? <Sun size={18}/> : <Moon size={18}/>}
              </button>
              
-             <div className="h-6 w-[1px] bg-current/10 mx-1" />
+             <div className="h-8 w-[1px] bg-current/10 mx-1" />
 
              <SignedIn>
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard" className={`text-[10px] font-black uppercase tracking-widest border-b border-current hover:opacity-70`}>
+                    <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest opacity-70 hover:opacity-100 border-b-2 border-amber-500/50">
                         {CONTENT.dashboard[lang]}
                     </Link>
-                    <UserButton />
+                    <div className="scale-110"><UserButton /></div>
                 </div>
              </SignedIn>
              
              <SignedOut>
-               <Link href="/sign-up">
-                  <button className="px-6 py-2.5 rounded-full bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black uppercase tracking-wider shadow-lg shadow-amber-900/20 transition-all active:scale-95">
-                    {CONTENT.register[lang]}
+               <Link href="/sign-in">
+                  <button className="px-8 py-3 rounded-full bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-900/20 transition-all active:scale-95">
+                    {CONTENT.login[lang]}
                   </button>
                </Link>
              </SignedOut>
@@ -137,98 +141,104 @@ export default function OverlayNavbar() {
 
 
       {/* ========================================================= */}
-      {/* 2. MOBILE TOP BAR (Logo + Theme/Lang Toggles)             */}
+      {/* 2. MOBILE TOP BAR (High Obviousness Login)               */}
       {/* ========================================================= */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 px-4 py-3 flex justify-between items-center pointer-events-none">
-        <Link href="/" className="pointer-events-auto group">
-           <div className="p-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
-              <Image src="/logo.png" alt="Logo" width={34} height={34} className="rounded-full" />
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 px-5 py-4 flex justify-between items-center pointer-events-none">
+        <Link href="/" className="pointer-events-auto">
+           <div className="p-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/30 shadow-2xl">
+              <Image src="/logo.png" alt="Logo" width={38} height={38} className="rounded-full" />
            </div>
         </Link>
 
         <div className="flex items-center gap-2 pointer-events-auto">
-            {/* Direct Language Selection */}
-            <button 
-                onClick={toggleLanguage} 
-                className={`px-4 h-10 rounded-full border text-[11px] font-black tracking-widest backdrop-blur-md shadow-lg transition-all active:scale-90
-                  ${isDark ? "bg-amber-950/40 border-amber-500/30 text-amber-200" : "bg-white/80 border-amber-200 text-amber-800"}`}
-            >
-                {lang === 'mn' ? 'EN' : 'MN'}
-            </button>
-            
-            {/* Direct Theme Toggle */}
-            <button 
-                onClick={toggleTheme} 
-                className={`w-10 h-10 rounded-full border flex items-center justify-center backdrop-blur-md shadow-lg transition-all active:scale-90
-                  ${isDark ? "bg-amber-950/40 border-amber-500/30 text-amber-200" : "bg-white/80 border-amber-200 text-amber-800"}`}
-            >
-                {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
+            {/* VERY OBVIOUS LOGIN BUTTON FOR MOBILE */}
+            <SignedOut>
+                <Link href="/sign-in">
+                    <motion.button 
+                      whileTap={{ scale: 0.9 }}
+                      className="px-5 h-11 rounded-full bg-amber-600 text-white text-[11px] font-black tracking-tighter uppercase shadow-lg shadow-amber-900/30 border border-amber-400/50"
+                    >
+                        {CONTENT.login[lang]}
+                    </motion.button>
+                </Link>
+            </SignedOut>
+
+            {/* Quick Action Circle Buttons */}
+            <div className="flex gap-1 p-1 rounded-full bg-black/5 backdrop-blur-md border border-white/10">
+                <button onClick={toggleLanguage} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isDark ? "text-amber-200" : "text-amber-900"}`}>
+                    <span className="text-[10px] font-black">{lang === 'mn' ? 'EN' : 'MN'}</span>
+                </button>
+                
+                <button onClick={toggleTheme} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isDark ? "text-amber-200" : "text-amber-900"}`}>
+                    {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                </button>
+            </div>
 
             <SignedIn>
-                <div className="ml-1 scale-110"><UserButton /></div>
+                <div className="ml-1 scale-125 drop-shadow-lg"><UserButton /></div>
             </SignedIn>
         </div>
       </div>
 
 
       {/* ========================================================= */}
-      {/* 3. MOBILE BOTTOM DOCK (The Hub)                           */}
+      {/* 3. MOBILE BOTTOM DOCK (Extra Rounded & Labeled)          */}
       {/* ========================================================= */}
-      <div className="md:hidden fixed bottom-5 left-0 right-0 z-50 px-4 flex justify-center">
+      <div className="md:hidden fixed bottom-6 left-0 right-0 z-50 px-5 flex justify-center">
         <nav className={`
-          flex items-center justify-between w-full max-w-[420px] px-2 py-2 rounded-[2.5rem] border shadow-[0_-10px_40px_rgba(0,0,0,0.15)] backdrop-blur-2xl transition-all duration-500
-          ${isDark ? "bg-[#1a0505]/95 border-amber-900/40 shadow-black" : "bg-white/95 border-amber-100"}
+          flex items-center justify-between w-full max-w-[440px] px-3 py-3 rounded-full border shadow-[0_-15px_50px_rgba(0,0,0,0.2)] backdrop-blur-3xl transition-all duration-700
+          ${isDark ? "bg-[#1a0505]/95 border-amber-900/50 shadow-black" : "bg-white/95 border-amber-100 shadow-amber-900/10"}
         `}>
           {mobileNav.map((item) => {
             const isActive = pathname === item.href;
             
+            // Central Services Button
             if (item.isMain) {
               return (
-                <Link key={item.id} href={item.href} className="relative -top-8 flex flex-col items-center">
+                <Link key={item.id} href={item.href} className="relative -top-10 flex flex-col items-center">
                   <motion.div 
-                    whileTap={{ scale: 0.9 }}
-                    className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all relative z-10
-                      ${isDark ? "bg-amber-500 text-[#1a0505]" : "bg-amber-600 text-white"}`}
+                    whileTap={{ scale: 0.85 }}
+                    className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl relative z-10
+                      ${isDark ? "bg-amber-500 text-[#1a0505]" : "bg-[#451a03] text-white"}`}
                   >
-                    <item.icon size={28} strokeWidth={2.5} />
-                    
-                    {/* Animated Outer Ring (Pulse) */}
+                    <item.icon size={30} strokeWidth={2.5} />
                     <motion.div 
-                      animate={{ scale: [1, 1.4], opacity: [0.5, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
+                      animate={{ scale: [1, 1.5], opacity: [0.4, 0] }}
+                      transition={{ duration: 2.5, repeat: Infinity }}
                       className="absolute inset-0 rounded-full bg-amber-500"
                     />
                   </motion.div>
-                  {/* Label for the center button */}
-                  <span className={`mt-10 text-[9px] font-black uppercase tracking-widest ${isActive ? "text-amber-500" : "opacity-50"}`}>
+                  <span className={`mt-2 text-[10px] font-black uppercase tracking-widest ${isActive ? "text-amber-500" : "opacity-40"}`}>
                     {item.label[lang]}
                   </span>
                 </Link>
               );
             }
 
+            // Standard Icons (Dynamic Dashboard/Login logic)
             return (
-              <Link key={item.id} href={item.href} className="flex-1 flex flex-col items-center justify-center py-2 gap-1 relative group">
-                {/* Active Indicator Bar (Top) */}
+              <Link key={item.id} href={item.href} className="flex-1 flex flex-col items-center justify-center py-2 relative group">
                 <AnimatePresence>
                   {isActive && (
                     <motion.div 
-                        layoutId="activeTabIndicator" 
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0 }}
-                        className={`absolute top-0 w-8 h-1 rounded-full ${isDark ? "bg-amber-400" : "bg-amber-700"}`} 
+                        layoutId="activePill" 
+                        className={`absolute inset-x-2 inset-y-1 rounded-full -z-10 ${isDark ? "bg-amber-900/20" : "bg-amber-100"}`} 
                     />
                   )}
                 </AnimatePresence>
 
-                <div className={`transition-all duration-300 ${isActive ? (isDark ? "text-amber-400 scale-110" : "text-amber-700 scale-110") : "opacity-40 group-active:scale-90"}`}>
-                  <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                <div className={`transition-all duration-300 mb-1 ${isActive ? (isDark ? "text-amber-400 scale-110" : "text-[#451a03] scale-110") : "opacity-40"}`}>
+                  <SignedIn>
+                     {item.id === 'dashboard' ? <item.icon size={22} strokeWidth={2.5} /> : <item.icon size={22} strokeWidth={2} />}
+                  </SignedIn>
+                  <SignedOut>
+                     {item.id === 'dashboard' ? <LogIn size={22} strokeWidth={2.5} /> : <item.icon size={22} strokeWidth={2} />}
+                  </SignedOut>
                 </div>
                 
-                <span className={`text-[9px] font-black uppercase tracking-tighter transition-all duration-300 ${isActive ? "opacity-100" : "opacity-40"}`}>
-                  {item.label[lang]}
+                <span className={`text-[9px] font-black uppercase tracking-tight transition-all ${isActive ? "opacity-100" : "opacity-30"}`}>
+                   <SignedIn>{item.label[lang]}</SignedIn>
+                   <SignedOut>{item.id === 'dashboard' ? CONTENT.login[lang] : item.label[lang]}</SignedOut>
                 </span>
               </Link>
             );
@@ -236,8 +246,8 @@ export default function OverlayNavbar() {
         </nav>
       </div>
 
-      {/* Helper to prevent content from being cut off by the dock on mobile */}
-      <div className="md:hidden h-24 pointer-events-none" />
+      {/* Spacing for mobile content */}
+      <div className="md:hidden h-28 pointer-events-none" />
     </>
   );
 }
