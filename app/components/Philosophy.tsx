@@ -33,9 +33,7 @@ export default function AboutUsHero() {
   if (!mounted) return <div className="min-h-screen bg-[#05051a]" />;
   return (
     <>
-      <OverlayNavbar />
       <ActualAboutContent />
-      <GoldenNirvanaFooter />
     </>
   );
 }
