@@ -6,11 +6,11 @@ import { useUser, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShieldAlert, Users, Calendar, LayoutDashboard, 
-  Search, Trash2, CheckCircle, XCircle, MoreHorizontal,
+  Search, Trash2, CheckCircle, XCircle,
   Loader2, UserCog, ScrollText, TrendingUp, Check, X,
-  Briefcase, FileText // Added FileText icon
+  FileText, Clock
 } from "lucide-react";
-import OverlayNavbar from "../components/Navbar";
+import OverlayNavbar from "../components/Navbar"; 
 import { useTheme } from "next-themes";
 
 // --- TYPES ---
@@ -18,7 +18,7 @@ interface AdminData {
   users: any[];
   bookings: any[];
   services: any[];
-  applications: any[]; // New field for pending monks
+  applications: any[];
   stats: {
     totalUsers: number;
     totalMonks: number;
@@ -39,7 +39,7 @@ export default function AdminDashboard() {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const isAdmin = user?.publicMetadata?.role === "admin";
-  const isDark = resolvedTheme === "dark"; // Fixed: dynamic theme detection
+  const isDark = false;
 
   // --- FETCH DATA ---
   const fetchAdminData = async () => {
@@ -47,12 +47,14 @@ export default function AdminDashboard() {
       const res = await fetch("/api/admin/data", { cache: "no-store" });
       if (res.ok) {
           const json = await res.json();
-          // Filter users to find pending applications
-          // Assuming your User object has { monkStatus: 'pending' } from the signup flow
-          json.applications = json.users.filter((u: any) => u.monkStatus === 'pending');
+          // Filter users to find pending applications if API doesn't separate them
+          if (!json.applications) {
+             json.applications = json.users.filter((u: any) => u.monkStatus === 'pending');
+          }
           setData(json);
+      } else {
+          router.push("/");
       }
-      else router.push("/");
     } catch (e) { console.error(e); } 
     finally { setLoading(false); }
   };
@@ -66,29 +68,23 @@ export default function AdminDashboard() {
 
   // --- ACTIONS ---
 
-  // 1. Handle Monk Application (Approve/Reject)
+  // 1. Approve/Reject Monk Application
   const handleApplication = async (userId: string, action: 'approve' | 'reject') => {
     setProcessingId(userId);
     try {
-        // Calls the route we created: app/api/admin/applications/[id]/route.ts
         const res = await fetch(`/api/admin/applications/${userId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action })
         });
-
-        if (res.ok) {
-            // Refresh data to update lists and stats
-            await fetchAdminData();
-        } else {
-            alert("Хүсэлтийг шинэчлэхэд алдаа гарлаа"); // "Failed to update application"
-        }
-    } catch (e) { console.error(e); alert("Алдаа гарлаа"); } 
+        if (res.ok) await fetchAdminData();
+    } catch (e) { console.error(e); } 
     finally { setProcessingId(null); }
   };
   
+  // 2. Delete User
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Та итгэлтэй байна уу?")) return; // "Are you sure?"
+    if (!confirm("Та энэ хэрэглэгчийг устгахдаа итгэлтэй байна уу?")) return;
     setProcessingId(userId);
     try {
       const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
@@ -96,258 +92,362 @@ export default function AdminDashboard() {
     } catch (e) { console.error(e); } finally { setProcessingId(null); }
   };
 
-  const handleBookingAction = async (bookingId: string, action: 'confirmed' | 'rejected') => {
-    setProcessingId(bookingId);
-    try {
-      const res = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: action })
-      });
-      if (res.ok) {
-        setData((prev) => prev ? ({...prev, bookings: prev.bookings.map(b => b._id === bookingId ? { ...b, status: action } : b)}) : null);
-      }
-    } catch (e) { console.error(e); } finally { setProcessingId(null); }
-  };
-
-  const handleDeleteService = async (serviceId: string) => {
-    if (!confirm("Үйлчилгээг устгах уу?")) return; // "Delete service?"
+  // 3. Approve/Reject/Delete Services
+  const handleServiceAction = async (serviceId: string, action: 'approve' | 'reject') => {
     setProcessingId(serviceId);
     try {
-      const res = await fetch(`/api/admin/services/${serviceId}`, { method: "DELETE" });
-      if (res.ok) {
-        setData((prev) => prev ? ({...prev, services: prev.services.filter(s => s._id !== serviceId)}) : null);
+      const res = await fetch(`/api/admin/services/${serviceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+
+      if (res.ok && data) {
+        const updatedServices = data.services.map(s => 
+            s.id === serviceId ? { ...s, status: action === 'approve' ? 'active' : 'rejected' } : s
+        );
+        setData({ ...data, services: updatedServices });
       }
     } catch (e) { console.error(e); } 
     finally { setProcessingId(null); }
   };
 
-  if (!isLoaded || loading) return <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB]"><Loader2 className="animate-spin text-amber-600" size={48} /></div>;
+  const handleDeleteService = async (serviceId: string) => {
+      if (!confirm("Та энэ үйлчилгээг устгахдаа итгэлтэй байна уу?")) return;
+      setProcessingId(serviceId);
+      try {
+          const res = await fetch(`/api/admin/services/${serviceId}`, { method: 'DELETE' });
+          if(res.ok && data) {
+              setData({ ...data, services: data.services.filter(s => s.id !== serviceId) });
+          }
+      } catch(e) { console.error(e); } finally { setProcessingId(null); }
+  };
+
+  // 4. Handle Bookings
+  const handleBookingAction = async (bookingId: string, action: 'confirmed' | 'rejected') => {
+      setProcessingId(bookingId);
+      try {
+          const res = await fetch(`/api/bookings/${bookingId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: action })
+          });
+          if(res.ok && data) {
+              const updatedBookings = data.bookings.map(b => b._id === bookingId ? {...b, status: action} : b);
+              setData({...data, bookings: updatedBookings});
+          }
+      } catch(e) { console.error(e); } finally { setProcessingId(null); }
+  }
+
+  // Loading State
+  if (!isLoaded || loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB] dark:bg-[#05051a]">
+        <Loader2 className="animate-spin text-amber-600" size={48} />
+    </div>
+  );
+  
   if (!isAdmin) return null;
 
-  // --- FILTERS ---
+  // Filters
   const filteredUsers = data?.users.filter(u => (u.name?.mn?.toLowerCase() || u.name?.en?.toLowerCase() || "").includes(searchTerm.toLowerCase()));
   const filteredBookings = data?.bookings.filter(b => (b.clientName?.toLowerCase() || "").includes(searchTerm.toLowerCase()));
-  const filteredServices = data?.services.filter(s => (s.title?.mn?.toLowerCase() || s.title?.en?.toLowerCase() || "").includes(searchTerm.toLowerCase()));
+  const filteredServices = data?.services.filter(s => (s.name?.mn?.toLowerCase() || s.name?.en?.toLowerCase() || "").includes(searchTerm.toLowerCase()));
 
   return (
-    <div className={`min-h-screen font-sans ${isDark ? "bg-[#05051a] text-white" : "bg-[#FFFBEB] text-[#451a03]"}`}>
+    <div className={`min-h-screen font-sans ${isDark ? "bg-[#05051a] text-white" : "bg-[#FDFBF7] text-[#451a03]"}`}>
       <OverlayNavbar />
       
-      <main className="container mx-auto px-6 pt-32 pb-20">
+      <main className="container mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-20">
         
         {/* HEADER */}
-        <header className="mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
-          <div>
+        <header className="mb-8 md:mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+          <div className="w-full md:w-auto">
             <div className="flex items-center gap-3 mb-2">
-               <ShieldAlert className="text-red-500" />
-               <span className="text-xs font-black uppercase tracking-[0.3em] opacity-60">Админ Систем</span> {/* System Core */}
+               <ShieldAlert className="text-red-500 w-5 h-5" />
+               <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] opacity-60">Admin System</span>
             </div>
-            <h1 className="text-4xl font-serif font-black">Хяналтын Самбар</h1> {/* Admin Dashboard */}
-            <p className="opacity-60 mt-2">Тавтай морил, Админ.</p> {/* Welcome back... */}
+            <h1 className="text-3xl md:text-4xl font-serif font-black">Удирдлагын самбар</h1>
+            <p className="opacity-60 text-sm mt-1">Хэрэглэгч, лам нар болон захиалгуудыг удирдах.</p>
           </div>
-          <div className="flex items-center gap-4">
-             <div className="text-right hidden md:block">
+          <div className="flex items-center justify-between w-full md:w-auto gap-4 p-3 rounded-2xl bg-black/5 md:bg-transparent dark:bg-white/5 md:dark:bg-transparent">
+             <div className="text-left md:text-right">
                 <p className="text-xs font-bold uppercase">{user?.fullName}</p>
-                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">АДМИН ЭРХ</span> {/* ADMIN ACCESS */}
+                <span className="text-red-500 text-[10px] font-black uppercase tracking-tighter">Super Admin</span>
              </div>
-             <div className="scale-125"><UserButton /></div>
+             <div className="scale-110 md:scale-125"><UserButton /></div>
           </div>
         </header>
 
-        {/* TABS */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-           <div className="flex gap-2 bg-black/5 p-1 rounded-xl overflow-x-auto w-full md:w-auto">
+        {/* NAVIGATION & SEARCH */}
+        <div className="space-y-4 mb-8">
+            {/* Horizontal Scrollable Tabs */}
+           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
               {[
-                { id: "overview", icon: LayoutDashboard, label: "Тойм" }, // Overview
-                { id: "applications", icon: FileText, label: "Хүсэлтүүд" }, // Applications
-                { id: "users", icon: Users, label: "Хэрэглэгч" }, // Users
-                { id: "bookings", icon: Calendar, label: "Захиалга" }, // Bookings
-                { id: "services", icon: Briefcase, label: "Үйлчилгээ" }, // Services
+                { id: "overview", icon: LayoutDashboard, label: "Тойм" },
+                { id: "applications", icon: FileText, label: "Хүсэлтүүд" },
+                { id: "services", icon: ScrollText, label: "Үйлчилгээ" },
+                { id: "users", icon: Users, label: "Хэрэглэгч" },
+                { id: "bookings", icon: Calendar, label: "Захиалга" },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                    activeTab === tab.id ? "bg-[#D97706] text-white shadow-lg" : "hover:bg-white/50 opacity-60 hover:opacity-100"
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                    activeTab === tab.id 
+                    ? "bg-[#D97706] text-white shadow-lg shadow-amber-900/20" 
+                    : `${isDark ? "bg-white/5" : "bg-black/5"} opacity-60 hover:opacity-100`
                   }`}
                 >
-                  <tab.icon size={16} /> 
+                  <tab.icon size={14} /> 
                   {tab.label}
-                  {/* Notification Badge for Applications */}
+                  {/* Badge for Pending Items */}
                   {tab.id === 'applications' && data?.applications && data.applications.length > 0 && (
-                      <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px]">
+                      <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] animate-pulse">
                           {data.applications.length}
+                      </span>
+                  )}
+                  {tab.id === 'services' && data?.services && data.services.filter(s => s.status === 'pending').length > 0 && (
+                      <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px]">
+                          {data.services.filter(s => s.status === 'pending').length}
                       </span>
                   )}
                 </button>
               ))}
            </div>
-           <div className="relative w-full md:w-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40" size={18} />
-              <input placeholder="Хайх..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`pl-12 pr-4 py-3 rounded-xl w-full md:w-80 outline-none border transition-all ${isDark ? "bg-[#0C164F] border-cyan-900 focus:border-cyan-400" : "bg-white border-amber-200 focus:border-amber-500"}`} />
+
+           <div className="relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" size={18} />
+              <input 
+                placeholder="Хэрэглэгч, захиалга эсвэл үйлчилгээ хайх..." 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                className={`pl-12 pr-4 py-4 rounded-2xl w-full outline-none border transition-all text-sm ${isDark ? "bg-[#0C164F] border-white/10" : "bg-white border-amber-100"}`} 
+              />
            </div>
         </div>
 
         {/* CONTENT */}
         <AnimatePresence mode="wait">
           
-          {/* 1. OVERVIEW TAB */}
+          {/* 1. OVERVIEW */}
           {activeTab === "overview" && (
-            <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-               <StatCard title="Нийт Хэрэглэгч" value={data?.stats.totalUsers || 0} icon={Users} color="bg-blue-500" /> {/* Total Users */}
-               <StatCard title="Идэвхтэй Лам нар" value={data?.stats.totalMonks || 0} icon={UserCog} color="bg-amber-500" /> {/* Active Monks */}
-               <StatCard title="Нийт Захиалга" value={data?.stats.totalBookings || 0} icon={Calendar} color="bg-purple-500" /> {/* Total Bookings */}
-               <StatCard title="Дууссан Цагууд" value={data?.stats.revenue || 0} icon={TrendingUp} color="bg-green-500" /> {/* Completed Sessions */}
+            <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+               <StatCard title="Нийт хэрэглэгч" value={data?.stats.totalUsers || 0} icon={Users} color="bg-blue-500" />
+               <StatCard title="Идэвхтэй лам нар" value={data?.stats.totalMonks || 0} icon={UserCog} color="bg-amber-500" />
+               <StatCard title="Нийт захиалга" value={data?.stats.totalBookings || 0} icon={Calendar} color="bg-purple-500" />
+               <StatCard title="Орлого" value={data?.stats.revenue || 0} icon={TrendingUp} color="bg-green-500" />
                
                {data?.applications && data.applications.length > 0 && (
-                   <div className="col-span-full bg-red-50 border border-red-200 p-6 rounded-3xl flex items-center justify-between">
-                       <div className="flex items-center gap-4">
-                           <div className="p-3 bg-red-100 rounded-full text-red-600"><ShieldAlert size={24} /></div>
+                   <div className="col-span-full bg-red-500/10 border border-red-500/20 p-5 md:p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
+                       <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
+                           <div className="p-4 bg-red-500 text-white rounded-2xl shadow-lg shadow-red-900/20"><ShieldAlert size={28} /></div>
                            <div>
-                               <h3 className="font-bold text-red-800 text-lg">Хүлээгдэж буй Лам болох хүсэлтүүд</h3> {/* Pending Monk Applications */}
-                               <p className="text-red-600/80 text-sm">Танд {data.applications.length} хэрэглэгчийн хүсэлт хүлээгдэж байна.</p> {/* There are X users waiting... */}
+                               <h3 className="font-black text-lg">Лам болох хүсэлтүүд</h3>
+                               <p className="opacity-70 text-sm">{data.applications.length} хэрэглэгч зөвшөөрөл хүлээж байна.</p>
                            </div>
                        </div>
-                       <button onClick={() => setActiveTab('applications')} className="bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-colors">Шагнал</button> {/* Review (using 'Шагнал' might mean award, better is 'Шалгах' or 'Харах') -> Changed to 'Шалгах' below */}
+                       <button onClick={() => setActiveTab('applications')} className="w-full md:w-auto bg-red-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-all">
+                           Шалгах
+                       </button>
                    </div>
                )}
             </motion.div>
           )}
 
-          {/* 5. APPLICATIONS TAB (NEW) */}
+          {/* 2. APPLICATIONS */}
           {activeTab === "applications" && (
-            <motion.div key="applications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className={`rounded-3xl overflow-hidden border ${isDark ? "bg-[#0C164F]/30 border-cyan-900" : "bg-white border-amber-100"}`}>
-               <table className="w-full text-left border-collapse">
-                  <thead className={isDark ? "bg-[#0C164F]" : "bg-amber-50"}>
-                     <tr>
-                        <th className="p-6 opacity-60">Өргөдөл гаргагч</th> {/* Applicant */}
-                        <th className="p-6 opacity-60">Цол / Туршлага</th> {/* Title / Exp */}
-                        <th className="p-6 opacity-60">Төлөв</th> {/* Status */}
-                        <th className="p-6 opacity-60 text-right">Шийдвэр</th> {/* Decision */}
-                     </tr>
-                  </thead>
-                  <tbody>
-                     {data?.applications?.length === 0 && (
-                         <tr><td colSpan={4} className="p-12 text-center opacity-50">Хүлээгдэж буй хүсэлт байхгүй байна.</td></tr>
-                     )}
-                     {data?.applications?.map((app) => (
-                        <tr key={app._id} className={`border-t ${isDark ? "border-cyan-900/30" : "border-amber-100"}`}>
-                           <td className="p-6">
-                              <div className="flex items-center gap-3">
-                                 <img src={app.image || "https://ui-avatars.com/api/?name=" + (app.name?.mn || app.name?.en)} className="w-10 h-10 rounded-full object-cover" />
-                                 <div>
-                                    <p className="font-bold">{app.name?.mn || app.name?.en}</p>
-                                    <p className="text-xs opacity-50">{app.email}</p>
-                                 </div>
-                              </div>
-                           </td>
-                           <td className="p-6">
-                               <p className="font-bold text-sm">{app.title?.mn || app.title?.en}</p>
-                               <p className="text-xs opacity-50">{app.yearsOfExperience} жилийн туршлага</p>
-                           </td>
-                           <td className="p-6">
-                               <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase border border-amber-200">
-                                   Шалгагдаж байна
-                               </span>
-                           </td>
-                           <td className="p-6 text-right">
-                              <div className="flex justify-end gap-2">
-                                  <button 
-                                    onClick={() => handleApplication(app._id, 'approve')} 
-                                    disabled={processingId === app._id}
-                                    className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-bold text-xs flex items-center gap-2"
-                                  >
-                                      {processingId === app._id ? <Loader2 size={14} className="animate-spin"/> : <Check size={14}/>} Зөвшөөрөх
-                                  </button>
-                                  <button 
-                                    onClick={() => handleApplication(app._id, 'reject')} 
-                                    disabled={processingId === app._id}
-                                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-bold text-xs flex items-center gap-2"
-                                  >
-                                      <X size={14}/> Татгалзах
-                                  </button>
-                              </div>
-                           </td>
-                        </tr>
-                     ))}
-                  </tbody>
-               </table>
-            </motion.div>
-          )}
-
-          {/* 2. USERS TAB */}
-          {activeTab === "users" && (
-            <motion.div key="users" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className={`rounded-3xl overflow-hidden border ${isDark ? "bg-[#0C164F]/30 border-cyan-900" : "bg-white border-amber-100"}`}>
-               <table className="w-full text-left border-collapse">
-                  <thead className={isDark ? "bg-[#0C164F]" : "bg-amber-50"}>
-                     <tr><th className="p-6 opacity-60">Нэр</th><th className="p-6 opacity-60">Үүрэг</th><th className="p-6 opacity-60">Төлөв</th><th className="p-6 opacity-60 text-right">Үйлдэл</th></tr>
-                  </thead>
-                  <tbody>
-                     {filteredUsers?.map((u) => (
-                        <tr key={u._id} className={`border-t ${isDark ? "border-cyan-900/30" : "border-amber-100"}`}>
-                           <td className="p-6"><div className="flex items-center gap-3"><img src={u.image || `https://ui-avatars.com/api/?name=${u.name?.en}`} className="w-10 h-10 rounded-full" /><div><p className="font-bold">{u.name?.mn || u.name?.en}</p><p className="text-xs opacity-50">{u.email}</p></div></div></td>
-                           <td className="p-6"><span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${u.role === 'monk' ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{u.role === 'monk' ? "Лам" : "Үйлчлүүлэгч"}</span></td>
-                           <td className="p-6"><span className="flex items-center gap-2 text-xs font-bold text-green-600"><div className="w-2 h-2 bg-green-500 rounded-full" /> Идэвхтэй</span></td>
-                           <td className="p-6 text-right"><button onClick={() => handleDeleteUser(u._id)} disabled={processingId === u._id} className="p-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg">{processingId === u._id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}</button></td>
-                        </tr>
-                     ))}
-                  </tbody>
-               </table>
-            </motion.div>
-          )}
-
-          {/* 3. BOOKINGS TAB */}
-          {activeTab === "bookings" && (
-            <motion.div key="bookings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className={`rounded-3xl overflow-hidden border ${isDark ? "bg-[#0C164F]/30 border-cyan-900" : "bg-white border-amber-100"}`}>
-               <table className="w-full text-left border-collapse">
-                  <thead className={isDark ? "bg-[#0C164F]" : "bg-amber-50"}>
-                     <tr><th className="p-6 opacity-60">Үйлчлүүлэгч</th><th className="p-6 opacity-60">Үйлчилгээ</th><th className="p-6 opacity-60">Цаг</th><th className="p-6 opacity-60">Төлөв</th><th className="p-6 opacity-60 text-right">Үйлдэл</th></tr>
-                  </thead>
-                  <tbody>
-                     {filteredBookings?.map((b) => (
-                        <tr key={b._id} className={`border-t ${isDark ? "border-cyan-900/30" : "border-amber-100"}`}>
-                           <td className="p-6 font-bold">{b.clientName}</td>
-                           <td className="p-6 text-sm opacity-80">{typeof b.serviceName === 'object' ? b.serviceName.mn || b.serviceName.en : b.serviceName}</td>
-                           <td className="p-6 text-sm">{b.date} <span className="opacity-50 text-xs">{b.time}</span></td>
-                           <td className="p-6"><StatusBadge status={b.status} /></td>
-                           <td className="p-6 text-right">
-                              {b.status === 'pending' ? (
-                                <div className="flex justify-end gap-2">
-                                    <button onClick={() => handleBookingAction(b._id, 'confirmed')} disabled={processingId === b._id} className="p-2 bg-green-100 text-green-600 hover:bg-green-200 rounded-lg">{processingId === b._id ? <Loader2 size={16} className="animate-spin"/> : <Check size={16}/>}</button>
-                                    <button onClick={() => handleBookingAction(b._id, 'rejected')} disabled={processingId === b._id} className="p-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg"><X size={16}/></button>
+            <motion.div key="applications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {data?.applications?.map((app) => (
+                        <div key={app._id} className={`p-6 rounded-[2rem] border ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
+                            <div className="flex items-center gap-4 mb-4">
+                                <img src={app.image || "/default-avatar.png"} className="w-14 h-14 rounded-2xl object-cover" alt="applicant" />
+                                <div>
+                                    <h4 className="font-black text-base">{app.name?.mn || app.name?.en}</h4>
+                                    <p className="text-xs opacity-50">{app.title?.mn || app.title?.en}</p>
                                 </div>
-                              ) : <span className="text-xs opacity-40">Шийдэгдсэн</span>}
-                           </td>
-                        </tr>
-                     ))}
-                  </tbody>
-               </table>
+                            </div>
+                            <div className="flex gap-2 mb-6 text-xs">
+                                <span className="bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md">{app.yearsOfExperience} жилийн туршлага</span>
+                                <span className="bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md">{app.email}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={() => handleApplication(app._id, 'approve')} className="flex-1 py-4 bg-green-500 text-white rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-green-600 transition-colors">
+                                    {processingId === app._id ? <Loader2 size={14} className="animate-spin"/> : <Check size={14}/>} Зөвшөөрөх
+                                </button>
+                                <button onClick={() => handleApplication(app._id, 'reject')} className="flex-1 py-4 bg-red-500/10 text-red-500 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
+                                    <X size={14}/> Татгалзах
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    {data?.applications?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Хүлээгдэж буй хүсэлт алга.</p>}
+                </div>
             </motion.div>
           )}
 
-          {/* 4. SERVICES TAB */}
+          {/* 3. SERVICES */}
           {activeTab === "services" && (
-            <motion.div key="services" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className={`rounded-3xl overflow-hidden border ${isDark ? "bg-[#0C164F]/30 border-cyan-900" : "bg-white border-amber-100"}`}>
-               <table className="w-full text-left border-collapse">
-                  <thead className={isDark ? "bg-[#0C164F]" : "bg-amber-50"}>
-                     <tr><th className="p-6 opacity-60">Үйлчилгээний Нэр</th><th className="p-6 opacity-60">Төрөл</th><th className="p-6 opacity-60">Үнэ</th><th className="p-6 opacity-60 text-right">Үйлдэл</th></tr>
+            <motion.div key="services" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredServices?.map((s) => (
+                    <div key={s.id} className={`p-6 rounded-[2rem] border relative overflow-hidden flex flex-col justify-between ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
+                        <div className="mb-4">
+                            <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-black text-sm">{s.name?.mn || s.name?.en}</h4>
+                                <StatusBadge status={s.status || 'pending'} />
+                            </div>
+                            <p className="text-xs opacity-50 mb-1 font-bold">Үнэ: {s.price}₮ • {s.duration}</p>
+                            <p className="text-[10px] opacity-40">Лам: {s.monkName?.mn || s.monkName?.en || "Тодорхойгүй"}</p>
+                        </div>
+
+                        <div className="flex gap-2 border-t pt-4 border-black/5 dark:border-white/5">
+                            {(!s.status || s.status === 'pending') && (
+                                <>
+                                    <button 
+                                        onClick={() => handleServiceAction(s.id, 'approve')}
+                                        disabled={processingId === s.id}
+                                        className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold text-[10px] uppercase hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        {processingId === s.id ? <Loader2 size={14} className="animate-spin"/> : <Check size={14} />} Зөвшөөрөх
+                                    </button>
+                                    <button 
+                                        onClick={() => handleServiceAction(s.id, 'reject')}
+                                        disabled={processingId === s.id}
+                                        className="flex-1 py-3 bg-amber-500/10 text-amber-600 rounded-xl font-bold text-[10px] uppercase hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <X size={14} /> Татгалзах
+                                    </button>
+                                </>
+                            )}
+                            <button 
+                                onClick={() => handleDeleteService(s.id)}
+                                disabled={processingId === s.id}
+                                className="py-3 px-4 bg-red-500/10 text-red-500 rounded-xl font-bold text-[10px] uppercase hover:bg-red-500/20 transition-colors flex items-center justify-center"
+                                title="Устгах"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
+                        {s.status === 'active' && <p className="text-[10px] text-green-600 text-center font-bold mt-2 opacity-60">Сайт дээр идэвхтэй</p>}
+                    </div>
+                ))}
+                {filteredServices?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Үйлчилгээ олдсонгүй.</p>}
+            </motion.div>
+          )}
+
+          {/* 4. USERS */}
+          {activeTab === "users" && (
+            <motion.div 
+              key="users" 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              {filteredUsers?.map((u) => (
+                <div key={u._id} className={`p-6 rounded-[2rem] border flex items-center justify-between group ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
+                  <div className="flex items-center gap-4 overflow-hidden">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 ${isDark ? "bg-white/10" : "bg-amber-100 text-amber-800"}`}>
+                      {u.image ? <img src={u.image} alt={u.name?.mn} className="w-full h-full rounded-full object-cover" /> : (u.name?.en?.[0] || "U")}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-black text-sm truncate">{u.name?.mn || u.name?.en || "Нэргүй хэрэглэгч"}</h4>
+                        {u.monkStatus === 'active' && <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded uppercase font-bold">Лам</span>}
+                        {u.role === 'admin' && <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded uppercase font-bold">Админ</span>}
+                      </div>
+                      <p className="text-xs opacity-50 truncate">{u.email}</p>
+                      <p className="text-[10px] opacity-30 mt-1">Бүртгүүлсэн: {new Date(u.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleDeleteUser(u._id)}
+                    disabled={processingId === u._id || u.role === 'admin'}
+                    className={`p-3 rounded-xl transition-all ${u.role === 'admin' ? 'opacity-0 cursor-default' : 'hover:bg-red-500/10 hover:text-red-500 opacity-0 group-hover:opacity-100'}`}
+                    title="Хэрэглэгчийг устгах"
+                  >
+                    {processingId === u._id ? <Loader2 size={16} className="animate-spin"/> : <Trash2 size={16} />}
+                  </button>
+                </div>
+              ))}
+              {filteredUsers?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Хэрэглэгч олдсонгүй.</p>}
+            </motion.div>
+          )}
+
+          {/* 5. BOOKINGS */}
+          {activeTab === "bookings" && (
+            <motion.div 
+              key="bookings" 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="space-y-4"
+            >
+               <div className="overflow-x-auto rounded-[2rem] border border-black/5 dark:border-white/5">
+                <table className={`w-full text-left text-sm ${isDark ? "bg-white/5" : "bg-white"}`}>
+                  <thead className={`uppercase text-[10px] font-black tracking-wider ${isDark ? "bg-black/20 text-white/50" : "bg-amber-50 text-amber-900/50"}`}>
+                    <tr>
+                      <th className="p-6">Үйлчилгээ / Лам</th>
+                      <th className="p-6">Захиалагч</th>
+                      <th className="p-6">Огноо & Цаг</th>
+                      <th className="p-6">Төлөв</th>
+                      <th className="p-6 text-right">Үйлдэл</th>
+                    </tr>
                   </thead>
-                  <tbody>
-                     {data?.services?.map((s) => (
-                        <tr key={s._id} className={`border-t ${isDark ? "border-cyan-900/30" : "border-amber-100"}`}>
-                           <td className="p-6 font-bold">{s.title?.mn || s.title?.en}</td>
-                           <td className="p-6 text-sm opacity-80 uppercase">{s.type === 'divination' ? "Мэргэ" : "Зан үйл"}</td>
-                           <td className="p-6 text-sm font-mono">{s.price?.toLocaleString()}₮</td>
-                           <td className="p-6 text-right">
-                              <button onClick={() => handleDeleteService(s._id)} disabled={processingId === s._id} className="p-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg">
-                                 {processingId === s._id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-                              </button>
-                           </td>
-                        </tr>
-                     ))}
+                  <tbody className="divide-y divide-black/5 dark:divide-white/5">
+                    {filteredBookings?.map((b) => (
+                      <tr key={b._id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                        <td className="p-6">
+                          <div className="font-bold">
+                            {typeof b.serviceName === 'object' 
+                              ? (b.serviceName?.mn || b.serviceName?.en || "Тодорхойгүй") 
+                              : b.serviceName}
+                          </div>
+                          <div className="text-xs opacity-50">{b.price}₮</div>
+                        </td>
+                        <td className="p-6">
+                          <div className="font-medium">{b.clientName}</div>
+                          <div className="text-xs opacity-50">{b.clientEmail}</div>
+                        </td>
+                        <td className="p-6">
+                           <div className="flex items-center gap-2">
+                              <Clock size={14} className="opacity-50"/>
+                              <span>{new Date(b.date).toLocaleDateString()}</span>
+                           </div>
+                           <div className="text-xs opacity-50 pl-6">{b.time}</div>
+                        </td>
+                        <td className="p-6">
+                           <StatusBadge status={b.status} />
+                        </td>
+                        <td className="p-6 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                             {b.status === 'pending' ? (
+                               <>
+                                <button 
+                                  onClick={() => handleBookingAction(b._id, 'confirmed')}
+                                  className="p-2 bg-green-500/10 text-green-600 rounded-lg hover:bg-green-500 hover:text-white transition-all"
+                                  title="Баталгаажуулах"
+                                >
+                                  <CheckCircle size={16} />
+                                </button>
+                                <button 
+                                  onClick={() => handleBookingAction(b._id, 'rejected')}
+                                  className="p-2 bg-red-500/10 text-red-600 rounded-lg hover:bg-red-500 hover:text-white transition-all"
+                                  title="Цуцлах"
+                                >
+                                  <XCircle size={16} />
+                                </button>
+                               </>
+                             ) : (
+                               <span className="text-xs opacity-30 font-bold uppercase">Шийдвэрлэгдсэн</span>
+                             )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
-               </table>
+                </table>
+                {filteredBookings?.length === 0 && <div className="p-10 text-center opacity-50">Захиалга олдсонгүй.</div>}
+               </div>
             </motion.div>
           )}
 
@@ -357,24 +457,51 @@ export default function AdminDashboard() {
   );
 }
 
-// --- SUB COMPONENTS ---
-function StatCard({ title, value, icon: Icon, color }: any) {
-    const { resolvedTheme } = useTheme(); const isDark = resolvedTheme === "dark";
-    return (<div className={`p-6 rounded-3xl border flex items-center gap-4 ${isDark ? "bg-[#0C164F]/50 border-cyan-900" : "bg-white border-amber-100"}`}><div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg ${color}`}><Icon size={24} /></div><div><p className="text-xs font-bold uppercase tracking-widest opacity-60">{title}</p><p className="text-3xl font-serif font-black">{value}</p></div></div>)
+// --- HELPER COMPONENTS ---
+
+function StatCard({ title, value, icon: Icon, color }: { title: string, value: number, icon: any, color: string }) {
+    return (
+        <div className="bg-white dark:bg-white/5 border border-amber-100 dark:border-white/10 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+            <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-white shadow-lg shadow-black/5 z-10 group-hover:scale-110 transition-transform`}>
+                <Icon size={24} />
+            </div>
+            <div className="z-10">
+                <p className="opacity-50 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
+                <h3 className="text-3xl font-black font-serif">{value.toLocaleString()}</h3>
+            </div>
+            {/* Background Decor */}
+            <div className={`absolute -right-6 -bottom-6 opacity-10 ${color.replace('bg-', 'text-')} transform rotate-12`}>
+                <Icon size={120} />
+            </div>
+        </div>
+    );
 }
 
 function StatusBadge({ status }: { status: string }) {
-    const styles: any = { 
-        pending: "bg-amber-100 text-amber-700", 
-        confirmed: "bg-green-100 text-green-700", 
-        rejected: "bg-red-100 text-red-700", 
-        completed: "bg-blue-100 text-blue-700" 
+    const styles = {
+        active: "bg-green-500 text-white",
+        confirmed: "bg-green-500 text-white",
+        pending: "bg-amber-500 text-white",
+        rejected: "bg-red-500 text-white",
+        cancelled: "bg-gray-500 text-white",
     };
-    const labels: any = {
-        pending: "Хүлээгдэж байна",
+    
+    // Translation map
+    const labels: Record<string, string> = {
+        active: "Идэвхтэй",
         confirmed: "Баталгаажсан",
-        rejected: "Цуцлагдсан",
-        completed: "Дууссан"
+        pending: "Хүлээгдэж буй",
+        rejected: "Татгалзсан",
+        cancelled: "Цуцлагдсан"
     };
-    return <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase ${styles[status] || "bg-gray-100"}`}>{labels[status] || status}</span>
+    
+    // Default to gray if status unknown
+    const activeStyle = styles[status as keyof typeof styles] || "bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
+    const label = labels[status] || status; // Use Mongolian label or fallback to English key
+
+    return (
+        <span className={`${activeStyle} px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider`}>
+            {label}
+        </span>
+    );
 }

@@ -16,21 +16,23 @@ export async function GET() {
     }).toArray();
 
     // 3. Extract and Flatten Monk Services
-    // We map over the monks, then map over their services to add context (like monk name/ID)
     const monkServices = monks.flatMap((monk) => {
       if (!monk.services || !Array.isArray(monk.services)) return [];
       
-      return monk.services.map((svc: any) => ({
-        ...svc,
-        _id: svc.id, // Ensure it has a top-level _id (using the UUID generated in the form)
-        source: "monk", // Flag to help UI distinguish
-        monkId: monk._id.toString(),
-        providerName: monk.name, // Pass the monk's name object
-        type: "Monk Service", // Fallback type
-        
-        // Ensure price is a number
-        price: Number(svc.price)
-      }));
+      return monk.services
+        // FILTER: Only show active/approved services (or those without status which might be legacy)
+        .filter((svc: any) => svc.status === 'active' || !svc.status) 
+        .map((svc: any) => ({
+          ...svc,
+          _id: svc.id, // Ensure it has a top-level _id (using the UUID generated in the form)
+          source: "monk", // Flag to help UI distinguish
+          monkId: monk._id.toString(),
+          providerName: monk.name, // Pass the monk's name object
+          type: "Monk Service", // Fallback type
+          
+          // Ensure price is a number
+          price: Number(svc.price)
+        }));
     });
 
     // 4. Combine both lists

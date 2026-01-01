@@ -19,16 +19,14 @@ import {
   Sun, 
   Moon,
   CreditCard,
-  Scroll
+  Scroll,
+  Ban
 } from "lucide-react";
 import OverlayNavbar from "../../components/Navbar"; 
 import { useLanguage } from "../../contexts/LanguageContext";
 import { Monk, Service } from "@/database/types";
 import { useTheme } from "next-themes";
 import { useUser } from "@clerk/nextjs";
-
-// --- CONSTANTS ---
-const TIME_SLOTS = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
 
 const pageStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Jost:wght@200;300;400&display=swap');
@@ -147,8 +145,6 @@ export default function MonkBookingPage() {
             return false;
         });
 
-        // Fallback: If no services linked, maybe show all (or handle empty state)
-        // For this demo, we assume filteredServices is correct.
         setAvailableServices(filteredServices);
 
       } catch (error) { 
@@ -176,7 +172,38 @@ export default function MonkBookingPage() {
     return dates;
   }, [language]);
 
-  // --- 3. CHECK AVAILABILITY ---
+  // --- 3. DYNAMIC TIME SLOTS ---
+  const currentDaySlots = useMemo(() => {
+      if (selectedDateIndex === null) return [];
+      
+      const dateObj = calendarDates[selectedDateIndex].full;
+      const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' }); 
+      
+      // Default Schedule if none set
+      const defaultSchedule = { start: "09:00", end: "19:00", active: true };
+      
+      // Find schedule for this day
+      const dayConfig = monk?.schedule?.find(s => s.day === dayName) || (monk?.schedule ? null : defaultSchedule);
+
+      if (!dayConfig || !dayConfig.active) return []; // Day off
+
+      const slots: string[] = [];
+      const [startH, startM] = dayConfig.start.split(':').map(Number);
+      const [endH, endM] = dayConfig.end.split(':').map(Number);
+      
+      let current = new Date(dateObj);
+      current.setHours(startH, startM, 0, 0);
+      const end = new Date(dateObj);
+      end.setHours(endH, endM, 0, 0);
+
+      while (current < end) {
+          slots.push(current.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit' }));
+          current.setMinutes(current.getMinutes() + 60); 
+      }
+      return slots;
+  }, [selectedDateIndex, monk, calendarDates]);
+
+  // --- 4. CHECK BOOKINGS ---
   useEffect(() => {
     async function fetchSlots() {
       if (selectedDateIndex === null || !monkId) return;
@@ -197,7 +224,7 @@ export default function MonkBookingPage() {
     fetchSlots();
   }, [selectedDateIndex, monkId, calendarDates]);
 
-  // --- 4. SUBMIT BOOKING ---
+  // --- 5. SUBMIT BOOKING ---
   const handleBooking = async () => {
     if(!monkId || selectedDateIndex === null || !selectedTime || !selectedService) return;
     
@@ -381,22 +408,52 @@ export default function MonkBookingPage() {
                                             <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-70 ${theme.textColor}`}>
                                                 <Clock size={14} /> III. {t({mn: "Цаг Сонгох", en: "Select Hour"})}
                                             </h4>
-                                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                                                {TIME_SLOTS.map((time, idx) => {
-                                                    const isTaken = takenSlots.includes(time);
-                                                    return (
-                                                        <motion.button 
-                                                            key={time}
-                                                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
-                                                            disabled={isTaken} 
-                                                            onClick={() => setSelectedTime(time)} 
-                                                            className={`py-3 rounded-xl text-sm font-bold border transition-all ${selectedTime === time ? theme.btnActive : isTaken ? "opacity-30 cursor-not-allowed bg-gray-500/10 border-transparent" : theme.btnDefault}`}
-                                                        >
-                                                            {time}
-                                                        </motion.button>
-                                                    )
-                                                })}
-                                            </div>
+                                            {currentDaySlots.length > 0 ? (
+                                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                                    {currentDaySlots.map((time, idx) => {
+                                                        const isTaken = takenSlots.includes(time);
+                                                        const isBlocked = monk?.blockedSlots?.some(b => 
+                                                            b.date === calendarDates[selectedDateIndex].full.toISOString().split('T')[0] && 
+                                                            b.time === time
+                                                        );
+                                                        const isDisabled = isTaken || isBlocked;
+                                                        
+                                                        return (
+                                                            <motion.button 
+                                                                key={time}
+                                                                initial={{ opacity: 0, y: 10 }} 
+                                                                animate={{ opacity: 1, y: 0 }} 
+                                                                transition={{ delay: idx * 0.05 }}
+                                                                disabled={isDisabled} 
+                                                                onClick={() => setSelectedTime(time)} 
+                                                                className={`relative py-3 rounded-xl text-sm font-bold border transition-all flex flex-col items-center justify-center overflow-hidden ${
+                                                                    selectedTime === time 
+                                                                        ? theme.btnActive 
+                                                                        : isDisabled 
+                                                                            ? "opacity-40 cursor-not-allowed bg-stone-100 border-stone-200 grayscale scale-95" 
+                                                                            : theme.btnDefault
+                                                                }`}
+                                                            >
+                                                                <span className={isDisabled ? "line-through opacity-50" : ""}>{time}</span>
+                                                                {isTaken && (
+                                                                    <span className="text-[8px] absolute bottom-1 font-black uppercase tracking-tighter text-stone-400">
+                                                                        {t({mn: "Дүүрсэн", en: "Taken"})}
+                                                                    </span>
+                                                                )}
+                                                                {isBlocked && !isTaken && (
+                                                                    <span className="text-[8px] absolute bottom-1 font-black uppercase tracking-tighter text-red-300/70">
+                                                                        {t({mn: "Завгүй", en: "Busy"})}
+                                                                    </span>
+                                                                )}
+                                                            </motion.button>
+                                                        )
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-8 opacity-50 border-2 border-dashed border-stone-200 rounded-xl">
+                                                    <p className="text-sm font-bold">{t({mn: "Энэ өдөр боломжгүй", en: "Monk is unavailable on this day"})}</p>
+                                                </div>
+                                            )}
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

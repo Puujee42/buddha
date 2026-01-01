@@ -12,6 +12,7 @@ export interface User {
   karma: number;
   meditationDays: number;
   totalMerits: number;
+  earnings?: number; // Total earnings for monks
   role: "seeker" | "monk" | "admin";
   
   createdAt: Date;
@@ -59,6 +60,17 @@ export interface Monk {
     };
     price: number; // in local currency
     duration: string; // e.g., "30 min", "1 hour"
+  }[];
+  schedule?: { 
+    day: string; 
+    start: string; 
+    end: string; 
+    active: boolean 
+  }[];
+  blockedSlots?: {
+    id: string;
+    date: string;
+    time: string;
   }[];
 }
 

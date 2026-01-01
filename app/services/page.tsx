@@ -70,7 +70,8 @@ export default function CelestialServices() {
   const [loading, setLoading] = useState(true);
 
   // Dynamic Theme Detection
-  const isDark = false;
+  const isDark = false
+  ;
 
   useEffect(() => {
     setMounted(true);

@@ -40,6 +40,11 @@ export async function GET(request: Request) {
         .sort({ date: 1, time: 1 }) 
         .toArray();
 
+    // If requesting specific monk and date, just return the times array for easy checking
+    if (monkId && searchParams.get("date")) {
+        return NextResponse.json(bookings.filter(b => b.status !== 'rejected' && b.status !== 'cancelled').map(b => b.time));
+    }
+
     return NextResponse.json(bookings);
   } catch (error) {
     return NextResponse.json({ message: "Error fetching bookings" }, { status: 500 });

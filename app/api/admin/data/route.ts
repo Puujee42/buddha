@@ -24,10 +24,28 @@ export async function GET(request: Request) {
         .sort({ createdAt: -1 })
         .toArray();
 
-    // 3. Fetch All Services
-    const services = await db.collection("services").find({}).toArray();
+    // 3. Fetch Standard Services
+    const standardServices = await db.collection("services").find({}).toArray();
 
-    // 4. Calculate Stats
+    // 4. Extract Monk Services (for approval)
+    const monkServices = users
+      .filter((u: any) => u.role === 'monk' && u.services && Array.isArray(u.services))
+      .flatMap((monk: any) => {
+          return monk.services.map((svc: any) => ({
+              ...svc,
+              _id: svc.id, // Use the internal ID as _id for the admin table
+              source: "monk",
+              monkId: monk._id.toString(),
+              monkName: monk.name,
+              type: "Monk Service",
+              // Ensure we have status
+              status: svc.status || 'active' 
+          }));
+      });
+
+    const allServices = [...standardServices, ...monkServices];
+
+    // 5. Calculate Stats
     const stats = {
       totalUsers: users.length,
       totalMonks: users.filter((u: any) => u.role === 'monk').length,
@@ -40,11 +58,12 @@ export async function GET(request: Request) {
     return NextResponse.json({
       users,
       bookings,
-      services,
+      services: allServices,
       stats
     });
 
   } catch (error) {
+    console.error("Admin Data Error:", error);
     return NextResponse.json({ message: "Admin Data Error" }, { status: 500 });
   }
 }

@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { 
-  Sun, Moon, Calendar, BookOpen, Award, Clock, Sparkles, Flower, Heart, 
-  ArrowRight, User, ScrollText, Briefcase, Quote, Loader2, Check, X, Bell, 
-  History, Video, Hourglass, CheckCircle, Plus, Pencil, Trash2, Save 
+  Sun, Clock, ScrollText, Plus, Trash2, X, History, Video, 
+  Loader2, Save, Ban, CheckCircle
 } from "lucide-react";
 import OverlayNavbar from "../components/Navbar";
-import GoldenNirvanaFooter from "../components/Footer";
 import { useLanguage } from "../contexts/LanguageContext";
 import LiveRitualRoom from "../components/LiveRitualRoom";
 
@@ -19,194 +17,360 @@ interface ServiceItem {
   name: { mn: string; en: string };
   price: number;
   duration: string;
+  status?: 'pending' | 'approved' | 'rejected' | 'active';
+}
+
+interface BlockedSlot {
+  id: string;
+  date: string;
+  time: string;
 }
 
 interface UserProfile {
   _id: string;
-  clerkId: string;
   role: "client" | "monk";
   name?: { mn: string; en: string };
-  bio?: { mn: string; en: string };
-  image?: string;
   title?: { mn: string; en: string };
-  education?: { mn: string; en: string };
-  philosophy?: { mn: string; en: string };
   services?: ServiceItem[];
-  yearsOfExperience?: number;
-  karma: number;
-  meditationDays: number;
-  totalMerits: number;
+  schedule?: { day: string; start: string; end: string; active: boolean }[]; 
+  blockedSlots?: BlockedSlot[];
+  earnings?: number;
 }
 
 interface Booking {
   _id: string;
-  clientId: string;
+  monkId: string;
   clientName: string;
-  serviceName: { mn: string; en: string } | string; 
+  serviceName: any;
   date: string;
   time: string;
-  status: 'pending' | 'confirmed' | 'rejected' | 'completed';
-  note?: string;
+  status: string;
 }
+
+// English keys for DB/Logic, Mongolian for Display
+const DAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS_MN = ["Ням", "Даваа", "Мягмар", "Лхагва", "Пүрэв", "Баасан", "Бямба"];
 
 export default function DashboardPage() {
   const { isLoaded, user } = useUser();
-  const { t, language } = useLanguage();
+  const { language } = useLanguage(); // assuming language is 'en' or 'mn'
+  const langKey = language === 'mn' ? 'mn' : 'en';
   
+  // --- TRANSLATION DICTIONARY ---
+  const TEXT = {
+    en: {
+      clientRole: "Sacred Seeker",
+      earnings: "Total Earnings",
+      bookBtn: "Book New Ritual",
+      availability: "Availability Manager",
+      updateBtn: "Update System",
+      step1: "Step 1: Set Weekly Hours",
+      step2: "Step 2: Manage Exceptions",
+      step2Desc: "Pick a date to mark specific hours as",
+      busy: "Busy",
+      unblockDay: "Unblock Day",
+      blockDay: "Block Day",
+      noHours: "No working hours set for this day.",
+      checkAbove: "Check your Weekly Schedule above.",
+      ritualsClient: "Client Rituals",
+      ritualsMy: "My Rituals",
+      join: "Join",
+      noRituals: "No scheduled rituals.",
+      services: "Services",
+      active: "Active",
+      pending: "Pending",
+      deleteSvc: "Delete Service",
+      wisdomTitle: "Daily Wisdom",
+      wisdomQuote: "Peace comes from within. Do not seek it without.",
+      modalBookTitle: "Book a Ritual",
+      selectGuide: "Select Guide",
+      selectDate: "Select Date",
+      unavailable: "Unavailable on this day.",
+      selectService: "Select Service",
+      confirmBook: "Confirm Booking",
+      modalSvcTitle: "New Service",
+      cancel: "Cancel",
+      submitReview: "Submit for Review",
+      alertSaved: "Availability updated successfully!",
+      alertSent: "Request sent!",
+      alertDelete: "Delete this service?",
+    },
+    mn: {
+      clientRole: "Эрхэм сүсэгтэн",
+      earnings: "Нийт орлого",
+      bookBtn: "Засал захиалах",
+      availability: "Цагийн хуваарь",
+      updateBtn: "Хадгалах",
+      step1: "Алхам 1: 7 хоногийн цаг тохируулах",
+      step2: "Алхам 2: Тусгай өдөр тохируулах",
+      step2Desc: "Тодорхой өдрийн цагийг хаах бол өдрөө сонгоно уу",
+      busy: "Завгүй",
+      unblockDay: "Өдрийг нээх",
+      blockDay: "Өдрийг хаах",
+      noHours: "Энэ өдөр цагийн хуваарь байхгүй байна.",
+      checkAbove: "Дээрх 7 хоногийн хуваарийг шалгана уу.",
+      ritualsClient: "Сүсэгтний засал",
+      ritualsMy: "Миний засал",
+      join: "Нэгдэх",
+      noRituals: "Захиалга алга байна.",
+      services: "Үйлчилгээ",
+      active: "Идэвхтэй",
+      pending: "Хүлээгдэж буй",
+      deleteSvc: "Устгах",
+      wisdomTitle: "Өдрийн сургаал",
+      wisdomQuote: "Амар амгалан дотроос ирдэг. Гаднаас бүү хай.",
+      modalBookTitle: "Засал захиалах",
+      selectGuide: "Лам сонгох",
+      selectDate: "Өдөр сонгох",
+      unavailable: "Энэ өдөр боломжгүй.",
+      selectService: "Үйлчилгээ сонгох",
+      confirmBook: "Баталгаажуулах",
+      modalSvcTitle: "Шинэ үйлчилгээ",
+      cancel: "Болих",
+      submitReview: "Илгээх",
+      alertSaved: "Амжилттай хадгалагдлаа!",
+      alertSent: "Хүсэлт илгээгдлээ!",
+      alertDelete: "Та энэ үйлчилгээг устгахдаа итгэлтэй байна уу?",
+    }
+  }[langKey];
+
   // --- DATA STATE ---
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]); 
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const [processingId, setProcessingId] = useState<string | null>(null);
-  
+  const [allMonks, setAllMonks] = useState<UserProfile[]>([]); 
+  const [loading, setLoading] = useState(true);
+
   // --- VIDEO CALL STATE ---
   const [activeRoomToken, setActiveRoomToken] = useState<string | null>(null);
   const [activeRoomName, setActiveRoomName] = useState<string | null>(null);
   const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
 
-  // --- SERVICE MANAGEMENT STATE ---
+  // --- MODALS ---
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
-  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
-  const [serviceForm, setServiceForm] = useState({ nameEn: "", nameMn: "", price: 0, duration: "30 min" });
-  const [isSavingService, setIsSavingService] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); 
 
-  // --- FETCH DATA (PROFILE & BOOKINGS) ---
+  // --- FORMS ---
+  const [serviceForm, setServiceForm] = useState({ nameEn: "", nameMn: "", price: 0, duration: "30 min" });
+  const [bookingForm, setBookingForm] = useState({ monkId: "", serviceId: "", date: "", time: "" });
+  
+  // --- SCHEDULE STATE (Monk Side) ---
+  const [schedule, setSchedule] = useState<{ day: string; start: string; end: string; active: boolean }[]>(
+    DAYS_EN.map(d => ({ day: d, start: "09:00", end: "17:00", active: true }))
+  );
+  const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
+  
+  // Block Time UI State
+  const [selectedBlockDate, setSelectedBlockDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // --- FETCH DATA ---
   useEffect(() => {
     async function fetchData() {
       if (!user) return;
       try {
-        setLoadingProfile(true);
+        setLoading(true);
         const userEmail = user.primaryEmailAddress?.emailAddress;
 
-        const profileRes = await fetch(`/api/monks/${user.id}`);
-        let currentRole = "client";
-        let dbId = null;
+        // 1. Try to fetch Monk Profile
+        const res = await fetch(`/api/monks/${user.id}`);
+        
+        if (res.ok) {
+            // === SCENARIO A: MONK (OR EXISTING CLIENT) ===
+            const data = await res.json();
+            setProfile(data);
+            
+            // If Monk, load schedule
+            if (data.role === 'monk') {
+                if (data.schedule) setSchedule(data.schedule);
+                if (data.blockedSlots) setBlockedSlots(data.blockedSlots);
+                // Fetch Monk's Bookings (By Monk ID)
+                const bRes = await fetch(`/api/bookings?monkId=${data._id}`);
+                if (bRes.ok) setBookings(await bRes.json());
+            } else {
+                // If Client in DB, fetch by email
+                if (userEmail) {
+                    const bRes = await fetch(`/api/bookings?userEmail=${userEmail}`);
+                    if (bRes.ok) setBookings(await bRes.json());
+                }
+                // Fetch monks for booking modal
+                const monksRes = await fetch('/api/monks');
+                if (monksRes.ok) setAllMonks(await monksRes.json());
+            }
 
-        if (profileRes.ok) {
-          const data = await profileRes.json();
-          setProfile(data);
-          currentRole = data.role;
-          dbId = data._id;
         } else {
-          setProfile({
-            _id: "temp", clerkId: user.id, role: "client",
-            name: { mn: user.fullName || "", en: user.fullName || "" },
-            karma: 0, meditationDays: 0, totalMerits: 0
-          });
+            // === SCENARIO B: NEW CLIENT (404 Not Found) ===
+            const tempClientProfile: UserProfile = {
+                _id: "temp_client",
+                role: "client",
+                name: { mn: user.fullName || "Хэрэглэгч", en: user.fullName || "User" },
+            };
+            setProfile(tempClientProfile);
+
+            if (userEmail) {
+                const bRes = await fetch(`/api/bookings?userEmail=${userEmail}`);
+                if (bRes.ok) setBookings(await bRes.json());
+            }
+
+            const monksRes = await fetch('/api/monks');
+            if (monksRes.ok) setAllMonks(await monksRes.json());
         }
 
-        let bookingsRes = null;
-        if (currentRole === 'monk' && dbId) {
-            bookingsRes = await fetch(`/api/bookings?monkId=${dbId}`, { cache: 'no-store' });
-        } else if (userEmail) {
-            bookingsRes = await fetch(`/api/bookings?userEmail=${userEmail}`, { cache: 'no-store' });
-        }
-
-        if (bookingsRes && bookingsRes.ok) {
-            const bookingData = await bookingsRes.json();
-            const sorted = bookingData.sort((a: Booking, b: Booking) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            setBookings(sorted);
-        }
-      } catch (error) { console.error(error); } finally { setLoadingProfile(false); }
+      } catch (e) { 
+          console.error(e); 
+      } finally { 
+          setLoading(false); 
+      }
     }
     if (isLoaded && user) fetchData();
   }, [isLoaded, user]);
 
-  // --- ACTIONS: BOOKINGS ---
-  const handleBookingAction = async (bookingId: string, action: 'confirmed' | 'rejected' | 'completed') => {
-    setProcessingId(bookingId);
-    try {
-      const res = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: action })
-      });
-      if (res.ok) {
-        setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: action } : b));
+  // --- LOGIC: GENERATE SLOTS FOR BLOCKING UI ---
+  const dailySlotsForBlocking = useMemo(() => {
+      if (!selectedBlockDate) return [];
+      const dateObj = new Date(selectedBlockDate);
+      const dayName = DAYS_EN[dateObj.getDay()]; 
+      const dayConfig = schedule.find(s => s.day === dayName);
+      if (!dayConfig || !dayConfig.active) return []; 
+
+      const slots: string[] = [];
+      let [startH, startM] = dayConfig.start.split(':').map(Number);
+      let [endH, endM] = dayConfig.end.split(':').map(Number);
+      
+      let current = new Date(dateObj);
+      current.setHours(startH, startM, 0, 0);
+      const end = new Date(dateObj);
+      end.setHours(endH, endM, 0, 0);
+
+      while (current < end) {
+          slots.push(current.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit' }));
+          current.setMinutes(current.getMinutes() + 60); 
       }
-    } catch (error) { console.error(error); } finally { setProcessingId(null); }
-  };
+      return slots;
+  }, [selectedBlockDate, schedule]);
 
-  const joinVideoCall = async (bookingId: string) => {
-    setJoiningRoomId(bookingId);
-    try {
-      const username = profile?.name?.en || user?.fullName || "User";
-      const res = await fetch(`/api/livekit?room=${bookingId}&username=${encodeURIComponent(username)}`);
-      const data = await res.json();
-      if (data.token) { 
-        setActiveRoomToken(data.token); 
-        setActiveRoomName(bookingId); 
-      }
-    } catch (error) { console.error(error); } finally { setJoiningRoomId(null); }
-  };
+  // --- ACTIONS ---
 
-  // --- AUTOMATIC COMPLETION ON CALL END ---
-  const handleCallEnd = async () => {
-    const bookingId = activeRoomName;
-    setActiveRoomToken(null);
-    setActiveRoomName(null);
-    if (bookingId) {
-        // MONK: Automatically update to completed when room is closed
-        await handleBookingAction(bookingId, 'completed');
-    }
-  };
-
-  // --- ACTIONS: SERVICE MANAGEMENT ---
-  const openAddService = () => {
-    setEditingServiceId(null);
-    setServiceForm({ nameEn: "", nameMn: "", price: 0, duration: "30 min" });
-    setIsServiceModalOpen(true);
-  };
-
-  const openEditService = (svc: ServiceItem) => {
-    setEditingServiceId(svc.id);
-    setServiceForm({ nameEn: svc.name.en, nameMn: svc.name.mn, price: svc.price, duration: svc.duration });
-    setIsServiceModalOpen(true);
-  };
-
-  const saveService = async () => {
+  const saveScheduleSettings = async () => {
     if (!profile) return;
-    setIsSavingService(true);
-    let updatedServices = [...(profile.services || [])];
-    if (editingServiceId) {
-      updatedServices = updatedServices.map(s => s.id === editingServiceId ? { ...s, name: { en: serviceForm.nameEn, mn: serviceForm.nameMn }, price: Number(serviceForm.price), duration: serviceForm.duration } : s);
-    } else {
-      updatedServices.push({ id: crypto.randomUUID(), name: { en: serviceForm.nameEn, mn: serviceForm.nameMn }, price: Number(serviceForm.price), duration: serviceForm.duration });
-    }
+    setIsSaving(true);
     try {
-      const res = await fetch(`/api/monks/${profile._id}/services`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ services: updatedServices }) });
-      if (res.ok) { setProfile({ ...profile, services: updatedServices }); setIsServiceModalOpen(false); }
-    } catch (e) { console.error(e); } finally { setIsSavingService(false); }
+        const res = await fetch(`/api/monks/${profile._id}/schedule`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ schedule, blockedSlots })
+        });
+        if (res.ok) alert(TEXT.alertSaved);
+    } catch (e) { console.error(e); } finally { setIsSaving(false); }
+  };
+
+  const toggleBlockSlot = (time: string) => {
+      const exists = blockedSlots.find(b => b.date === selectedBlockDate && b.time === time);
+      if (exists) {
+          setBlockedSlots(blockedSlots.filter(b => b.id !== exists.id));
+      } else {
+          setBlockedSlots([...blockedSlots, { id: crypto.randomUUID(), date: selectedBlockDate, time }]);
+      }
+  };
+
+  const toggleBlockWholeDay = () => {
+      const allBlocked = dailySlotsForBlocking.every(time => 
+          blockedSlots.some(b => b.date === selectedBlockDate && b.time === time)
+      );
+      if (allBlocked) {
+          setBlockedSlots(blockedSlots.filter(b => b.date !== selectedBlockDate));
+      } else {
+          const newBlocks = dailySlotsForBlocking
+              .filter(time => !blockedSlots.some(b => b.date === selectedBlockDate && b.time === time))
+              .map(time => ({ id: crypto.randomUUID(), date: selectedBlockDate, time }));
+          setBlockedSlots([...blockedSlots, ...newBlocks]);
+      }
+  };
+
+  const submitBooking = async () => {
+    if(!bookingForm.monkId || !bookingForm.date || !bookingForm.time) return;
+    setIsSaving(true);
+    try {
+        const res = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                ...bookingForm,
+                clientName: profile?.name?.en || user?.fullName,
+                clientId: profile?._id
+            })
+        });
+        if(res.ok) { 
+            alert(TEXT.alertSent); 
+            setIsBookingModalOpen(false); 
+            window.location.reload(); 
+        }
+    } catch(e) { console.error(e); } finally { setIsSaving(false); }
+  };
+
+  const submitService = async () => {
+    if (!profile) return;
+    setIsSaving(true);
+    const newService: ServiceItem = { 
+        id: crypto.randomUUID(), 
+        name: { en: serviceForm.nameEn, mn: serviceForm.nameMn }, 
+        price: Number(serviceForm.price), 
+        duration: serviceForm.duration, 
+        status: 'pending' 
+    };
+    const updatedServices = [...(profile.services || []), newService];
+    try {
+      const res = await fetch(`/api/monks/${profile._id}/service`, { 
+          method: 'PATCH', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ services: updatedServices }) 
+      });
+      if (res.ok) { 
+          setProfile({ ...profile, services: updatedServices }); 
+          setIsServiceModalOpen(false); 
+      }
+    } catch (e) { console.error(e); } finally { setIsSaving(false); }
   };
 
   const deleteService = async (serviceId: string) => {
-    if (!profile || !confirm("Delete this service?")) return;
+    if (!profile || !confirm(TEXT.alertDelete)) return;
     const updatedServices = (profile.services || []).filter(s => s.id !== serviceId);
     try {
-        const res = await fetch(`/api/monks/${profile._id}/services`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ services: updatedServices }) });
-        if (res.ok) setProfile({ ...profile, services: updatedServices });
+        const res = await fetch(`/api/monks/${profile._id}/service`, { 
+            method: 'PATCH', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ services: updatedServices }) 
+        });
+        if (res.ok) {
+            setProfile({ ...profile, services: updatedServices });
+        }
     } catch (e) { console.error(e); }
   };
 
-  if (!isLoaded) return null;
-  const langKey = language === 'mn' ? 'mn' : 'en';
-  const userRole = profile?.role || "client";
-  const displayName = profile?.name?.[langKey] || user?.fullName || "Guest";
-  const getServiceName = (b: Booking) => typeof b.serviceName === 'string' ? b.serviceName : b.serviceName?.[langKey] || "Ritual";
-
-  const pendingBookings = bookings.filter(b => b.status === 'pending');
-  const historyBookings = bookings.filter(b => b.status !== 'pending');
-
-  const content = {
-    waitingAdmin: t({ mn: "Админ зөвшөөрөхийг хүлээж байна", en: "Awaiting Admin Approval" }),
-    startCall: t({ mn: "Зан үйл эхлэх", en: "Start Ritual" }),
-    historyTitle: t({ mn: "Захиалгын түүх", en: "Ritual Records" }),
-    incomingTitle: t({ mn: "Шинэ хүсэлтүүд", en: "Incoming Calls" }),
-    servicesTitle: t({ mn: "Миний үйлчилгээнүүд", en: "My Services" }),
+  const joinVideoCall = async (id: string) => {
+      setJoiningRoomId(id);
+      try {
+        const res = await fetch(`/api/livekit?room=${id}&username=${user?.fullName}`);
+        const data = await res.json();
+        setActiveRoomToken(data.token); 
+        setActiveRoomName(id);
+      } catch (e) { console.error(e); } finally { setJoiningRoomId(null); }
   };
 
+  if (!isLoaded) return null;
+  const isMonk = profile?.role === 'monk';
+
   if (activeRoomToken && activeRoomName) {
-    return <LiveRitualRoom token={activeRoomToken} serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL!} roomName={activeRoomName} onLeave={handleCallEnd} />;
+    return <LiveRitualRoom token={activeRoomToken} serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL!} roomName={activeRoomName} onLeave={async () => { 
+        if(activeRoomName) {
+            try {
+                // End call logic: Add payment and complete booking
+                await fetch(`/api/bookings/${activeRoomName}/complete`, { method: 'POST' });
+            } catch(e) { console.error(e); }
+        }
+        setActiveRoomToken(null); 
+        setActiveRoomName(null);
+        window.location.reload(); 
+    }} />;
   }
 
   return (
@@ -214,175 +378,299 @@ export default function DashboardPage() {
       <OverlayNavbar />
       <main className="min-h-screen bg-[#FFFBEB] pt-32 pb-20 font-sans px-6">
         
-        {/* --- 1. HERO SECTION --- */}
+        {/* HERO SECTION */}
         <section className="container mx-auto mb-12">
-            <div className="relative overflow-hidden bg-[#451a03] rounded-[3rem] p-8 md:p-16 text-[#FFFBEB] shadow-2xl flex items-center gap-10">
-                <div className="scale-[2.5] origin-center"><UserButton /></div>
-                <div className="flex-1">
-                    <h1 className="text-4xl md:text-6xl font-serif font-bold">{displayName}</h1>
-                    <p className="text-xl text-[#FDE68A]/80 font-light mt-2 uppercase tracking-widest">{userRole === 'monk' ? profile?.title?.[langKey] : "Sacred Seeker"}</p>
+            <div className="bg-[#451a03] rounded-[3rem] p-8 md:p-12 text-[#FFFBEB] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="flex items-center gap-8">
+                    <div className="scale-[2] origin-center"><UserButton /></div>
+                    <div>
+                        <h1 className="text-3xl md:text-5xl font-serif font-bold">{profile?.name?.[langKey] || user?.fullName}</h1>
+                        <p className="text-[#FDE68A]/80 uppercase tracking-widest mt-2">{isMonk ? profile?.title?.[langKey] : TEXT.clientRole}</p>
+                        {isMonk && (
+                            <div className="mt-4 inline-flex items-center gap-2 bg-[#FDE68A]/20 px-4 py-2 rounded-xl backdrop-blur-sm border border-[#FDE68A]/30">
+                                <span className="text-xs uppercase tracking-widest opacity-80">{TEXT.earnings}:</span>
+                                <span className="text-xl font-bold text-[#FDE68A]">{profile?.earnings?.toLocaleString() || 0}₮</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
+                {!isMonk && (
+                    <button onClick={() => setIsBookingModalOpen(true)} className="bg-[#D97706] text-white px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-[#B45309] shadow-lg flex items-center gap-3">
+                        <Plus size={18} /> {TEXT.bookBtn}
+                    </button>
+                )}
             </div>
         </section>
 
-        {/* --- 2. MAIN GRID --- */}
-        <section className="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-12">
-            
-            {loadingProfile ? <div className="flex justify-center py-20"><Loader2 className="animate-spin text-amber-600" size={40} /></div> : (
-              <>
-                {/* --- MONK: INCOMING REQUESTS (NO BUTTONS - ADMIN ONLY) --- */}
-                {userRole === 'monk' && (
-                  <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-white">
-                    <h2 className="text-2xl font-serif font-bold text-[#451a03] mb-8 flex items-center gap-3"><Bell className="text-[#D97706]" /> {content.incomingTitle}</h2>
-                    <div className="space-y-4">
-                        {pendingBookings.length > 0 ? pendingBookings.map((b) => (
-                            <div key={b._id} className="p-6 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] flex flex-col md:flex-row justify-between items-center gap-4">
-                                <div>
-                                    <h4 className="font-bold text-[#451a03]">{b.clientName}</h4>
-                                    <p className="text-[#D97706] text-sm font-medium">{getServiceName(b)}</p>
-                                    <p className="text-xs text-stone-500 mt-1">{b.date} • {b.time}</p>
-                                </div>
-                                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-100">
-                                    <Hourglass size={14} className="animate-pulse" /> {content.waitingAdmin}
-                                </div>
-                            </div>
-                        )) : <p className="text-stone-400 italic text-center py-6">No pending requests.</p>}
-                    </div>
-                  </div>
-                )}
+        <section className="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* LEFT COLUMN */}
+          <div className="lg:col-span-2 space-y-8">
+             
+             {/* --- SCHEDULE SETTINGS (MONK ONLY) --- */}
+             {isMonk && (
+                 <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-white">
+                     <div className="flex justify-between items-center mb-6">
+                         <h2 className="text-2xl font-serif font-bold text-[#451a03] flex items-center gap-3"><Clock className="text-[#D97706]"/> {TEXT.availability}</h2>
+                         <button onClick={saveScheduleSettings} disabled={isSaving} className="flex items-center gap-2 bg-[#D97706] text-white px-4 py-2 rounded-full font-bold text-xs hover:bg-[#B45309]">
+                             {isSaving ? <Loader2 className="animate-spin" size={14}/> : <Save size={14}/>} {TEXT.updateBtn}
+                         </button>
+                     </div>
 
-                {/* --- MONK: HISTORY & ACTIVE CALLS --- */}
-                {userRole === 'monk' && (
-                    <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-white">
-                        <h2 className="text-2xl font-serif font-bold text-[#451a03] mb-8 flex items-center gap-3"><History className="text-[#78350F]" /> {content.historyTitle}</h2>
-                        <div className="space-y-4">
-                            {historyBookings.length > 0 ? historyBookings.map((b) => (
-                                <div key={b._id} className="p-5 rounded-2xl border border-stone-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${b.status === 'confirmed' ? 'bg-green-100 text-green-600' : b.status === 'completed' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>
-                                            {b.status === 'confirmed' ? <Video size={18} /> : b.status === 'completed' ? <CheckCircle size={18} /> : <X size={18} />}
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-[#451a03]">{b.clientName}</h4>
-                                            <p className="text-xs text-stone-500">{b.date} • {b.time}</p>
-                                        </div>
-                                    </div>
+                     {/* 1. Weekly Schedule */}
+                    
+                     {/* 2. Block Specific Times */}
+                     <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                             <div>
+                                 <h3 className="font-bold text-xs uppercase text-stone-400 tracking-widest mb-1">{TEXT.step2}</h3>
+                                 <p className="text-xs text-stone-500">{TEXT.step2Desc} <span className="text-red-500 font-bold">{TEXT.busy}</span>.</p>
+                             </div>
+                             <div className="flex gap-2 items-center">
+                                <input 
+                                    type="date" 
+                                    className="p-3 rounded-xl border-2 border-[#D97706]/20 bg-white font-bold text-[#451a03] outline-none focus:border-[#D97706]"
+                                    value={selectedBlockDate}
+                                    onChange={(e) => setSelectedBlockDate(e.target.value)}
+                                />
+                                {dailySlotsForBlocking.length > 0 && (
+                                    <button 
+                                        onClick={toggleBlockWholeDay}
+                                        className={`px-4 py-3 rounded-xl text-xs font-bold uppercase transition-colors border ${
+                                            dailySlotsForBlocking.every(time => blockedSlots.some(b => b.date === selectedBlockDate && b.time === time))
+                                            ? "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
+                                            : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                                        }`}
+                                    >
+                                        {dailySlotsForBlocking.every(time => blockedSlots.some(b => b.date === selectedBlockDate && b.time === time)) ? TEXT.unblockDay : TEXT.blockDay}
+                                    </button>
+                                )}
+                             </div>
+                         </div>
 
-                                    <div className="flex items-center gap-3 self-end md:self-auto">
-                                        {b.status === 'confirmed' ? (
-                                            <button 
-                                                onClick={() => joinVideoCall(b._id)} 
-                                                disabled={joiningRoomId === b._id}
-                                                className="flex items-center gap-2 px-6 py-2 bg-[#05051a] text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-cyan-900 transition-all shadow-lg"
-                                            >
-                                                {joiningRoomId === b._id ? <Loader2 className="animate-spin" size={14}/> : <Video size={14} />} {content.startCall}
-                                            </button>
-                                        ) : (
-                                            <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider border ${b.status === 'completed' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
-                                                {b.status}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            )) : <p className="text-stone-400 italic text-center py-6">Empty history.</p>}
-                        </div>
-                    </div>
-                )}
-                
-                {/* --- CLIENT: VIEW RITUALS --- */}
-                {userRole === 'client' && (
-                    <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-white">
-                        <h2 className="text-2xl font-serif font-bold text-[#451a03] mb-8 flex items-center gap-3"><Sparkles className="text-[#D97706]" /> My Rituals</h2>
-                        <div className="space-y-4">
-                            {bookings.length > 0 ? bookings.map((b) => (
-                                <div key={b._id} className="p-6 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-bold text-[#451a03]">{getServiceName(b)}</h4>
-                                        <p className="text-sm text-stone-500">{b.date} • {b.time}</p>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        {b.status === 'confirmed' ? (
-                                            <button onClick={() => joinVideoCall(b._id)} className="px-5 py-2 bg-[#05051a] text-white rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                                                <Video size={14} /> Join Call
-                                            </button>
-                                        ) : (
-                                            <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase border ${b.status === 'pending' ? 'bg-amber-50 text-amber-600' : b.status === 'completed' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'}`}>
-                                                {b.status}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            )) : <p className="text-stone-400 italic text-center py-6">No scheduled rituals.</p>}
-                        </div>
-                    </div>
-                )}
+                         {dailySlotsForBlocking.length > 0 ? (
+                             <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                                 {dailySlotsForBlocking.map((time) => {
+                                     const isBlocked = blockedSlots.some(b => b.date === selectedBlockDate && b.time === time);
+                                     return (
+                                         <button 
+                                            key={time}
+                                            onClick={() => toggleBlockSlot(time)}
+                                            className={`py-3 rounded-xl text-xs font-black transition-all border-2 relative
+                                                ${isBlocked 
+                                                    ? 'bg-red-500 text-white border-red-500 shadow-md transform scale-95 opacity-90' 
+                                                    : 'bg-white text-[#451a03] border-stone-200 hover:border-[#D97706] hover:shadow-lg' 
+                                                }`}
+                                         >
+                                             {time}
+                                             {isBlocked ? (
+                                                 <Ban size={12} className="absolute top-1 right-1 opacity-50" />
+                                             ) : (
+                                                 <CheckCircle size={12} className="absolute top-1 right-1 opacity-20 text-green-500" />
+                                             )}
+                                         </button>
+                                     );
+                                 })}
+                             </div>
+                         ) : (
+                             <div className="text-center py-8 opacity-50 border-2 border-dashed border-stone-200 rounded-xl">
+                                 <Ban className="mx-auto mb-2 w-8 h-8 text-stone-400"/>
+                                 <p className="text-sm font-bold">{TEXT.noHours}</p>
+                                 <p className="text-xs">{TEXT.checkAbove}</p>
+                             </div>
+                         )}
+                     </div>
+                 </div>
+             )}
 
-                {/* --- MONK: SERVICE MANAGEMENT --- */}
-                {userRole === 'monk' && profile && (
-                    <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-white">
-                        <div className="flex justify-between items-center mb-8">
-                            <h2 className="text-2xl font-serif font-bold text-[#451a03] flex items-center gap-3"><ScrollText className="text-[#D97706]" /> {content.servicesTitle}</h2>
-                            <button onClick={openAddService} className="bg-[#D97706] text-white p-2 rounded-full hover:bg-[#B45309] transition-colors"><Plus size={20} /></button>
-                        </div>
-                        <div className="space-y-4">
-                            {profile.services?.map((svc) => (
-                                <div key={svc.id} className="p-4 rounded-xl bg-[#FFFBEB] border border-[#FDE68A]/30 flex justify-between items-center group">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#D97706] shadow-sm"><Flower size={20} /></div>
-                                        <div><h4 className="font-bold text-[#451a03]">{svc.name[langKey]}</h4><p className="text-xs text-stone-500">{svc.price.toLocaleString()}₮ • {svc.duration}</p></div>
-                                    </div>
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => openEditService(svc)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg"><Pencil size={16} /></button>
-                                        <button onClick={() => deleteService(svc.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-              </>
-            )}
+             {/* --- BOOKINGS LIST --- */}
+             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-white">
+                 <h2 className="text-2xl font-serif font-bold text-[#451a03] mb-6 flex items-center gap-3"><History className="text-[#78350F]"/> {isMonk ? TEXT.ritualsClient : TEXT.ritualsMy}</h2>
+                 <div className="space-y-4">
+                     {bookings.length > 0 ? bookings.map((b) => (
+                         <div key={b._id} className="p-5 rounded-2xl border border-stone-100 flex justify-between items-center">
+                             <div>
+                                 <h4 className="font-bold text-[#451a03]">{b.clientName}</h4>
+                                 <p className="text-xs text-stone-500">{b.date} • {b.time}</p>
+                                 <p className="text-[10px] text-[#D97706] font-bold mt-1">
+                                     {typeof b.serviceName === 'string' ? b.serviceName : b.serviceName?.[langKey]}
+                                 </p>
+                             </div>
+                             <div className="flex gap-2">
+                                 {b.status === 'confirmed' ? (
+                                     <button 
+                                        onClick={() => joinVideoCall(b._id)} 
+                                        disabled={joiningRoomId === b._id}
+                                        className="px-4 py-2 bg-[#05051a] text-white rounded-lg text-xs font-black uppercase flex items-center gap-2"
+                                     >
+                                         {joiningRoomId === b._id ? <Loader2 className="animate-spin" size={14}/> : <Video size={14}/>} {TEXT.join}
+                                     </button>
+                                 ) : (
+                                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${b.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-stone-100 text-stone-500 border-stone-200'}`}>
+                                         {b.status === 'pending' ? TEXT.pending : b.status}
+                                     </span>
+                                 )}
+                             </div>
+                         </div>
+                     )) : <p className="text-stone-400 italic text-center py-4">{TEXT.noRituals}</p>}
+                 </div>
+             </div>
+
+             {/* --- SERVICES (Monk) --- */}
+             {isMonk && (
+                 <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-white">
+                    <div className="flex justify-between items-center mb-6">
+                         <h2 className="text-2xl font-serif font-bold text-[#451a03] flex items-center gap-3"><ScrollText className="text-[#D97706]"/> {TEXT.services}</h2>
+                         <button onClick={() => setIsServiceModalOpen(true)} className="bg-[#D97706] text-white p-2 rounded-full hover:bg-[#B45309]"><Plus size={20}/></button>
+                     </div>
+                     <div className="space-y-3">
+                         {profile?.services?.map((svc) => (
+                             <div key={svc.id} className="p-4 rounded-xl bg-[#FFFBEB] border border-[#FDE68A]/30 flex justify-between items-center group">
+                                 <div className="flex items-center gap-4">
+                                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#D97706] shadow-sm"><ScrollText size={18} /></div>
+                                     <div>
+                                         <h4 className="font-bold text-[#451a03]">{svc.name[langKey]}</h4>
+                                         <p className="text-xs text-stone-500">{svc.price}₮ • {svc.duration}</p>
+                                     </div>
+                                 </div>
+                                 <div className="flex items-center gap-3">
+                                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${svc.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                         {svc.status === 'active' ? TEXT.active : TEXT.pending}
+                                     </span>
+                                     <button 
+                                        onClick={() => deleteService(svc.id)}
+                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                        title={TEXT.deleteSvc}
+                                     >
+                                         <Trash2 size={16} />
+                                     </button>
+                                 </div>
+                             </div>
+                         ))}
+                     </div>
+                 </div>
+             )}
           </div>
-
-          {/* --- SIDEBAR --- */}
-          <div className="space-y-8">
-              <div className="bg-[#451a03] rounded-[2.5rem] p-8 text-[#FFFBEB] shadow-xl">
-                <h2 className="text-2xl font-serif font-bold mb-8 flex items-center gap-3"><BookOpen className="text-[#FDE68A]" /> Resources</h2>
-                <div className="space-y-4">
-                  <button className="w-full flex items-center justify-between p-5 rounded-2xl bg-white/10 hover:bg-white/20 transition-all font-medium"><span>Heart Sutra</span><ArrowRight size={16} /></button>
-                  <button className="w-full flex items-center justify-between p-5 rounded-2xl bg-white/10 hover:bg-white/20 transition-all font-medium"><span>Meditation Guide</span><ArrowRight size={16} /></button>
-                </div>
-              </div>
-              <div className="p-8 rounded-[2.5rem] bg-[#FEF3C7] border border-[#FDE68A] relative overflow-hidden">
-                <Sun className="absolute -right-4 -bottom-4 w-32 h-32 text-[#F59E0B]/20" />
-                <p className="text-lg font-serif italic text-[#78350F] leading-relaxed relative z-10">"Knowing yourself is the beginning of all wisdom."</p>
+          
+          {/* RIGHT SIDEBAR */}
+          <div className="space-y-6">
+              <div className="bg-[#FEF3C7] border border-[#FDE68A] p-8 rounded-[2.5rem]">
+                  <Sun className="w-16 h-16 text-[#F59E0B]/30 mb-4"/>
+                  <h3 className="text-xl font-bold text-[#78350F] mb-2">{TEXT.wisdomTitle}</h3>
+                  <p className="italic text-[#78350F]/80 text-sm">"{TEXT.wisdomQuote}"</p>
               </div>
           </div>
         </section>
 
-        {/* --- MODAL: SERVICE FORM --- */}
+        {/* --- CLIENT BOOKING MODAL --- */}
         <AnimatePresence>
-            {isServiceModalOpen && (
+            {isBookingModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
-                        <div className="flex justify-between items-center mb-6"><h3 className="text-xl font-bold font-serif text-[#451a03]">Service Details</h3><button onClick={() => setIsServiceModalOpen(false)}><X size={24}/></button></div>
-                        <div className="space-y-4">
-                            <input className="w-full p-3 border rounded-xl" placeholder="Name (English)" value={serviceForm.nameEn} onChange={e => setServiceForm({...serviceForm, nameEn: e.target.value})} />
-                            <input className="w-full p-3 border rounded-xl" placeholder="Name (Mongolian)" value={serviceForm.nameMn} onChange={e => setServiceForm({...serviceForm, nameMn: e.target.value})} />
-                            <div className="grid grid-cols-2 gap-4">
-                                <input type="number" className="p-3 border rounded-xl" placeholder="Price" value={serviceForm.price} onChange={e => setServiceForm({...serviceForm, price: Number(e.target.value)})} />
-                                <input className="p-3 border rounded-xl" placeholder="Duration" value={serviceForm.duration} onChange={e => setServiceForm({...serviceForm, duration: e.target.value})} />
+                    <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl h-[80vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6"><h3 className="text-xl font-bold font-serif text-[#451a03]">{TEXT.modalBookTitle}</h3><button onClick={() => setIsBookingModalOpen(false)}><X size={24}/></button></div>
+                        <div className="space-y-6">
+                            
+                            {/* 1. Select Guide */}
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-stone-400 mb-2">{TEXT.selectGuide}</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {allMonks.map(m => (
+                                        <button key={m._id} onClick={() => setBookingForm({ ...bookingForm, monkId: m._id, serviceId: "", time: "" })} className={`p-3 rounded-xl border text-left transition-all ${bookingForm.monkId === m._id ? 'bg-[#451a03] text-white' : 'bg-stone-50 border-stone-100'}`}><p className="font-bold text-sm">{m.name?.[langKey]}</p></button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex gap-3 mt-8">
-                            <button onClick={() => setIsServiceModalOpen(false)} className="flex-1 py-3 border rounded-xl font-bold text-stone-500">Cancel</button>
-                            <button onClick={saveService} className="flex-1 py-3 bg-[#D97706] text-white rounded-xl font-bold">{isSavingService ? <Loader2 className="animate-spin mx-auto" /> : "Save"}</button>
+
+                            {/* 2. Date */}
+                            {bookingForm.monkId && (
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-stone-400 mb-2">{TEXT.selectDate}</label>
+                                    <input type="date" className="w-full p-3 border rounded-xl" value={bookingForm.date} onChange={e => setBookingForm({ ...bookingForm, date: e.target.value, time: "" })} />
+                                </div>
+                            )}
+
+                            {/* 3. Smart Time Slots */}
+                            {bookingForm.date && (
+                                <div className="grid grid-cols-4 gap-2">
+                                    {(() => {
+                                        const selectedMonk = allMonks.find(m => m._id === bookingForm.monkId);
+                                        const dayName = new Date(bookingForm.date).toLocaleDateString('en-US', { weekday: 'long' });
+                                        const daySchedule = selectedMonk?.schedule?.find(s => s.day === dayName);
+                                        if (!daySchedule || !daySchedule.active) return <p className="col-span-4 text-xs text-center text-red-400">{TEXT.unavailable}</p>;
+
+                                        const slots = [];
+                                        let [sH, sM] = daySchedule.start.split(':').map(Number);
+                                        let [eH, eM] = daySchedule.end.split(':').map(Number);
+                                        let curr = new Date(); curr.setHours(sH, sM, 0); 
+                                        const end = new Date(); end.setHours(eH, eM, 0);
+                                        
+                                        while(curr < end) {
+                                            const timeStr = curr.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit' });
+                                            // Check if blocked by Monk
+                                            const isBlocked = selectedMonk?.blockedSlots?.some(b => b.date === bookingForm.date && b.time === timeStr);
+                                            
+                                            slots.push(
+                                                <button 
+                                                    key={timeStr} 
+                                                    disabled={isBlocked} 
+                                                    onClick={() => setBookingForm({...bookingForm, time: timeStr})}
+                                                    className={`py-2 rounded-lg text-xs font-bold border transition-all ${isBlocked ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : bookingForm.time === timeStr ? 'bg-[#05051a] text-white' : 'bg-white border-stone-200'}`}
+                                                >
+                                                    {timeStr}
+                                                </button>
+                                            );
+                                            curr.setMinutes(curr.getMinutes() + 60);
+                                        }
+                                        return slots;
+                                    })()}
+                                </div>
+                            )}
+
+                            {/* 4. Service */}
+                            {bookingForm.time && (
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-stone-400 mb-2">{TEXT.selectService}</label>
+                                    <div className="space-y-2">
+                                        {allMonks.find(m => m._id === bookingForm.monkId)?.services?.filter(s => s.status !== 'rejected').map(s => (
+                                            <button key={s.id} onClick={() => setBookingForm({ ...bookingForm, serviceId: s.id })} className={`w-full p-3 rounded-xl border flex justify-between items-center transition-all ${bookingForm.serviceId === s.id ? 'bg-[#FDE68A] border-[#D97706] text-[#451a03]' : 'bg-white border-stone-200'}`}><span className="font-bold text-sm">{s.name[langKey]}</span><span className="text-xs">{s.price}₮</span></button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <button onClick={submitBooking} disabled={isSaving || !bookingForm.serviceId} className="w-full py-4 bg-[#D97706] text-white rounded-2xl font-bold uppercase tracking-widest disabled:opacity-50">
+                                {isSaving ? <Loader2 className="animate-spin mx-auto"/> : TEXT.confirmBook}
+                            </button>
                         </div>
                     </motion.div>
                 </div>
             )}
         </AnimatePresence>
+
+        {/* --- SERVICE MODAL --- */}
+        <AnimatePresence>
+            {isServiceModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white rounded-[2rem] p-8 w-full max-w-md">
+                        <h3 className="text-xl font-bold mb-4 text-[#451a03]">{TEXT.modalSvcTitle}</h3>
+                        <div className="space-y-3 mb-6">
+                            <input className="w-full p-3 border rounded-xl" placeholder="Name (EN)" value={serviceForm.nameEn} onChange={e => setServiceForm({...serviceForm, nameEn: e.target.value})} />
+                            <input className="w-full p-3 border rounded-xl" placeholder="Нэр (MN)" value={serviceForm.nameMn} onChange={e => setServiceForm({...serviceForm, nameMn: e.target.value})} />
+                            <div className="flex gap-2">
+                                <input type="number" className="w-full p-3 border rounded-xl" placeholder="Price" value={serviceForm.price} onChange={e => setServiceForm({...serviceForm, price: Number(e.target.value)})} />
+                                <input className="w-full p-3 border rounded-xl" placeholder="Duration" value={serviceForm.duration} onChange={e => setServiceForm({...serviceForm, duration: e.target.value})} />
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setIsServiceModalOpen(false)} className="flex-1 py-3 border rounded-xl font-bold text-stone-500">{TEXT.cancel}</button>
+                            <button onClick={submitService} className="flex-1 py-3 bg-[#D97706] text-white rounded-xl font-bold flex items-center justify-center gap-2">
+                                {isSaving ? <Loader2 className="animate-spin"/> : TEXT.submitReview}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+
       </main>
     </>
   );
