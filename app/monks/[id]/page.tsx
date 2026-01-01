@@ -323,7 +323,7 @@ export default function MonkBookingPage() {
                     <div className="flex items-center justify-between pb-6 border-b border-current border-opacity-10">
                          <div className="flex items-center gap-3">
                              {isNight ? <Moon className="text-indigo-400" /> : <Sun className="text-amber-500" />}
-                             <span className={`font-celestial text-xl ${theme.textColor}`}>{t({mn: "Захиалга", en: "Sacred Booking"})}</span>
+                             <span className={`font-celestial text-xl ${theme.textColor}`}>{t({mn: "Захиалга", en: "Booking"})}</span>
                          </div>
                          <div className="flex items-center gap-2 text-xs font-bold opacity-50">
                              <Sparkles size={14} />

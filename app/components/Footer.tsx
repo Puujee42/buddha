@@ -53,7 +53,7 @@ export default function GoldenNirvanaFooter() {
     }),
     location: t({ mn: "Улаанбаатар, Монгол", en: "Ulaanbaatar, Mongolia" }),
     peace: t({ mn: "Амгалан", en: "Peace" }),
-    gandantitle: t({ mn: "Гандан", en: "Nirvana" }),
+    gandantitle: t({ mn: "Гэвабол", en: "Gevabol" }),
   };
 
   const theme = isDark ? {
@@ -254,7 +254,7 @@ export default function GoldenNirvanaFooter() {
 
            <div className="flex items-center gap-12">
               <Link href="#" className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity">Void Policy</Link>
-              <Link href="#" className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity">Sacred Terms</Link>
+              <Link href="#" className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity">Terms</Link>
               
               {/* ASCENSION BUTTON */}
               <button 

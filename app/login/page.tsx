@@ -35,7 +35,7 @@ export default function LoginPage() {
       en: "\"Peace comes from within. Do not seek it without. Sign in to continue your journey towards enlightenment.\""
     }),
     welcomeBack: t({ mn: "Тавтай морилно уу", en: "Welcome Back" }),
-    identifyDesc: t({ mn: "Ариун судар болон сангхад нэвтрэхийн тулд өөрийгөө таниулна уу.", en: "Identify yourself to access the sacred texts and sangha." }),
+    identifyDesc: t({ mn: "Cангхад нэвтрэхийн тулд өөрийгөө таниулна уу.", en: "Identify yourself to access the  texts and sangha." }),
     loadingText: t({ mn: "Сүнс сэргэж байна...", en: "Awakening Spirits..." }),
     enterBtn: t({ mn: "Ариун газарт нэвтрэх", en: "Enter Sanctuary" }),
     joinBtn: t({ mn: "Сангхад нэвтрэх", en: "Join the Sangha" }),
@@ -87,11 +87,7 @@ export default function LoginPage() {
         </div>
 
         {/* Bottom Quote */}
-        <div className="absolute bottom-12 left-0 w-full text-center">
-            <p className="text-[#FDE68A]/40 text-xs uppercase tracking-[0.3em]">
-               Om Mani Padme Hum
-            </p>
-        </div>
+      
       </div>
 
 
@@ -124,7 +120,7 @@ export default function LoginPage() {
           <div className="text-center mb-10">
              <Link href="/" className="inline-flex items-center gap-2 text-[#D97706] hover:text-[#B45309] transition-colors mb-6 group">
                 <Flower size={20} className="group-hover:rotate-180 transition-transform duration-700" />
-                <span className="font-bold font-sans uppercase tracking-widest text-xs">Nirvana</span>
+                <span className="font-bold font-sans uppercase tracking-widest text-xs">Гэвабол</span>
              </Link>
              <h2 className="text-3xl font-bold text-[#451a03] mb-3">{content.welcomeBack}</h2>
              <p className="text-[#78350F]/70 text-sm font-sans leading-relaxed">

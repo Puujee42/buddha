@@ -84,7 +84,7 @@ export default function DivineTarotShowcase() {
             </motion.div>
             
             <h1 className={`text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-serif tracking-tight leading-[1.1] drop-shadow-2xl ${isDark ? 'text-white' : 'text-[#451a03]'}`}>
-               {t({ mn: "Ариун Багш нар", en: "Celestial Masters" })} 
+               {t({ mn: "Багш нар", en: "Readers" })} 
                <span className={`block mt-10 text-xl sm:text-2xl md:text-3xl italic font-light font-serif tracking-[0.6em] uppercase bg-clip-text text-transparent bg-gradient-to-r ${
                  isDark ? 'from-cyan-400 via-white to-magenta-500' : 'from-amber-600 via-orange-500 to-amber-600'}`}>
                  {t({mn:"Хувь Тавилангийн Зам", en:"The Path of Destiny"})}
@@ -104,7 +104,6 @@ export default function DivineTarotShowcase() {
           )}
         </div>
       </section>
-      <GoldenNirvanaFooter />
     </>
   );
 }

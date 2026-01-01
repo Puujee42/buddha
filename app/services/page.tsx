@@ -134,7 +134,7 @@ export default function CelestialServices() {
             <motion.h1
               className={`text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-serif leading-[0.9] tracking-tighter transition-colors duration-700 ${isDark ? "text-white" : "text-stone-900"}`}
             >
-              {t({mn: "Ариун", en: "Ancient"})} <br />
+              
               <span className={`italic font-light transition-colors ${isDark ? "text-[#C72075]" : "text-amber-600"}`}>
                 {t({mn: "Зан Үйл", en: "Rituals"})}
               </span>

@@ -9,7 +9,7 @@ import { Flower, Users, Globe, ArrowDown, ShieldCheck, Sparkles, Star, ArrowRigh
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
 import OverlayNavbar from "../components/Navbar"; 
-import GoldenNirvanaFooter from "../components/Footer";
+import GoldenГэваболFooter from "../components/Footer";
 
 const RitualViewportFrame = ({ theme }: { theme: any }) => (
   <div className="fixed inset-0 pointer-events-none z-[100] p-4 md:p-8">
@@ -81,7 +81,7 @@ function ActualAboutContent() {
       philosophyDesc: "Merging ancient wisdom with the speed of light to serve the modern soul through accessible connection.",
       philosophies: [
         { title: "Mindset", desc: "Guiding you toward inner stillness and mental clarity.", icon: <Star /> },
-        { title: "Heritage", desc: "Preserving sacred Mongolian traditions for the digital age.", icon: <Flower /> },
+        { title: "Heritage", desc: "Preserving  Mongolian traditions for the digital age.", icon: <Flower /> },
         { title: "Innovation", desc: "Unlocking borderless access to spiritual guidance via tech.", icon: <Globe /> }
       ],
       marquee: ["MONGOLIAN HERITAGE", "DIGITAL PEACE", "TRADITIONAL WISDOM"],

@@ -28,7 +28,7 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave }: 
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent">
         <div>
-          <h2 className="text-white font-serif text-xl tracking-widest">SACRED SPACE</h2>
+          <h2 className="text-white font-serif text-xl tracking-widest">SPACE</h2>
           <p className="text-cyan-400 text-xs uppercase tracking-[0.2em]">{roomName}</p>
         </div>
         <button 

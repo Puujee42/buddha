@@ -31,7 +31,7 @@ export default function SignUpPage() {
   const [role, setRole] = useState<"client" | "monk">("client");
 
   const content = {
-    leftTitle: t({ mn: "Ариун хамт олонд <br/> нэгдээрэй", en: "Join the <br/> Sacred Sangha" }),
+    leftTitle: t({ mn: "Xамт олонд <br/> нэгдээрэй", en: "Join the <br/>us" }),
     leftDesc: t({
       mn: "\"Мянган бээрийн аялал нэг алхмаас эхэлдэг. Бидэнтэй нэгдэж, амар амгалан, гэгээрлийн төлөөх замаа өнөөдөр эхлүүлээрэй.\"",
       en: "\"A journey of a thousand miles begins with a single step. Join us and begin your path towards peace and enlightenment today.\""
@@ -110,7 +110,7 @@ export default function SignUpPage() {
           <div className="text-center mb-8">
              <Link href="/" className="inline-flex items-center gap-2 text-[#D97706] hover:text-[#B45309] transition-colors mb-6 group">
                 <Flower size={20} className="group-hover:rotate-180 transition-transform duration-700" />
-                <span className="font-bold font-sans uppercase tracking-widest text-xs">Nirvana</span>
+                <span className="font-bold font-sans uppercase tracking-widest text-xs">Гэвабол</span>
              </Link>
              <h2 className="text-3xl font-bold text-[#451a03] mb-3">{content.beginJourney}</h2>
              <p className="text-[#78350F]/70 text-sm font-sans">{content.identifyDesc}</p>

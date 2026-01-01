@@ -81,7 +81,7 @@ export default function MissionPage() {
     heroHeadline1: t({ mn: "Цаг хугацаа, орон зайг", en: "Transcending" }),
     heroHeadline2: t({ mn: "үл хамааран", en: "Infinite Realms" }),
     heroSubtitle: t({ mn: "Оюун санааны амар амгаланг танд түгээнэ.", en: "Distributing the light of inner peace." }),
-    missionTag: t({ mn: "Бидний Эрхэм Зорилго", en: "Our Sacred Mission" }),
+    missionTag: t({ mn: "Бидний Эрхэм Зорилго", en: "Our  Mission" }),
     missionTitle: t({ mn: "Амар амгалангийн үрийг тарих", en: "Planting Seeds of Peace" }),
     stats: [
       { number: "24/7", label: t({ mn: "Онлайн Зөвлөгөө", en: "Eternal Guide" }), icon: <Star /> },
@@ -170,13 +170,13 @@ export default function MissionPage() {
                      <MissionArtifact 
                         icon={<Sparkles />}
                         title={t({ mn: "Гэрээсээ холбогд", en: "Digital Presence" })}
-                        desc={t({ mn: "Видео дуудлагаар багштайгаа шууд уулзах боломж.", en: "Face-to-face sacred connection via the digital portal." })}
+                        desc={t({ mn: "Видео дуудлагаар багштайгаа шууд уулзах боломж.", en: "Face-to-face  connection via the digital portal." })}
                         isNight={isNight}
                         theme={theme}
                      />
                      <MissionArtifact 
                         icon={<Eye />}
-                        title={t({ mn: "Засал ном", en: "Sacred Rituals" })}
+                        title={t({ mn: "Засал ном", en: " Rituals" })}
                         desc={t({ mn: "Уламжлалт зан үйлийг байгаа газраасаа авах.", en: "Receive traditional remedies at your sanctuary of choice." })}
                         isNight={isNight}
                         theme={theme}
@@ -199,7 +199,7 @@ export default function MissionPage() {
                     The Global Sangha
                  </h2>
                  <p className={`text-2xl font-serif italic ${isNight ? 'text-indigo-400' : 'text-amber-600'}`}>
-                    "Nirvana at your fingertips"
+                    "Gevabol at your fingertips"
                  </p>
               </header>
 

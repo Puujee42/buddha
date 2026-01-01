@@ -59,7 +59,7 @@ export default function DashboardPage() {
   // --- TRANSLATION DICTIONARY ---
   const TEXT = {
     en: {
-      clientRole: "Sacred Seeker",
+      clientRole: "Seeker",
       earnings: "Total Earnings",
       bookBtn: "Book New Ritual",
       availability: "Availability Manager",
