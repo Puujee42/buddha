@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { 
@@ -12,28 +12,19 @@ import {
   MapPin, 
   Phone,
   Sun,
-  Moon,
   Flower,
-  Sparkles,
   Infinity as InfinityIcon,
   Orbit,
   Star
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useTheme } from "next-themes";
 
 export default function GoldenNirvanaFooter() {
   const { t } = useLanguage();
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  if (!mounted) return null;
 
   const isDark =false;
 
