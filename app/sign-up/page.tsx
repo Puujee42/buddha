@@ -13,6 +13,7 @@ import {
   ScrollText
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import OverlayNavbar from "../components/Navbar";
 
 // --- CUSTOM SVG: The Endless Knot ---
 const EndlessKnot = ({ className }: { className?: string }) => (
@@ -51,7 +52,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen w-full flex bg-[#FFFBEB] font-serif selection:bg-[#F59E0B] selection:text-white overflow-hidden">
-      
+      <OverlayNavbar />
       {/* --- LEFT SIDE (Unchanged) --- */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-[#451a03]">
         <motion.div 
