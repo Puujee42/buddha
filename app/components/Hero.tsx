@@ -31,10 +31,6 @@ export default function Hero() {
     highlight: t({ mn: "Оюун", en: "Spiritual" }),
     main: t({ mn: "санааны амар амгаланг гэрээсээ...", en: "peace from the comfort of home..." }),
     desc: t({
-
-
-
-      
       mn: "Гандантэгчинлэн хийд болон бусад томоохон хийдүүдийн туршлагатай лам хуврагуудтай шууд холбогдоно.",
       en: "Connect directly with experienced monks from Gandantegchinlen and other major monasteries."
     }),
