@@ -59,3 +59,35 @@ export async function GET(request: Request, props: Props) {
     );
   }
 }
+
+export async function PATCH(request: Request, props: Props) {
+  try {
+    const params = await props.params;
+    const { id } = params;
+    const body = await request.json();
+
+    const { db } = await connectToDatabase();
+
+    // Prevent updating sensitive fields via this route if necessary
+    // For now, we allow updating the fields provided in the body
+    const { _id, clerkId, role, ...updateFields } = body;
+
+    const result = await db.collection("users").updateOne(
+      { _id: new ObjectId(id), role: "monk" },
+      { $set: updateFields }
+    );
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ message: "Monk profile not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Profile updated", success: true });
+
+  } catch (error: any) {
+    console.error("Profile Update Error:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error", error: error.message },
+      { status: 500 }
+    );
+  }
+}

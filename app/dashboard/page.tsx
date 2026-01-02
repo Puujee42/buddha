@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { 
   Sun, Clock, ScrollText, Plus, Trash2, X, History, Video, 
-  Loader2, Save, Ban, CheckCircle
+  Loader2, Save, Ban, CheckCircle, Edit, ImageIcon, Upload
 } from "lucide-react";
 import OverlayNavbar from "../components/Navbar";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -35,6 +35,15 @@ interface UserProfile {
   schedule?: { day: string; start: string; end: string; active: boolean }[]; 
   blockedSlots?: BlockedSlot[];
   earnings?: number;
+  // Added fields for profile editing
+  image?: string;
+  avatar?: string; // for client
+  bio?: { mn: string; en: string };
+  specialties?: string[];
+  education?: { mn: string; en: string };
+  philosophy?: { mn: string; en: string };
+  yearsOfExperience?: number;
+  video?: string;
 }
 
 interface Booking {
@@ -94,6 +103,19 @@ export default function DashboardPage() {
       alertSaved: "Availability updated successfully!",
       alertSent: "Request sent!",
       alertDelete: "Delete this service?",
+      editProfile: "Edit Profile",
+      saveProfile: "Save Profile",
+      modalProfileTitle: "Edit Profile",
+      labelNameMN: "Name (MN)",
+      labelNameEN: "Name (EN)",
+      labelTitleMN: "Title (MN)",
+      labelTitleEN: "Title (EN)",
+      labelBioMN: "Bio (MN)",
+      labelBioEN: "Bio (EN)",
+      labelExp: "Years of Experience",
+      labelSpecialties: "Specialties (comma separated)",
+      labelImage: "Profile Image",
+      uploading: "Uploading...",
     },
     mn: {
       clientRole: "Эрхэм сүсэгтэн",
@@ -131,6 +153,19 @@ export default function DashboardPage() {
       alertSaved: "Амжилттай хадгалагдлаа!",
       alertSent: "Хүсэлт илгээгдлээ!",
       alertDelete: "Та энэ үйлчилгээг устгахдаа итгэлтэй байна уу?",
+      editProfile: "Профайл засах",
+      saveProfile: "Хадгалах",
+      modalProfileTitle: "Профайл засах",
+      labelNameMN: "Нэр (Монгол)",
+      labelNameEN: "Нэр (Англи)",
+      labelTitleMN: "Цол (Монгол)",
+      labelTitleEN: "Цол (Англи)",
+      labelBioMN: "Намтар (Монгол)",
+      labelBioEN: "Намтар (Англи)",
+      labelExp: "Ажилласан жил",
+      labelSpecialties: "Мэргэшсэн чиглэл (таслалаар тусгаарлах)",
+      labelImage: "Профайл зураг",
+      uploading: "Хуулж байна...",
     }
   }[langKey];
 
@@ -148,10 +183,15 @@ export default function DashboardPage() {
   // --- MODALS ---
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); 
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
   // --- FORMS ---
   const [serviceForm, setServiceForm] = useState({ nameEn: "", nameMn: "", price: 0, duration: "30 min" });
   const [bookingForm, setBookingForm] = useState({ monkId: "", serviceId: "", date: "", time: "" });
+  
+  // Profile Edit Form State
+  const [editForm, setEditForm] = useState<any>({});
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // --- SCHEDULE STATE (Monk Side) ---
   const [schedule, setSchedule] = useState<{ day: string; start: string; end: string; active: boolean }[]>(
@@ -346,6 +386,7 @@ export default function DashboardPage() {
     } catch (e) { console.error(e); }
   };
 
+
   const joinVideoCall = async (id: string) => {
       setJoiningRoomId(id);
       try {
@@ -354,6 +395,59 @@ export default function DashboardPage() {
         setActiveRoomToken(data.token); 
         setActiveRoomName(id);
       } catch (e) { console.error(e); } finally { setJoiningRoomId(null); }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    
+    // Create form data
+    const data = new FormData();
+    data.append("file", file);
+    if(uploadPreset) data.append("upload_preset", uploadPreset);
+    
+    try {
+      if(!cloudName || !uploadPreset) throw new Error("Missing Cloudinary config");
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: data });
+      if (!res.ok) throw new Error("Image upload failed");
+      const fileData = await res.json();
+      
+      setEditForm((prev: any) => ({ ...prev, image: fileData.secure_url, avatar: fileData.secure_url }));
+    } catch (error: any) {
+      console.error(error);
+      alert(`Upload failed: ${error.message}`);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    if(!profile) return;
+    setIsSaving(true);
+    try {
+        const endpoint = isMonk ? `/api/monks/${profile._id}` : `/api/users/${user?.id}`; // Use Clerk ID for client update if profile._id is temp
+        
+        // Prepare payload
+        const payload = { ...editForm };
+        // Clean up some fields if needed
+        
+        const res = await fetch(endpoint, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if(res.ok) {
+            alert(TEXT.alertSaved);
+            setProfile({ ...profile, ...editForm });
+            setIsEditProfileModalOpen(false);
+        } else {
+            alert("Failed to update profile.");
+        }
+    } catch(e) { console.error(e); } finally { setIsSaving(false); }
   };
 
   if (!isLoaded) return null;
@@ -382,7 +476,9 @@ export default function DashboardPage() {
         <section className="container mx-auto mb-12">
             <div className="bg-[#451a03] rounded-[3rem] p-8 md:p-12 text-[#FFFBEB] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="flex items-center gap-8">
-                    <div className="scale-[2] origin-center"><UserButton /></div>
+                    <div className="scale-[2] origin-center relative">
+                        <UserButton />
+                    </div>
                     <div>
                         <h1 className="text-3xl md:text-5xl font-serif font-bold">{profile?.name?.[langKey] || user?.fullName}</h1>
                         <p className="text-[#FDE68A]/80 uppercase tracking-widest mt-2">{isMonk ? profile?.title?.[langKey] : TEXT.clientRole}</p>
@@ -394,11 +490,21 @@ export default function DashboardPage() {
                         )}
                     </div>
                 </div>
-                {!isMonk && (
-                    <button onClick={() => setIsBookingModalOpen(true)} className="bg-[#D97706] text-white px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-[#B45309] shadow-lg flex items-center gap-3">
-                        <Plus size={18} /> {TEXT.bookBtn}
-                    </button>
-                )}
+                
+                <div className="flex flex-col md:flex-row gap-4 items-center">
+                    <button onClick={() => {
+                        setEditForm(profile || {});
+                        setIsEditProfileModalOpen(true);
+                     }} className="bg-white/10 text-white px-6 py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-white/20 flex items-center gap-3 border border-white/20 backdrop-blur-sm transition-all">
+                        <Edit size={18} /> {TEXT.editProfile}
+                     </button>
+
+                    {!isMonk && (
+                        <button onClick={() => setIsBookingModalOpen(true)} className="bg-[#D97706] text-white px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-[#B45309] shadow-lg flex items-center gap-3">
+                            <Plus size={18} /> {TEXT.bookBtn}
+                        </button>
+                    )}
+                </div>
             </div>
         </section>
 
@@ -664,6 +770,120 @@ export default function DashboardPage() {
                             <button onClick={() => setIsServiceModalOpen(false)} className="flex-1 py-3 border rounded-xl font-bold text-stone-500">{TEXT.cancel}</button>
                             <button onClick={submitService} className="flex-1 py-3 bg-[#D97706] text-white rounded-xl font-bold flex items-center justify-center gap-2">
                                 {isSaving ? <Loader2 className="animate-spin"/> : TEXT.submitReview}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+
+        {/* --- EDIT PROFILE MODAL --- */}
+        <AnimatePresence>
+            {isEditProfileModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-[2rem] p-8 w-full max-w-2xl shadow-2xl h-[85vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-bold font-serif text-[#451a03] flex items-center gap-2">
+                                <Edit size={24} className="text-[#D97706]"/> {TEXT.modalProfileTitle}
+                            </h3>
+                            <button onClick={() => setIsEditProfileModalOpen(false)} className="p-2 hover:bg-stone-100 rounded-full transition-colors"><X size={24}/></button>
+                        </div>
+                        
+                        <div className="space-y-6">
+                            
+                            {/* Profile Image */}
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-[#FDE68A] shadow-lg group">
+                                    <img 
+                                        src={editForm.image || editForm.avatar || user?.imageUrl} 
+                                        alt="Profile" 
+                                        className="w-full h-full object-cover" 
+                                    />
+                                    <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+                                        {uploadingImage ? <Loader2 className="animate-spin text-white"/> : <Upload className="text-white"/>}
+                                    </label>
+                                </div>
+                                <p className="text-xs text-stone-400 font-bold uppercase tracking-widest">{TEXT.labelImage}</p>
+                            </div>
+
+                            {/* FIELDS */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Name */}
+                                {isMonk ? (
+                                    <>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelNameMN}</label>
+                                            <input className="w-full p-3 border rounded-xl" value={editForm.name?.mn || ""} onChange={e => setEditForm({...editForm, name: {...editForm.name, mn: e.target.value}})} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelNameEN}</label>
+                                            <input className="w-full p-3 border rounded-xl" value={editForm.name?.en || ""} onChange={e => setEditForm({...editForm, name: {...editForm.name, en: e.target.value}})} />
+                                        </div>
+                                    </>
+                                ) : (
+                                    // Client Name (Usually single field but we support MN/EN for consistency if needed, but lets stick to simple if client)
+                                    // Dashboard uses profile.name.mn/en. If client is "temp", it constructs from user.fullName.
+                                    // If we save, we should save consistent structure.
+                                    <>
+                                         <div className="space-y-1 col-span-2">
+                                            <label className="text-xs font-bold uppercase text-[#D97706]">{language === 'mn' ? TEXT.labelNameMN : TEXT.labelNameEN}</label>
+                                            {/* We update both EN and MN for client to keep it simple or just update the one matching lang */}
+                                            <input className="w-full p-3 border rounded-xl" value={editForm.name?.mn || editForm.name?.en || ""} 
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    setEditForm({...editForm, name: { mn: val, en: val }});
+                                                }} 
+                                            />
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Monk Specific Fields */}
+                                {isMonk && (
+                                    <>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelTitleMN}</label>
+                                            <input className="w-full p-3 border rounded-xl" value={editForm.title?.mn || ""} onChange={e => setEditForm({...editForm, title: {...editForm.title, mn: e.target.value}})} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelTitleEN}</label>
+                                            <input className="w-full p-3 border rounded-xl" value={editForm.title?.en || ""} onChange={e => setEditForm({...editForm, title: {...editForm.title, en: e.target.value}})} />
+                                        </div>
+
+                                        <div className="col-span-1 md:col-span-2 space-y-1">
+                                            <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelBioMN}</label>
+                                            <textarea rows={3} className="w-full p-3 border rounded-xl" value={editForm.bio?.mn || ""} onChange={e => setEditForm({...editForm, bio: {...editForm.bio, mn: e.target.value}})} />
+                                        </div>
+                                        <div className="col-span-1 md:col-span-2 space-y-1">
+                                            <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelBioEN}</label>
+                                            <textarea rows={3} className="w-full p-3 border rounded-xl" value={editForm.bio?.en || ""} onChange={e => setEditForm({...editForm, bio: {...editForm.bio, en: e.target.value}})} />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelExp}</label>
+                                            <input type="number" className="w-full p-3 border rounded-xl" value={editForm.yearsOfExperience || 0} onChange={e => setEditForm({...editForm, yearsOfExperience: Number(e.target.value)})} />
+                                        </div>
+                                        
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelSpecialties}</label>
+                                            <input 
+                                                className="w-full p-3 border rounded-xl" 
+                                                value={editForm.specialties?.join(", ") || ""} 
+                                                onChange={e => setEditForm({...editForm, specialties: e.target.value.split(",").map((s: string) => s.trim())})} 
+                                                placeholder={TEXT.labelSpecialties}
+                                            />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                            
+                            <button 
+                                onClick={saveProfile} 
+                                disabled={isSaving || uploadingImage} 
+                                className="w-full py-4 bg-[#D97706] text-white rounded-2xl font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-[#B45309] transition-all"
+                            >
+                                {isSaving ? <Loader2 className="animate-spin"/> : <Save size={20}/>} {TEXT.saveProfile}
                             </button>
                         </div>
                     </motion.div>
