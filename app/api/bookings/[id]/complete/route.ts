@@ -41,13 +41,16 @@ export async function POST(request: Request, props: Props) {
         );
     }
 
-    // 4. Mark Booking as Completed
+    // 4. Delete Chat Messages (Cleanup)
+    await db.collection("messages").deleteMany({ bookingId: id });
+
+    // 5. Mark Booking as Completed
     await db.collection("bookings").updateOne(
         { _id: new ObjectId(id) },
         { $set: { status: 'completed', updatedAt: new Date() } }
     );
 
-    return NextResponse.json({ success: true, message: "Booking completed and payment added." });
+    return NextResponse.json({ success: true, message: "Booking completed, payment added, and chat history cleaned." });
 
   } catch (error: any) {
     console.error("Complete Booking Error:", error);

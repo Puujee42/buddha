@@ -124,3 +124,12 @@ export interface Service{
     en: string;
   };
 }
+
+export interface Message {
+  _id?: ObjectId | string;
+  bookingId: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  createdAt: Date;
+}

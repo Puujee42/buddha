@@ -5,11 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { 
   Sun, Clock, ScrollText, Plus, Trash2, X, History, Video, 
-  Loader2, Save, Ban, CheckCircle, Edit, ImageIcon, Upload
+  Loader2, Save, Ban, CheckCircle, Edit, ImageIcon, Upload, MessageCircle
 } from "lucide-react";
 import OverlayNavbar from "../components/Navbar";
 import { useLanguage } from "../contexts/LanguageContext";
 import LiveRitualRoom from "../components/LiveRitualRoom";
+import ChatWindow from "../components/ChatWindow";
 
 // --- TYPES ---
 interface ServiceItem {
@@ -116,6 +117,11 @@ export default function DashboardPage() {
       labelSpecialties: "Specialties (comma separated)",
       labelImage: "Profile Image",
       uploading: "Uploading...",
+      enterRoom: "Enter Ritual Room",
+      startsIn: "Starts in",
+      roomOpen: "Room Open",
+      roomClosed: "Room Closed",
+      startVideo: "Start Video Call"
     },
     mn: {
       clientRole: "Эрхэм сүсэгтэн",
@@ -166,6 +172,11 @@ export default function DashboardPage() {
       labelSpecialties: "Мэргэшсэн чиглэл (таслалаар тусгаарлах)",
       labelImage: "Профайл зураг",
       uploading: "Хуулж байна...",
+      enterRoom: "Өрөөнд орох",
+      startsIn: "Эхлэхэд",
+      roomOpen: "Өрөө нээлттэй",
+      roomClosed: "Хаагдсан",
+      startVideo: "Видео дуудлага эхлүүлэх"
     }
   }[langKey];
 
@@ -184,6 +195,9 @@ export default function DashboardPage() {
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); 
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  
+  // Ritual Room Modal (Chat + Video Trigger)
+  const [activeBookingForRoom, setActiveBookingForRoom] = useState<Booking | null>(null);
 
   // --- FORMS ---
   const [serviceForm, setServiceForm] = useState({ nameEn: "", nameMn: "", price: 0, duration: "30 min" });
@@ -288,6 +302,32 @@ export default function DashboardPage() {
       return slots;
   }, [selectedBlockDate, schedule]);
 
+  // --- HELPER: CHECK RITUAL AVAILABILITY ---
+  const checkRitualAvailability = (booking: Booking) => {
+    // 1. Parse Date/Time
+    const bookingDateTime = new Date(`${booking.date}T${booking.time}`);
+    const now = new Date();
+    
+    // 2. Open Window: 30 minutes before
+    const openTime = new Date(bookingDateTime.getTime() - 30 * 60 * 1000); // -30 mins
+    
+    // 3. Close Window: Assuming 1 hour duration + padding if not specified
+    // Ideally we fetch duration, but let's assume 2 hours max window for safety
+    const closeTime = new Date(bookingDateTime.getTime() + 2 * 60 * 60 * 1000); 
+
+    if (now >= openTime && now <= closeTime) {
+      return { isOpen: true, message: TEXT.roomOpen };
+    } else if (now < openTime) {
+      // Calculate time left
+      const diffMs = openTime.getTime() - now.getTime();
+      const diffHrs = Math.floor(diffMs / 3600000);
+      const diffMins = Math.floor((diffMs % 3600000) / 60000);
+      return { isOpen: false, message: `${TEXT.startsIn} ${diffHrs}h ${diffMins}m` };
+    } else {
+      return { isOpen: false, message: TEXT.roomClosed };
+    }
+  };
+
   // --- ACTIONS ---
 
   const saveScheduleSettings = async () => {
@@ -301,6 +341,20 @@ export default function DashboardPage() {
         });
         if (res.ok) alert(TEXT.alertSaved);
     } catch (e) { console.error(e); } finally { setIsSaving(false); }
+  };
+
+  const completeSession = async (bookingId: string) => {
+      if (!confirm("Are you sure you want to complete this session? This will close the room and delete chat history.")) return;
+      setIsSaving(true);
+      try {
+          const res = await fetch(`/api/bookings/${bookingId}/complete`, { method: 'POST' });
+          if (res.ok) {
+              alert("Session completed successfully.");
+              setActiveBookingForRoom(null);
+              // Update local state to reflect completion without reload
+              setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'completed' } : b));
+          }
+      } catch (e) { console.error(e); } finally { setIsSaving(false); }
   };
 
   const toggleBlockSlot = (time: string) => {
@@ -335,14 +389,19 @@ export default function DashboardPage() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 ...bookingForm,
-                clientName: profile?.name?.en || user?.fullName,
-                clientId: profile?._id
+                userName: profile?.name?.[langKey] || user?.fullName,
+                userEmail: user?.primaryEmailAddress?.emailAddress,
+                userId: profile?._id === "temp_client" ? user?.id : profile?._id,
+                serviceId: bookingForm.serviceId
             })
         });
         if(res.ok) { 
             alert(TEXT.alertSent); 
             setIsBookingModalOpen(false); 
             window.location.reload(); 
+        } else {
+            const err = await res.json();
+            alert(err.message || "Booking failed");
         }
     } catch(e) { console.error(e); } finally { setIsSaving(false); }
   };
@@ -428,16 +487,13 @@ export default function DashboardPage() {
     if(!profile) return;
     setIsSaving(true);
     try {
-        const endpoint = isMonk ? `/api/monks/${profile._id}` : `/api/users/${user?.id}`; // Use Clerk ID for client update if profile._id is temp
-        
-        // Prepare payload
-        const payload = { ...editForm };
-        // Clean up some fields if needed
+        const isActuallyMonk = profile.role === 'monk';
+        const endpoint = isActuallyMonk ? `/api/monks/${profile._id}` : `/api/users/${user?.id}`; 
         
         const res = await fetch(endpoint, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(editForm)
         });
 
         if(res.ok) {
@@ -455,15 +511,10 @@ export default function DashboardPage() {
 
   if (activeRoomToken && activeRoomName) {
     return <LiveRitualRoom token={activeRoomToken} serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL!} roomName={activeRoomName} onLeave={async () => { 
-        if(activeRoomName) {
-            try {
-                // End call logic: Add payment and complete booking
-                await fetch(`/api/bookings/${activeRoomName}/complete`, { method: 'POST' });
-            } catch(e) { console.error(e); }
-        }
+        // End call logic: just close video, don't necessarily end booking or reload
+        // We might want to keep the chat open
         setActiveRoomToken(null); 
         setActiveRoomName(null);
-        window.location.reload(); 
     }} />;
   }
 
@@ -524,6 +575,64 @@ export default function DashboardPage() {
                      </div>
 
                      {/* 1. Weekly Schedule */}
+                     <div className="mb-10">
+                         <h3 className="font-bold text-xs uppercase text-stone-400 tracking-widest mb-4">{TEXT.step1}</h3>
+                         <div className="space-y-3">
+                             {DAYS_EN.map((day, idx) => {
+                                 const config = schedule.find(s => s.day === day) || { day, start: "09:00", end: "17:00", active: false };
+                                 return (
+                                     <div key={day} className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-2xl border transition-all ${config.active ? 'bg-white border-[#D97706]/20' : 'bg-stone-50 border-stone-100 opacity-60'}`}>
+                                         <div className="flex items-center gap-3 mb-2 md:mb-0">
+                                             <input 
+                                                 type="checkbox" 
+                                                 checked={config.active} 
+                                                 onChange={(e) => {
+                                                     const newSchedule = [...schedule];
+                                                     const dayIdx = newSchedule.findIndex(s => s.day === day);
+                                                     if (dayIdx > -1) {
+                                                         newSchedule[dayIdx].active = e.target.checked;
+                                                     } else {
+                                                         newSchedule.push({ day, start: "09:00", end: "17:00", active: e.target.checked });
+                                                     }
+                                                     setSchedule(newSchedule);
+                                                 }}
+                                                 className="w-5 h-5 accent-[#D97706]"
+                                             />
+                                             <span className="font-bold text-[#451a03] min-w-[100px]">{DAYS_MN[idx]} ({day.slice(0,3)})</span>
+                                         </div>
+                                         
+                                         {config.active && (
+                                             <div className="flex items-center gap-2">
+                                                 <input 
+                                                     type="time" 
+                                                     value={config.start} 
+                                                     onChange={(e) => {
+                                                         const newSchedule = [...schedule];
+                                                         const dayIdx = newSchedule.findIndex(s => s.day === day);
+                                                         newSchedule[dayIdx].start = e.target.value;
+                                                         setSchedule(newSchedule);
+                                                     }}
+                                                     className="p-2 rounded-lg border border-stone-200 text-xs font-bold"
+                                                 />
+                                                 <span className="text-stone-400 font-bold">-</span>
+                                                 <input 
+                                                     type="time" 
+                                                     value={config.end} 
+                                                     onChange={(e) => {
+                                                         const newSchedule = [...schedule];
+                                                         const dayIdx = newSchedule.findIndex(s => s.day === day);
+                                                         newSchedule[dayIdx].end = e.target.value;
+                                                         setSchedule(newSchedule);
+                                                     }}
+                                                     className="p-2 rounded-lg border border-stone-200 text-xs font-bold"
+                                                 />
+                                             </div>
+                                         )}
+                                     </div>
+                                 );
+                             })}
+                         </div>
+                     </div>
                     
                      {/* 2. Block Specific Times */}
                      <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
@@ -593,32 +702,48 @@ export default function DashboardPage() {
              <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-white">
                  <h2 className="text-2xl font-serif font-bold text-[#451a03] mb-6 flex items-center gap-3"><History className="text-[#78350F]"/> {isMonk ? TEXT.ritualsClient : TEXT.ritualsMy}</h2>
                  <div className="space-y-4">
-                     {bookings.length > 0 ? bookings.map((b) => (
-                         <div key={b._id} className="p-5 rounded-2xl border border-stone-100 flex justify-between items-center">
-                             <div>
-                                 <h4 className="font-bold text-[#451a03]">{b.clientName}</h4>
-                                 <p className="text-xs text-stone-500">{b.date} • {b.time}</p>
-                                 <p className="text-[10px] text-[#D97706] font-bold mt-1">
-                                     {typeof b.serviceName === 'string' ? b.serviceName : b.serviceName?.[langKey]}
-                                 </p>
-                             </div>
-                             <div className="flex gap-2">
-                                 {b.status === 'confirmed' ? (
-                                     <button 
-                                        onClick={() => joinVideoCall(b._id)} 
-                                        disabled={joiningRoomId === b._id}
-                                        className="px-4 py-2 bg-[#05051a] text-white rounded-lg text-xs font-black uppercase flex items-center gap-2"
-                                     >
-                                         {joiningRoomId === b._id ? <Loader2 className="animate-spin" size={14}/> : <Video size={14}/>} {TEXT.join}
-                                     </button>
-                                 ) : (
-                                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${b.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-stone-100 text-stone-500 border-stone-200'}`}>
-                                         {b.status === 'pending' ? TEXT.pending : b.status}
-                                     </span>
-                                 )}
-                             </div>
-                         </div>
-                     )) : <p className="text-stone-400 italic text-center py-4">{TEXT.noRituals}</p>}
+                     {bookings.length > 0 ? bookings.map((b) => {
+                         const availability = checkRitualAvailability(b);
+                         return (
+                            <div key={b._id} className="p-5 rounded-2xl border border-stone-100 flex justify-between items-center bg-stone-50/50">
+                                <div>
+                                    <h4 className="font-bold text-[#451a03]">{b.clientName}</h4>
+                                    <p className="text-xs text-stone-500">{b.date} • {b.time}</p>
+                                    <p className="text-[10px] text-[#D97706] font-bold mt-1">
+                                        {typeof b.serviceName === 'string' ? b.serviceName : b.serviceName?.[langKey]}
+                                    </p>
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                    {b.status === 'confirmed' ? (
+                                        <>
+                                            {availability.isOpen ? (
+                                                <button 
+                                                    onClick={() => setActiveBookingForRoom(b)} 
+                                                    className="px-4 py-2 bg-[#D97706] text-white rounded-lg text-xs font-black uppercase flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-[#B45309] animate-pulse"
+                                                >
+                                                    <MessageCircle size={14} /> {TEXT.enterRoom}
+                                                </button>
+                                            ) : (
+                                                <div className="flex flex-col items-end">
+                                                     <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-stone-100 text-stone-400 border border-stone-200">
+                                                        {TEXT.join} ({availability.message})
+                                                     </span>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : b.status === 'completed' ? (
+                                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-green-100 text-green-600 border border-green-200 flex items-center gap-1">
+                                            <CheckCircle size={12}/> Completed
+                                        </span>
+                                    ) : (
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${b.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-stone-100 text-stone-500 border-stone-200'}`}>
+                                            {b.status === 'pending' ? TEXT.pending : b.status}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                         );
+                     }) : <p className="text-stone-400 italic text-center py-4">{TEXT.noRituals}</p>}
                  </div>
              </div>
 
@@ -667,6 +792,55 @@ export default function DashboardPage() {
               </div>
           </div>
         </section>
+
+        {/* --- RITUAL ROOM MODAL (Chat + Video) --- */}
+        <AnimatePresence>
+            {activeBookingForRoom && (
+                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-[2rem] p-6 w-full max-w-lg shadow-2xl h-[80vh] flex flex-col">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 className="text-xl font-bold font-serif text-[#451a03] flex items-center gap-2">
+                                    <Video className="text-[#D97706]"/> Ritual Room
+                                </h3>
+                                <p className="text-xs text-stone-500">{activeBookingForRoom.clientName} • {activeBookingForRoom.date}</p>
+                            </div>
+                            <button onClick={() => setActiveBookingForRoom(null)} className="p-2 hover:bg-stone-100 rounded-full"><X size={20}/></button>
+                        </div>
+                        
+                        {/* Video Call Trigger */}
+                        <div className="mb-4 space-y-2">
+                             <button 
+                                onClick={() => joinVideoCall(activeBookingForRoom._id)} 
+                                disabled={joiningRoomId === activeBookingForRoom._id}
+                                className="w-full py-4 bg-[#05051a] text-white rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg"
+                             >
+                                 {joiningRoomId === activeBookingForRoom._id ? <Loader2 className="animate-spin" /> : <Video size={20}/>} {TEXT.startVideo}
+                             </button>
+                             
+                             {isMonk && (
+                                 <button 
+                                    onClick={() => completeSession(activeBookingForRoom._id)}
+                                    disabled={isSaving}
+                                    className="w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-100 border border-red-100 transition-all"
+                                 >
+                                     {isSaving ? <Loader2 className="animate-spin" size={16}/> : <CheckCircle size={16}/>} Complete Session
+                                 </button>
+                             )}
+                        </div>
+
+                        {/* Chat Window */}
+                        <div className="flex-1 overflow-hidden rounded-xl border border-stone-200">
+                             <ChatWindow 
+                                bookingId={activeBookingForRoom._id} 
+                                currentUserId={profile?._id || user?.id || "anon"} 
+                                currentUserName={profile?.name?.[langKey] || user?.fullName || "Anonymous"} 
+                             />
+                        </div>
+                    </motion.div>
+                 </div>
+            )}
+        </AnimatePresence>
 
         {/* --- CLIENT BOOKING MODAL --- */}
         <AnimatePresence>
