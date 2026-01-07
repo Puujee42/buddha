@@ -108,18 +108,40 @@ export default function MajesticTarotSection() {
         const res = await fetch('/api/monks');
         const data: Monk[] = await res.json();
         
-        // LIMIT TO 3 MONKS FOR PERFORMANCE
-        const limitedData = data.slice(0, 3);
+        let processedMonks: MonkData[] = [];
 
-        const mappedMonks: MonkData[] = limitedData.map((m, i) => ({
-          id: m._id?.toString() || `temp-${i}`,
-          arcana: RUNES[i % RUNES.length],
-          name: m.name,
-          title: m.title,
-          video: m.video || "/num1.mp4"
-        }));
+        try {
+            // Attempt to use Rust Wasm for high-performance sorting/scoring
+            // @ts-ignore - Module might not be installed yet
+            const wasm = await import("rust-modules");
+            const result = JSON.parse(wasm.process_monks(JSON.stringify(data)));
+            
+            console.log("Using Rust Wasm for Monk Processing 🦀");
+
+            // Map the Rust result back to UI format
+            processedMonks = result.map((m: any) => ({
+                id: m.id,
+                arcana: m.arcana,
+                name: m.name,
+                title: m.title,
+                video: m.video
+            }));
+
+        } catch (wasmError) {
+             // JS Fallback logic if Wasm fails or isn't installed
+            // LIMIT TO 3 MONKS FOR PERFORMANCE
+            const limitedData = data.slice(0, 3);
+
+            processedMonks = limitedData.map((m, i) => ({
+              id: m._id?.toString() || `temp-${i}`,
+              arcana: RUNES[i % RUNES.length],
+              name: m.name,
+              title: m.title,
+              video: m.video || "/num1.mp4"
+            }));
+        }
         
-        setMonks(mappedMonks);
+        setMonks(processedMonks);
       } catch (e) {
         console.error("Failed to fetch monks for section", e);
       }
