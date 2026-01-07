@@ -249,7 +249,6 @@ export default function AboutPage() {
                     </div>
                 </section>
 
-                <GoldenNirvanaFooter />
             </motion.div>
         )}
       </AnimatePresence>
