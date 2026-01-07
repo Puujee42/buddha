@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Calendar, Clock, CheckCircle2, Loader2,
-  Sun, Orbit, Star, Users, Sparkles
+  Sun, Orbit, Star, Users, Sparkles, LogIn
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useUser } from "@clerk/nextjs"; 
@@ -64,7 +64,7 @@ export default function RitualBookingPage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { t, language } = useLanguage();
   const { resolvedTheme } = useTheme();
-  const { user } = useUser(); 
+  const { user, isSignedIn } = useUser(); 
 
   const [mounted, setMounted] = useState(false);
   const [service, setService] = useState<any | null>(null); 
@@ -219,6 +219,10 @@ export default function RitualBookingPage() {
   const times = ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
 
   const handleBooking = async () => {
+    if (!isSignedIn) {
+      alert(t({mn: "Та захиалга өгөхийн тулд нэвтрэх шаардлагатай.", en: "Please sign in to book a ritual."}));
+      return;
+    }
     if (!userName || !userEmail || !selectedTime || !selectedMonk || selectedDateIndex === null || !service) {
       alert("Please fill all required fields and select a monk and time.");
       return;
@@ -554,17 +558,30 @@ export default function RitualBookingPage() {
                             onChange={(e) => setUserNote(e.target.value)}
                             whileFocus={{ scale: 1.01 }}
                           />
-                          <motion.button
-                            disabled={!userName || !userEmail || !selectedMonk || selectedDateIndex === null || !selectedTime || isSubmitting}
-                            onClick={handleBooking}
-                            className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 disabled:opacity-30 shadow-xl ${theme.button}`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            {isSubmitting ? <Loader2 className="animate-spin" /> : <>
-                              {t({mn: "Захиалах", en: "Book Ritual"})} <Sparkles size={16} />
-                            </>}
-                          </motion.button>
+                          
+                          {isSignedIn ? (
+                            <motion.button
+                              disabled={!userName || !userEmail || !selectedMonk || selectedDateIndex === null || !selectedTime || isSubmitting}
+                              onClick={handleBooking}
+                              className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 disabled:opacity-30 shadow-xl ${theme.button}`}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              {isSubmitting ? <Loader2 className="animate-spin" /> : <>
+                                {t({mn: "Захиалах", en: "Book Ritual"})} <Sparkles size={16} />
+                              </>}
+                            </motion.button>
+                          ) : (
+                            <Link href="/sign-in" className="block w-full">
+                              <motion.button
+                                className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 shadow-xl bg-amber-600 text-white`}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                {t({mn: "Нэвтэрч захиалга өгөх", en: "Sign In to Book"})} <LogIn size={16} />
+                              </motion.button>
+                            </Link>
+                          )}
                         </motion.div>
                       )}
                     </AnimatePresence>

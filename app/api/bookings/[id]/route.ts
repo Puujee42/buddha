@@ -105,8 +105,40 @@ export async function DELETE(request: Request, props: Props) {
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ message: "Invalid Booking ID" }, { status: 400 });
     }
+    
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
     const { db } = await connectToDatabase();
+    
+    // 1. Fetch booking to check permissions
+    const booking = await db.collection("bookings").findOne({ _id: new ObjectId(id) });
+    if (!booking) {
+        return NextResponse.json({ message: "Booking not found" }, { status: 404 });
+    }
+
+    // 2. Authorization Check
+    const isClient = booking.clientId === user.id;
+    const isAdmin = user.publicMetadata.role === "admin";
+    
+    let isMonk = false;
+    if (booking.monkId) {
+       try {
+           const monkProfile = await db.collection("users").findOne({ _id: new ObjectId(booking.monkId) });
+           if (monkProfile && monkProfile.clerkId === user.id) {
+               isMonk = true;
+           }
+       } catch (e) {
+           console.error("Error fetching monk for auth check", e);
+       }
+    }
+
+    if (!isClient && !isMonk && !isAdmin) {
+        return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+
     const result = await db.collection("bookings").deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {

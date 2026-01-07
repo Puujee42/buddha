@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { ObjectId } from "mongodb";
 import { sendBookingNotification } from "@/lib/mail";
+import { auth } from "@clerk/nextjs/server";
 
 // Force dynamic to prevent caching issues (users not seeing new bookings)
 export const dynamic = "force-dynamic";
@@ -53,6 +54,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { userId: authUserId } = await auth();
+    if (!authUserId) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { monkId, date, time, userName, userEmail, serviceId, note } = body; 
 

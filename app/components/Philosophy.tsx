@@ -19,11 +19,6 @@ const RitualViewportFrame = ({ theme }: { theme: any }) => (
           SPIRITUAL HERITAGE • TECHNOLOGY • PEACE
         </span>
     </div>
-    <div className="absolute top-10 left-1/2 -translate-x-1/2 flex items-center gap-6">
-        <div className={`h-[1px] w-12 bg-current opacity-20 ${theme.textColor}`} />
-        <span className={`text-[8px] tracking-[1em] opacity-40 font-bold uppercase ${theme.textColor}`}>EST. 2025</span>
-        <div className={`h-[1px] w-12 bg-current opacity-20 ${theme.textColor}`} />
-    </div>
   </div>
 );
 

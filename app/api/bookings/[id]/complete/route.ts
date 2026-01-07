@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { ObjectId } from "mongodb";
+import { currentUser } from "@clerk/nextjs/server";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -15,6 +16,11 @@ export async function POST(request: Request, props: Props) {
       return NextResponse.json({ message: "Invalid booking ID" }, { status: 400 });
     }
 
+    const user = await currentUser();
+    if (!user) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const { db } = await connectToDatabase();
 
     // 1. Find the booking
@@ -23,12 +29,28 @@ export async function POST(request: Request, props: Props) {
       return NextResponse.json({ message: "Booking not found" }, { status: 404 });
     }
 
-    // 2. Check if already processed
+    // 2. Authorization Check (Only Monk or Admin)
+    const isAdmin = user.publicMetadata.role === "admin";
+    let isMonk = false;
+    
+    if (booking.monkId) {
+        // Fetch monk profile to check if it matches current user
+        const monkProfile = await db.collection("users").findOne({ _id: new ObjectId(booking.monkId) });
+        if (monkProfile && monkProfile.clerkId === user.id) {
+            isMonk = true;
+        }
+    }
+
+    if (!isMonk && !isAdmin) {
+        return NextResponse.json({ message: "Forbidden: Only the Monk or Admin can complete this booking." }, { status: 403 });
+    }
+
+    // 3. Check if already processed
     if (booking.status === 'completed') {
         return NextResponse.json({ message: "Booking already completed" });
     }
 
-    // 3. Update Monk's Earnings (Add 50,000 as requested)
+    // 4. Update Monk's Earnings (Add 50,000 as requested)
     const monkId = booking.monkId;
     if (monkId) {
         // monkId can be string or ObjectId in booking, ensure we match correctly
@@ -41,10 +63,10 @@ export async function POST(request: Request, props: Props) {
         );
     }
 
-    // 4. Delete Chat Messages (Cleanup)
+    // 5. Delete Chat Messages (Cleanup)
     await db.collection("messages").deleteMany({ bookingId: id });
 
-    // 5. Mark Booking as Completed
+    // 6. Mark Booking as Completed
     await db.collection("bookings").updateOne(
         { _id: new ObjectId(id) },
         { $set: { status: 'completed', updatedAt: new Date() } }

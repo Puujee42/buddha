@@ -82,7 +82,7 @@ export default function MonkBookingPage() {
   const monkId = Array.isArray(params.id) ? params.id[0] : params.id; // Monk ID from URL
   const { language, t } = useLanguage();
   const { resolvedTheme } = useTheme(); 
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   
   // Data State
   const [monk, setMonk] = useState<Monk | null>(null);
@@ -226,6 +226,10 @@ export default function MonkBookingPage() {
 
   // --- 5. SUBMIT BOOKING ---
   const handleBooking = async () => {
+    if (!isSignedIn) {
+      alert(t({mn: "Та захиалга өгөхийн тулд нэвтрэх шаардлагатай.", en: "Please sign in to book a ritual."}));
+      return;
+    }
     if(!monkId || selectedDateIndex === null || !selectedTime || !selectedService) return;
     
     setIsSubmitting(true);
@@ -476,11 +480,21 @@ export default function MonkBookingPage() {
                                                 <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme.textColor}`}>Intention / Note</label>
                                                 <textarea value={userNote} onChange={e => setUserNote(e.target.value)} className={`w-full p-4 rounded-xl border outline-none font-serif h-24 resize-none transition-all focus:ring-2 focus:ring-opacity-50 ${theme.inputBg}`} placeholder={t({mn: "Тусгай хүсэлт...", en: "Special requests..."})} />
                                             </div>
-                                            <button onClick={handleBooking} disabled={!userName || !userEmail || isSubmitting} className={`w-full py-5 rounded-2xl font-celestial font-bold text-sm uppercase tracking-widest transition-all overflow-hidden relative group disabled:opacity-50 disabled:cursor-not-allowed ${theme.primaryBtn}`}>
-                                                <span className="relative z-10 flex items-center justify-center gap-3">
-                                                    {isSubmitting ? <Loader2 className="animate-spin" /> : <>{t({mn: "Баталгаажуулах", en: "Seal Fate"})} <CreditCard size={16} /></>}
-                                                </span>
-                                            </button>
+                                            {isSignedIn ? (
+                                                <button onClick={handleBooking} disabled={!userName || !userEmail || isSubmitting} className={`w-full py-5 rounded-2xl font-celestial font-bold text-sm uppercase tracking-widest transition-all overflow-hidden relative group disabled:opacity-50 disabled:cursor-not-allowed ${theme.primaryBtn}`}>
+                                                    <span className="relative z-10 flex items-center justify-center gap-3">
+                                                        {isSubmitting ? <Loader2 className="animate-spin" /> : <>{t({mn: "Баталгаажуулах", en: "Seal Fate"})} <CreditCard size={16} /></>}
+                                                    </span>
+                                                </button>
+                                            ) : (
+                                                <Link href="/sign-in" className="block w-full">
+                                                    <button className={`w-full py-5 rounded-2xl font-celestial font-bold text-sm uppercase tracking-widest transition-all overflow-hidden relative group bg-amber-600 text-white shadow-amber-900/20`}>
+                                                        <span className="relative z-10 flex items-center justify-center gap-3">
+                                                            {t({mn: "Нэвтэрч захиалга өгөх", en: "Sign In to Book"})} <Sparkles size={16} />
+                                                        </span>
+                                                    </button>
+                                                </Link>
+                                            )}
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

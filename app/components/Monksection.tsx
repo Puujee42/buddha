@@ -108,7 +108,10 @@ export default function MajesticTarotSection() {
         const res = await fetch('/api/monks');
         const data: Monk[] = await res.json();
         
-        const mappedMonks: MonkData[] = data.map((m, i) => ({
+        // LIMIT TO 3 MONKS FOR PERFORMANCE
+        const limitedData = data.slice(0, 3);
+
+        const mappedMonks: MonkData[] = limitedData.map((m, i) => ({
           id: m._id?.toString() || `temp-${i}`,
           arcana: RUNES[i % RUNES.length],
           name: m.name,

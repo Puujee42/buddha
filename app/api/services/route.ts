@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function GET() {
   try {
@@ -47,6 +48,15 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (user.publicMetadata.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden: Only admins can create standard services" }, { status: 403 });
+    }
+
     const body = await request.json();
     const { db } = await connectToDatabase();
 
