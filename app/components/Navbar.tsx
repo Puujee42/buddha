@@ -46,7 +46,7 @@ export default function OverlayNavbar() {
 
   if (!mounted) return null;
 
-  const isDark = resolvedTheme === "dark";
+  const isDark = false;
   const toggleLanguage = () => setLanguage(lang === "mn" ? "en" : "mn");
   const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
@@ -81,7 +81,7 @@ export default function OverlayNavbar() {
             ? "w-[85%] lg:w-[1100px] py-3 px-10" 
             : "w-[90%] lg:w-[1200px] py-5 px-12"}
           ${isDark 
-            ? "bg-[#1a0505]/80 border-amber-900/40 text-amber-50 shadow-black" 
+            ? "bg-[#d4a373]/90 border-amber-700/50 text-[#451a03] shadow-amber-900/20" 
             : "bg-white/80 border-amber-100 text-[#451a03] shadow-amber-900/10"}
         `}>
           {/* Logo */}

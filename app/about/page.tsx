@@ -80,7 +80,7 @@ export default function AboutPage() {
 
   // Default to light if not mounted to prevent hydration mismatch on visual props
   // We DO NOT return early here anymore to ensure the ref is attached.
-  const isDark = mounted && resolvedTheme === "dark";
+  const isDark = false;
 
   // --- THEME CONFIG ---
   const theme = isDark ? {

@@ -138,7 +138,7 @@ export default function MonkBookingPage() {
   const [takenSlots, setTakenSlots] = useState<string[]>([]);
 
   // -- Theme --
-  const isNight = resolvedTheme === "dark";
+  const isNight = false;
 
   useEffect(() => {
     setMounted(true);

@@ -17,7 +17,7 @@ export default function Hero() {
   const { language, t } = useLanguage();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const isDark = resolvedTheme === "dark";
+  const isDark = false;
 
   const { scrollYProgress } = useScroll();
   const yContent = useTransform(scrollYProgress, [0, 0.5], [0, -50]);

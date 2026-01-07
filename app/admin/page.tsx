@@ -8,10 +8,11 @@ import {
   ShieldAlert, Users, Calendar, LayoutDashboard, 
   Search, Trash2, CheckCircle, XCircle,
   Loader2, UserCog, ScrollText, TrendingUp, Check, X,
-  FileText, Clock
+  FileText, Clock, Edit
 } from "lucide-react";
 import OverlayNavbar from "../components/Navbar"; 
 import { useTheme } from "next-themes";
+import MonkEditModal from "./MonkEditModal";
 
 // --- TYPES ---
 interface AdminData {
@@ -37,6 +38,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"overview" | "users" | "bookings" | "services" | "applications">("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [editingMonk, setEditingMonk] = useState<any>(null);
 
   const isAdmin = user?.publicMetadata?.role === "admin";
   const isDark = false;
@@ -67,6 +69,26 @@ export default function AdminDashboard() {
   }, [isLoaded, user, isAdmin, router]);
 
   // --- ACTIONS ---
+
+  const handleSaveMonk = async (id: string, updatedData: any) => {
+    try {
+      const res = await fetch(`/api/monks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
+      });
+      
+      if (res.ok) {
+        await fetchAdminData();
+        setEditingMonk(null);
+      } else {
+        alert("Failed to update monk");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error updating monk");
+    }
+  };
 
   // 1. Approve/Reject Monk Application
   const handleApplication = async (userId: string, action: 'approve' | 'reject') => {
@@ -360,14 +382,25 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   
-                  <button 
-                    onClick={() => handleDeleteUser(u._id)}
-                    disabled={processingId === u._id || u.role === 'admin'}
-                    className={`p-3 rounded-xl transition-all ${u.role === 'admin' ? 'opacity-0 cursor-default' : 'hover:bg-red-500/10 hover:text-red-500 opacity-0 group-hover:opacity-100'}`}
-                    title="Хэрэглэгчийг устгах"
-                  >
-                    {processingId === u._id ? <Loader2 size={16} className="animate-spin"/> : <Trash2 size={16} />}
-                  </button>
+                  <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                     {u.role === 'monk' && (
+                        <button 
+                            onClick={() => setEditingMonk(u)}
+                            className="p-2 hover:bg-amber-500/10 hover:text-amber-500 rounded-lg transition-colors"
+                            title="Мэдээллийг засах"
+                        >
+                            <Edit size={16} />
+                        </button>
+                     )}
+                     <button 
+                        onClick={() => handleDeleteUser(u._id)}
+                        disabled={processingId === u._id || u.role === 'admin'}
+                        className={`p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors ${u.role === 'admin' ? 'hidden' : ''}`}
+                        title="Хэрэглэгчийг устгах"
+                    >
+                        {processingId === u._id ? <Loader2 size={16} className="animate-spin"/> : <Trash2 size={16} />}
+                    </button>
+                  </div>
                 </div>
               ))}
               {filteredUsers?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Хэрэглэгч олдсонгүй.</p>}
@@ -452,6 +485,14 @@ export default function AdminDashboard() {
           )}
 
         </AnimatePresence>
+
+        {/* MODALS */}
+        <MonkEditModal 
+            isOpen={!!editingMonk} 
+            monk={editingMonk} 
+            onClose={() => setEditingMonk(null)} 
+            onSave={handleSaveMonk} 
+        />
       </main>
     </div>
   );

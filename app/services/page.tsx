@@ -94,7 +94,7 @@ export default function CelestialServices() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isDark = mounted && resolvedTheme === 'dark';
+  const isDark = false;
 
   useEffect(() => {
     setMounted(true);

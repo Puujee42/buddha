@@ -144,7 +144,7 @@ function ActualAboutContent() {
   const { language } = useLanguage();
   const { resolvedTheme } = useTheme();
   // Ensure we capture "dark" correctly from next-themes if available, defaulting to false
-  const isNight = resolvedTheme === "dark"; 
+  const isNight = false; 
   const containerRef = useRef<HTMLDivElement>(null);
 
   // --- CONTENT DATA ---

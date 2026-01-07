@@ -61,7 +61,7 @@ export default function DivineTarotShowcase() {
   const [selectedDate, setSelectedDate] = useState("");
 
   // Theme Sync
-  const isDark = mounted && resolvedTheme === 'dark';
+  const isDark = false;
 
   useEffect(() => {
     setMounted(true);
