@@ -1,269 +1,248 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
-import CountUp from "react-countup";
-import { TypeAnimation } from "react-type-animation";
-import { Flower, Users, Globe, ArrowDown, ShieldCheck, Sparkles, Star, ArrowRight, Quote, Heart, Sun, Feather } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { 
+  Home,
+  Users,
+  Sparkles,
+  LayoutGrid,
+  Compass,
+  Globe,
+  Sun,
+  Moon,
+  LogIn,
+  UserCircle
+} from "lucide-react";
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
-import OverlayNavbar from "../components/Navbar"; 
-import GoldenNirvanaFooter from "../components/Footer";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useLanguage } from "../contexts/LanguageContext";
 
-const RitualViewportFrame = ({ theme }: { theme: any }) => (
-  <div className="fixed inset-0 pointer-events-none z-[100] p-4 md:p-8">
-    <div className={`w-full h-full border-[1px] opacity-20 rounded-[2rem] md:rounded-[3rem] transition-colors duration-1000 ${theme.borderColor}`} />
-    <div className="absolute left-10 top-1/2 -rotate-90 origin-left hidden lg:block">
-        <span className={`text-[8px] tracking-[1em] opacity-30 font-bold uppercase ${theme.textColor}`}>
-          SPIRITUAL HERITAGE • TECHNOLOGY • PEACE
-        </span>
-    </div>
-    <div className="absolute top-10 left-1/2 -translate-x-1/2 flex items-center gap-6">
-        <div className={`h-[1px] w-12 bg-current opacity-20 ${theme.textColor}`} />
-        <span className={`text-[8px] tracking-[1em] opacity-40 font-bold uppercase ${theme.textColor}`}>EST. 2025</span>
-        <div className={`h-[1px] w-12 bg-current opacity-20 ${theme.textColor}`} />
-    </div>
-  </div>
-);
+const CONTENT = {
+  logo: { mn: "Гэвабол", en: "Gevabol" },
+  login: { mn: "Нэвтрэх", en: "Sign In" },
+  register: { mn: "Бүртгүүлэх", en: "Register" },
+  dashboard: { mn: "Самбар", en: "Panel" },
+};
 
-export default function AboutUsHero() {
+export default function OverlayNavbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return <div className="min-h-screen bg-[#05051a]" />;
+  const pathname = usePathname();
+  const { language: lang, setLanguage } = useLanguage();
+  const { resolvedTheme, setTheme } = useTheme();
+  const { scrollY } = useScroll();
+
+  // Prevent hydration mismatch
+  useEffect(() => setMounted(true), []);
+
+  // Monitor scroll for desktop pill effect
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > 50);
+  });
+
+  if (!mounted) return null;
+
+  const isDark = resolvedTheme === "dark";
+  const toggleLanguage = () => setLanguage(lang === "mn" ? "en" : "mn");
+  const toggleTheme = () => setTheme(isDark ? "light" : "dark");
+
+  const desktopNav = [
+    { name: { mn: "Нүүр", en: "Home" }, href: "/" },
+    { name: { mn: "Үзмэрч", en: "Monks" }, href: "/monks" },
+    { name: { mn: "Үйлчилгээ", en: "Services" }, href: "/services" },
+    { name: { mn: "Бидний тухай", en: "About Us" }, href: "/about" },
+  ];
+
+  const mobileNav = [
+    { id: "home", icon: Home, href: "/", label: { mn: "Нүүр", en: "Home" } },
+    { id: "monks", icon: Users, href: "/monks", label: { mn: "Үзмэрч", en: "Monks" } },
+    { id: "services", icon: Sparkles, href: "/services", label: { mn: "Засал", en: "Ritual" }, isMain: true },
+    { id: "dashboard", icon: LayoutGrid, href: "/dashboard", label: { mn: "Самбар", en: "Panel" } },
+    { id: "about", icon: Compass, href: "/about", label: { mn: "Тухай", en: "About" } },
+  ];
+
   return (
     <>
-      <ActualAboutContent />
-    </>
-  );
-}
+      {/* ========================================================= */}
+      {/* 1. DESKTOP HEADER (Extra Rounded Pill)                   */}
+      {/* ========================================================= */}
+      <motion.header 
+        className="fixed z-50 left-0 right-0 hidden md:flex justify-center pointer-events-none"
+        animate={{ y: isScrolled ? 15 : 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+      >
+        <nav className={`
+          pointer-events-auto flex items-center justify-between transition-all duration-700
+          ${isScrolled 
+            ? "w-[85%] lg:w-[1100px] py-3 px-10 rounded-full border backdrop-blur-2xl shadow-2xl" 
+            : "w-full max-w-[1400px] py-8 px-12 bg-transparent border-transparent"}
+          ${isDark 
+            ? "bg-[#1a0505]/80 border-amber-900/40 text-amber-50 shadow-black" 
+            : "bg-white/80 border-amber-100 text-[#451a03] shadow-amber-900/10"}
+        `}>
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-4 group">
+             <div className="relative w-11 h-11 overflow-hidden rounded-full border-2 border-amber-500/20 shadow-inner">
+                <Image src="/logo.png" alt="Logo" fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+             </div>
+             <span className="font-serif font-black text-2xl tracking-tighter">{CONTENT.logo[lang]}</span>
+          </Link>
 
-function ActualAboutContent() {
-  const { language } = useLanguage();
-  const { resolvedTheme } = useTheme();
-  const isNight = false; 
-  const containerRef = useRef<HTMLDivElement>(null);
+          {/* Links */}
+          <div className="flex items-center gap-1 bg-current/5 p-1 rounded-full">
+            {desktopNav.map((item) => (
+              <Link 
+                key={item.href} 
+                href={item.href} 
+                className={`px-6 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all
+                  ${pathname === item.href 
+                    ? (isDark ? "bg-amber-600 text-[#1a0505]" : "bg-[#451a03] text-white") 
+                    : "opacity-60 hover:opacity-100"}`}
+              >
+                {item.name[lang]}
+              </Link>
+            ))}
+          </div>
 
-  // --- FULLY POPULATED MONGOLIAN & ENGLISH CONTENT ---
-  const content = {
-    mn: {
-      badge: "Бидний Эрхэм Зорилго",
-      typeSequence: ["Уламжлалт Соёлыг", 1500, "Орчин үеийн Технологиор", 1500, "Таны Гартаа", 2000],
-      subheadline: "Монголчуудын олон зуун жилийн оюун санааны өв соёлыг дижитал шилжилттэй холбож, хүн бүрт амар амгаланг хүртээмжтэй түгээх нь бидний зорилго юм.",
-      cta: "Үйлчилгээ үзэх",
-      masters: "120+ Багш нар",
-      philosophyTitle: "Бидний Баримтлах",
-      philosophySubtitle: "Гурван Тулгуур",
-      philosophyDesc: "Эртний мэргэн ухааныг гэрлийн хурдтай холбож, орчин үеийн хүмүүсийн сэтгэл зүйд нийцүүлэх нь бидний гүүр юм.",
-      philosophies: [
-        { title: "Оюун санаа", desc: "Дотоод амар амгаланг олоход тань туслах зөвлөгөө.", icon: <Star /> },
-        { title: "Уламжлал", desc: "Монгол зан заншил, өв соёлоо дижитал хэлбэрт хадгалах.", icon: <Flower /> },
-        { title: "Технологи", desc: "Дэлхийн хаанаас ч холбогдох хязгааргүй боломжийг нээх.", icon: <Globe /> }
-      ],
-      marquee: ["МОНГОЛ ӨВ СОЁЛ", "ДИЖИТАЛ АМАР АМГАЛАН", "УЛАМЖЛАЛТ МЭРГЭН УХААН"],
-      stats: [
-        { label: "Мэргэжлийн Багш нар", end: 120, icon: <Users /> },
-        { label: "Нийт Хамрах Хүрээ", end: 21, icon: <Globe /> },
-        { label: "Амар Амгаланг Эрэлхийлэгчид", end: 5000, icon: <Heart /> }
-      ],
-      storyTitle: "Мэргэн Ухааны Зам",
-      storyText: "Бид зөвхөн вэбсайт биш, энэ бол оюун санааны аялал юм. Технологийн тусламжтайгаар орон зай, цаг хугацааны саадыг даван туулж, таныг жинхэнэ өөртэйгөө уулзахад тусална.",
-      liveText: "Шуд дамжуулалт"
-    },
-    en: {
-      badge: "Our Noble Mission",
-      typeSequence: ["Traditional Heritage", 1500, "Modern Technology", 1500, "In Your Hands", 2000],
-      subheadline: "Our mission is to bridge centuries of Mongolian spiritual wisdom with digital innovation, making inner peace accessible to everyone, everywhere.",
-      cta: "Explore Services",
-      masters: "120+ Masters",
-      philosophyTitle: "Our Philosophy",
-      philosophySubtitle: "Three Pillars",
-      philosophyDesc: "Merging ancient wisdom with the speed of light to serve the modern soul through accessible connection.",
-      philosophies: [
-        { title: "Mindset", desc: "Guiding you toward inner stillness and mental clarity.", icon: <Star /> },
-        { title: "Heritage", desc: "Preserving sacred Mongolian traditions for the digital age.", icon: <Flower /> },
-        { title: "Innovation", desc: "Unlocking borderless access to spiritual guidance via tech.", icon: <Globe /> }
-      ],
-      marquee: ["MONGOLIAN HERITAGE", "DIGITAL PEACE", "TRADITIONAL WISDOM"],
-      stats: [
-        { label: "Trusted Masters", end: 120, icon: <Users /> },
-        { label: "Global Coverage", end: 21, icon: <Globe /> },
-        { label: "Peace Seekers", end: 5000, icon: <Heart /> }
-      ],
-      storyTitle: "The Wisdom Path",
-      storyText: "We are more than just a platform; we are a spiritual vessel. Through technology, we dissolve the barriers of time and distance, connecting you to the source of peace.",
-      liveText: "Live Atmosphere"
-    }
-  };
+          {/* Desktop Actions */}
+          <div className="flex items-center gap-3">
+             <button onClick={toggleLanguage} className="w-11 h-11 rounded-full border flex items-center justify-center border-current/10 hover:bg-current/10 transition-all active:scale-90">
+                <Globe size={18}/>
+             </button>
+           
+             <div className="h-8 w-[1px] bg-current/10 mx-1" />
 
-  const t = content[language as keyof typeof content] || content.en;
-  const { scrollYProgress } = useScroll();
-  const mantraX = useTransform(scrollYProgress, [0, 1], [0, -500]);
+             <SignedIn>
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest opacity-70 hover:opacity-100 border-b-2 border-amber-500/50">
+                        {CONTENT.dashboard[lang]}
+                    </Link>
+                    <div className="scale-110"><UserButton /></div>
+                </div>
+             </SignedIn>
+             
+             <SignedOut>
+               <Link href="/sign-in">
+                  <button className="px-8 py-3 rounded-full bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-900/20 transition-all active:scale-95">
+                    {CONTENT.login[lang]}
+                  </button>
+               </Link>
+             </SignedOut>
+          </div>
+        </nav>
+      </motion.header>
 
-  const theme = isNight ? {
-      mainBg: "bg-[#05051a]", textColor: "text-amber-50", accentText: "text-amber-500",
-      mutedText: "text-amber-100/40", borderColor: "border-amber-500/20",
-      altarBg: "bg-amber-950/20 backdrop-blur-xl border-amber-500/10",
-      btnPrimary: "bg-amber-600 text-[#05051a] shadow-amber-900/40",
-  } : {
-      mainBg: "bg-[#FDFBF7]", textColor: "text-[#451a03]", accentText: "text-amber-600",
-      mutedText: "text-[#78350F]/50", borderColor: "border-amber-900/10",
-      altarBg: "bg-white/80 backdrop-blur-md border-amber-900/5",
-      btnPrimary: "bg-[#451a03] text-white shadow-orange-900/20",
-  };
 
-  return (
-    <div ref={containerRef} className={`relative w-full ${theme.mainBg} ${theme.textColor} transition-colors duration-1000 font-serif overflow-hidden`}>
-      <RitualViewportFrame theme={theme} />
-      
-      {/* FLOATING BACKGROUND TEXT */}
-      <div className="absolute top-40 left-0 w-full whitespace-nowrap pointer-events-none opacity-[0.03] z-0 select-none">
-        <motion.h2 style={{ x: mantraX }} className="text-[20vw] font-black uppercase tracking-tighter">
-          Peace Wisdom Harmony Compassion Tradition Modernity
-        </motion.h2>
+      {/* ========================================================= */}
+      {/* 2. MOBILE TOP BAR (High Obviousness Login)               */}
+      {/* ========================================================= */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 px-5 py-4 flex justify-between items-center pointer-events-none">
+        <Link href="/" className="pointer-events-auto">
+           <div className="p-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/30 shadow-2xl">
+              <Image src="/logo.png" alt="Logo" width={38} height={38} className="rounded-full" />
+           </div>
+        </Link>
+
+        <div className="flex items-center gap-2 pointer-events-auto">
+            {/* VERY OBVIOUS LOGIN BUTTON FOR MOBILE */}
+            <SignedOut>
+                <Link href="/sign-in">
+                    <motion.button 
+                      whileTap={{ scale: 0.9 }}
+                      className="px-5 h-11 rounded-full bg-amber-600 text-white text-[11px] font-black tracking-tighter uppercase shadow-lg shadow-amber-900/30 border border-amber-400/50"
+                    >
+                        {CONTENT.login[lang]}
+                    </motion.button>
+                </Link>
+            </SignedOut>
+
+            {/* Quick Action Circle Buttons */}
+            <div className="flex gap-1 p-1 rounded-full bg-black/5 backdrop-blur-md border border-white/10">
+                <button onClick={toggleLanguage} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isDark ? "text-amber-200" : "text-amber-900"}`}>
+                    <span className="text-[10px] font-black">{lang === 'mn' ? 'EN' : 'MN'}</span>
+                </button>
+                
+               
+            </div>
+
+            <SignedIn>
+                <div className="ml-1 scale-125 drop-shadow-lg"><UserButton /></div>
+            </SignedIn>
+        </div>
       </div>
 
-      {/* --- HERO SECTION --- */}
-      <section className="relative min-h-screen flex items-center pt-32 pb-20">
-        <div className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+
+      {/* ========================================================= */}
+      {/* 3. MOBILE BOTTOM DOCK (Extra Rounded & Labeled)          */}
+      {/* ========================================================= */}
+      <div className="md:hidden fixed bottom-6 left-0 right-0 z-50 px-5 flex justify-center">
+        <nav className={`
+          flex items-center justify-between w-full max-w-[440px] px-3 py-3 rounded-full border shadow-[0_-15px_50px_rgba(0,0,0,0.2)] backdrop-blur-3xl transition-all duration-700
+          ${isDark ? "bg-[#1a0505]/95 border-amber-900/50 shadow-black" : "bg-white/95 border-amber-100 shadow-amber-900/10"}
+        `}>
+          {mobileNav.map((item) => {
+            const isActive = pathname === item.href;
             
-            <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1 }}>
-              <div className="flex items-center gap-4 mb-8">
-                 <div className={`h-[1px] w-12 ${theme.accentText} bg-current`} />
-                 <span className="text-[10px] uppercase tracking-[0.4em] font-black">{t.badge}</span>
-              </div>
-              
-              <h1 className="text-5xl sm:text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85] italic mb-10">
-                 <TypeAnimation sequence={t.typeSequence} wrapper="span" speed={50} repeat={Infinity} />
-              </h1>
-              
-              <p className={`max-w-md text-base md:text-xl font-sans tracking-wide leading-relaxed mb-12 ${theme.mutedText}`}>
-                 {t.subheadline}
-              </p>
-
-              <div className="flex flex-wrap gap-6">
-                <Link href="/services">
-                  <motion.button whileHover={{ scale: 1.05 }} className={`px-10 py-5 rounded-full font-black uppercase tracking-[0.2em] text-[10px] flex items-center gap-3 ${theme.btnPrimary}`}>
-                    <Sparkles size={16} /> {t.cta}
-                  </motion.button>
+            // Central Services Button
+            if (item.isMain) {
+              return (
+                <Link key={item.id} href={item.href} className="relative -top-10 flex flex-col items-center">
+                  <motion.div 
+                    whileTap={{ scale: 0.85 }}
+                    className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl relative z-10
+                      ${isDark ? "bg-amber-500 text-[#1a0505]" : "bg-[#451a03] text-white"}`}
+                  >
+                    <item.icon size={30} strokeWidth={2.5} />
+                    <motion.div 
+                      animate={{ scale: [1, 1.5], opacity: [0.4, 0] }}
+                      transition={{ duration: 2.5, repeat: Infinity }}
+                      className="absolute inset-0 rounded-full bg-amber-500"
+                    />
+                  </motion.div>
+                  <span className={`mt-2 text-[10px] font-black uppercase tracking-widest ${isActive ? "text-amber-500" : "opacity-40"}`}>
+                    {item.label[lang]}
+                  </span>
                 </Link>
-                <div className="flex items-center gap-4 px-6 border-l border-current opacity-30">
-                   <div className="flex -space-x-3">
-                      {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-amber-400" />)}
-                   </div>
-                   <span className="text-[10px] font-bold">{t.masters}</span>
+              );
+            }
+
+            // Standard Icons (Dynamic Dashboard/Login logic)
+            return (
+              <Link key={item.id} href={item.href} className="flex-1 flex flex-col items-center justify-center py-2 relative group">
+                <AnimatePresence>
+                  {isActive && (
+                    <motion.div 
+                        layoutId="activePill" 
+                        className={`absolute inset-x-2 inset-y-1 rounded-full -z-10 ${isDark ? "bg-amber-900/20" : "bg-amber-100"}`} 
+                    />
+                  )}
+                </AnimatePresence>
+
+                <div className={`transition-all duration-300 mb-1 ${isActive ? (isDark ? "text-amber-400 scale-110" : "text-[#451a03] scale-110") : "opacity-40"}`}>
+                  <SignedIn>
+                     {item.id === 'dashboard' ? <item.icon size={22} strokeWidth={2.5} /> : <item.icon size={22} strokeWidth={2} />}
+                  </SignedIn>
+                  <SignedOut>
+                     {item.id === 'dashboard' ? <LogIn size={22} strokeWidth={2.5} /> : <item.icon size={22} strokeWidth={2} />}
+                  </SignedOut>
                 </div>
-              </div>
-            </motion.div>
+                
+                <span className={`text-[9px] font-black uppercase tracking-tight transition-all ${isActive ? "opacity-100" : "opacity-30"}`}>
+                   <SignedIn>{item.label[lang]}</SignedIn>
+                   <SignedOut>{item.id === 'dashboard' ? CONTENT.login[lang] : item.label[lang]}</SignedOut>
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative group">
-              <div className={`absolute -inset-8 border border-current opacity-5 rounded-full animate-[spin_30s_linear_infinite]`} />
-              <div className={`relative aspect-[4/5] overflow-hidden rounded-[4rem] border-[12px] ${theme.altarBg} shadow-2xl`}>
-                <video autoPlay loop muted playsInline className="w-full h-full object-cover">
-                  <source src="/num2.mp4" type="video/mp4" />
-                </video>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end text-white">
-                   <div>
-                      <p className="text-[8px] uppercase tracking-widest opacity-60">{t.liveText}</p>
-                      <h4 className="text-lg font-bold">Divine Wisdom</h4>
-                   </div>
-                   <div className="w-12 h-12 rounded-full border border-white/30 flex items-center justify-center backdrop-blur-md">
-                      <Flower size={20} className="animate-pulse" />
-                   </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* --- PHILOSOPHY SECTION --- */}
-      <section className="relative py-32 bg-current/[0.02]">
-        <div className="container mx-auto px-6">
-           <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-20">
-              <div className="max-w-2xl">
-                <Quote size={40} className={`mb-6 opacity-20 ${theme.accentText}`} />
-                <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">
-                  {t.philosophyTitle} <br/> <span className={theme.accentText}>{t.philosophySubtitle}</span>
-                </h2>
-              </div>
-              <p className={`max-w-xs text-xs uppercase tracking-widest leading-loose font-bold ${theme.mutedText}`}>
-                {t.philosophyDesc}
-              </p>
-           </div>
-
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              {t.philosophies.map((p, i) => (
-                <div key={i} className="group p-8 rounded-[2rem] border border-transparent hover:border-current/10 transition-all duration-500">
-                   <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-all duration-500 group-hover:bg-current group-hover:text-white border ${theme.borderColor}`}>
-                      {React.cloneElement(p.icon as React.ReactElement, { size: 28, strokeWidth: 1 } as any)}
-                   </div>
-                   <h3 className="text-2xl font-bold mb-4 uppercase tracking-tight">{p.title}</h3>
-                   <div className="h-[1px] w-12 bg-current opacity-20 mb-4" />
-                   <p className={`text-sm leading-relaxed ${theme.mutedText}`}>{p.desc}</p>
-                </div>
-              ))}
-           </div>
-        </div>
-      </section>
-
-      {/* --- STORY SECTION (Added to fill space) --- */}
-      <section className="py-32 px-6">
-         <div className="container mx-auto max-w-5xl">
-            <div className={`p-12 md:p-24 rounded-[4rem] relative overflow-hidden border ${theme.borderColor} ${theme.altarBg}`}>
-               <div className="absolute top-0 right-0 p-12 opacity-10">
-                  <Feather size={200} />
-               </div>
-               <div className="relative z-10 text-center">
-                  <Sun size={48} className={`mx-auto mb-8 ${theme.accentText}`} />
-                  <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-8">{t.storyTitle}</h2>
-                  <p className="text-lg md:text-2xl leading-relaxed italic opacity-80 max-w-3xl mx-auto">
-                    "{t.storyText}"
-                  </p>
-               </div>
-            </div>
-         </div>
-      </section>
-
-      {/* --- MARQUEE --- */}
-      <section className="py-24 border-y border-current/10 overflow-hidden">
-        <div className="flex gap-20 animate-[marquee_40s_linear_infinite] whitespace-nowrap">
-           {[...Array(4)].map((_, i) => (
-             <div key={i} className="flex gap-20 items-center">
-                <span className="text-6xl md:text-8xl font-black opacity-10 italic">{t.marquee[0]}</span>
-                <Flower className="opacity-20" size={40} />
-                <span className="text-6xl md:text-8xl font-black opacity-10 italic">{t.marquee[1]}</span>
-                <Sparkles className="opacity-20" size={40} />
-             </div>
-           ))}
-        </div>
-      </section>
-
-      {/* --- STATS SECTION --- */}
-      <section className="relative py-32 px-6">
-         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
-            {t.stats.map((stat, i) => (
-              <motion.div key={i} whileHover={{ y: -10 }} className={`p-12 rounded-[3rem] text-center border ${theme.altarBg} ${theme.borderColor}`}>
-                <div className={`mx-auto w-12 h-12 flex items-center justify-center mb-6 ${theme.accentText}`}>
-                  {React.cloneElement(stat.icon as React.ReactElement, { size: 32 } as any)}
-                </div>
-                <div className="text-5xl md:text-7xl font-black tracking-tighter mb-4">
-                  <CountUp end={stat.end} duration={3} />+
-                </div>
-                <p className="text-[10px] uppercase tracking-[0.3em] font-black opacity-50">{stat.label}</p>
-              </motion.div>
-            ))}
-         </div>
-      </section>
-
-      <style jsx global>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
-    </div>
+      {/* Spacing for mobile content */}
+      <div className="md:hidden h-28 pointer-events-none" />
+    </>
   );
 }
