@@ -69,7 +69,12 @@ export default function DivineTarotShowcase() {
       try {
         const response = await fetch('/api/monks');
         const data = await response.json();
-        setMonks(data);
+        if (Array.isArray(data)) {
+          setMonks(data);
+        } else {
+          console.error("API returned non-array:", data);
+          setMonks([]);
+        }
       } catch (error) { console.error(error); }
       finally { setLoading(false); }
     }

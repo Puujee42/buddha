@@ -5,113 +5,141 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { 
   motion, 
-  useSpring, 
-  useTransform,
   AnimatePresence,
 } from "framer-motion";
 import { 
-  ArrowLeft, 
-  Calendar, 
-  Clock, 
-  CheckCircle2, 
-  Loader2, 
-  Sparkles, 
-  Sun, 
-  Moon,
-  CreditCard,
-  Scroll,
-  Ban
+  ArrowLeft, Calendar, Clock, CheckCircle2, Loader2, Sparkles, 
+  ArrowRight, Stars, User, Mail, PenTool, Info, Shield, Hourglass, CreditCard, ChevronDown 
 } from "lucide-react";
 import OverlayNavbar from "../../components/Navbar"; 
 import { useLanguage } from "../../contexts/LanguageContext";
-import { Monk, Service } from "@/database/types";
+import { Monk } from "@/database/types";
 import { useTheme } from "next-themes";
 import { useUser } from "@clerk/nextjs";
 
-const pageStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Jost:wght@200;300;400&display=swap');
-  .font-celestial { font-family: 'Cinzel', serif; }
-  .font-ethereal { font-family: 'Jost', sans-serif; }
-  .scrollbar-hide::-webkit-scrollbar { display: none; }
-  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-`;
+// ==========================================
+// 1. VISUAL ASSETS & STYLES
+// ==========================================
 
-// --- VISUAL COMPONENTS ---
-
-const DayAtmosphere = () => (
-  <div className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000">
-    <div className="absolute inset-0 bg-gradient-to-b from-[#FFFBEB] via-[#fffbf0] to-[#fff7ed]" />
-    <motion.div animate={{ rotate: 360 }} transition={{ duration: 150, repeat: Infinity, ease: "linear" }} className="absolute top-[-50%] right-[-20%] w-[800px] h-[800px] opacity-[0.03] text-amber-900">
-        <svg viewBox="0 0 100 100" className="w-full h-full fill-current"><path d="M50 0 L55 45 L100 50 L55 55 L50 100 L45 55 L0 50 L45 45 Z" /></svg>
-    </motion.div>
+const CosmicBackground = ({ isNight }: { isNight: boolean }) => (
+  <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div className={`absolute inset-0 transition-colors duration-1000 ${
+      isNight 
+        ? "bg-[radial-gradient(ellipse_at_top,_#1e1b4b_0%,_#020617_100%)]" 
+        : "bg-[radial-gradient(ellipse_at_top,_#fffbeb_0%,_#fff7ed_100%)]"
+    }`} />
+    
+    {/* Slow Moving Clouds */}
+    <motion.div 
+      animate={{ rotate: 360, scale: [1, 1.1, 1] }}
+      transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
+      className={`absolute top-[-40%] right-[-20%] w-[80vw] h-[80vw] rounded-full blur-[120px] opacity-20 ${isNight ? "bg-indigo-900" : "bg-amber-200"}`}
+    />
+    <motion.div 
+      animate={{ rotate: -360, scale: [1, 1.2, 1] }}
+      transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
+      className={`absolute bottom-[-20%] left-[-20%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 ${isNight ? "bg-fuchsia-900" : "bg-orange-100"}`}
+    />
+    <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
   </div>
 );
 
-const NightAtmosphere = () => (
-  <div className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000">
-    <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e1b4b]" />
-    <motion.div animate={{ rotate: -360 }} transition={{ duration: 200, repeat: Infinity, ease: "linear" }} className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] opacity-[0.08] text-indigo-300">
-       <svg viewBox="0 0 100 100" className="w-full h-full fill-none stroke-current" strokeWidth="0.2"><circle cx="50" cy="50" r="40" strokeDasharray="2 2" /><path d="M50 10 L50 90 M10 50 L90 50" /></svg>
-    </motion.div>
+// --- COMPONENT: SERVICE TICKET (The Informative Hero) ---
+const ServiceTicket = ({ service, theme, t, lang }: any) => (
+  <div className="relative group perspective-[1000px] mb-8">
+    <div className={`absolute inset-0 bg-gradient-to-r ${theme.accentGradient} opacity-20 blur-xl group-hover:opacity-30 transition-opacity`} />
+    <div className={`relative p-6 rounded-[2rem] border overflow-hidden backdrop-blur-md transition-all duration-500 ${theme.ticketBg} ${theme.border}`}>
+        
+        {/* Ticket Perforations Decoration */}
+        <div className="absolute left-0 top-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-[#fdfbf7] dark:bg-[#020617]" />
+        <div className="absolute right-0 top-1/2 translate-x-1/2 w-6 h-6 rounded-full bg-[#fdfbf7] dark:bg-[#020617]" />
+
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+            <div>
+                <div className="flex items-center gap-2 mb-2">
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${theme.badge}`}>
+                        {t({mn: "Төлөвлөгөө", en: "Selected Ritual"})}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] font-bold opacity-60">
+                        <Hourglass size={12} /> {service.duration}
+                    </span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-serif font-bold mb-2">{service.name[lang]}</h2>
+                <p className="text-xs md:text-sm opacity-70 max-w-lg leading-relaxed">
+                    {/* Fallback description if DB lacks it */}
+                    {service.description?.[lang] || t({mn: "Таны хувь заяаны төөргийг тайлж, ирээдүйн чиг баримжааг тодорхойлох гүн ухааны зөвлөгөө.", en: "A profound spiritual consultation to unravel your destiny lines and provide clarity for your future path."})}
+                </p>
+            </div>
+            <div className="text-right shrink-0">
+                <p className="text-[10px] uppercase tracking-widest opacity-50 mb-1">{t({mn: "Үнэ", en: "Offering"})}</p>
+                <div className={`text-4xl font-serif font-medium ${theme.accentText}`}>
+                    {Number(service.price).toLocaleString()}₮
+                </div>
+            </div>
+        </div>
+    </div>
   </div>
 );
 
-// Portal displays MONK details primarily
-const LivingPortal = ({ image, name, title, isNight }: { image: string, name: string, title: string, isNight: boolean }) => (
-  <div className="relative w-full aspect-[3/4] perspective-1000 group">
-       <div className={`absolute inset-10 rounded-[100px] blur-[100px] opacity-30 -z-10 transition-all duration-700 group-hover:opacity-50 ${isNight ? 'bg-indigo-600' : 'bg-amber-600'}`} />
-       <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className={`relative w-full h-full rounded-t-[280px] rounded-b-[40px] p-0.5 shadow-2xl overflow-hidden transition-all duration-1000 ${isNight ? "bg-gradient-to-b from-indigo-300 via-indigo-600 to-[#020617]" : "bg-gradient-to-b from-amber-200 via-amber-500 to-[#78350F]"}`}>
-          <div className={`absolute inset-[2px] rounded-t-[278px] rounded-b-[38px] overflow-hidden ${isNight ? "bg-[#0f172a]" : "bg-white"}`}>
-             <div className="w-full h-full relative">
-                <img src={image} alt={name} className={`w-full h-full object-cover transition-all duration-1000 ${isNight ? "opacity-70 brightness-110 saturate-[0.8]" : "opacity-90"}`} />
-                <div className={`absolute inset-0 bg-gradient-to-t ${isNight ? "from-indigo-950/90" : "from-amber-900/60"} via-transparent to-transparent`} />
-             </div>
-             <div className="absolute bottom-10 left-6 right-6 text-center">
-                 <p className={`text-xs uppercase tracking-widest font-bold mb-2 ${isNight ? "text-indigo-200" : "text-amber-100"}`}>{title}</p>
-                 <h2 className={`font-celestial text-3xl ${isNight ? "text-indigo-50" : "text-white"}`}>{name}</h2>
-             </div>
-          </div>
-       </motion.div>
-  </div>
-);
+// --- COMPONENT: INFO ACCORDION ---
+const InfoItem = ({ icon, title, text, theme }: any) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className={`border-b ${theme.border} last:border-0`}>
+            <button 
+                onClick={() => setIsOpen(!isOpen)} 
+                className="w-full flex items-center justify-between py-4 text-left group"
+            >
+                <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full bg-current/5 ${theme.accentText}`}>{icon}</div>
+                    <span className="text-xs font-bold uppercase tracking-widest opacity-80 group-hover:opacity-100">{title}</span>
+                </div>
+                <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div 
+                        initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <p className="pb-4 pl-12 text-sm leading-relaxed opacity-60">{text}</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
 
-// --- MAIN PAGE ---
+// ==========================================
+// 2. MAIN PAGE LOGIC
+// ==========================================
 
 export default function MonkBookingPage() {
   const params = useParams();
-  const monkId = Array.isArray(params.id) ? params.id[0] : params.id; // Monk ID from URL
-  const { language, t } = useLanguage();
+  const monkId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const { language: lang, t } = useLanguage();
   const { resolvedTheme } = useTheme(); 
   const { user, isSignedIn } = useUser();
   
-  // Data State
+  // -- State --
   const [monk, setMonk] = useState<Monk | null>(null);
-  const [availableServices, setAvailableServices] = useState<any[]>([]);
-  
-  // Selection State
   const [selectedService, setSelectedService] = useState<any | null>(null);
   const [selectedDateIndex, setSelectedDateIndex] = useState<number | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
-  // User Form State
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userNote, setUserNote] = useState("");
   
-  // UI State
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [takenSlots, setTakenSlots] = useState<string[]>([]);
 
-  // Mouse Effects
-  const mouseX = useSpring(0, { stiffness: 30, damping: 20 });
-  const mouseY = useSpring(0, { stiffness: 30, damping: 20 });
-  const torchX = useTransform(mouseX, (x: number) => x - 400); 
-  const torchY = useTransform(mouseY, (y: number) => y - 400);
+  // -- Theme --
+  const isNight = resolvedTheme === "dark";
 
-  // --- 1. INITIAL FETCH ---
   useEffect(() => {
     setMounted(true);
     if (user) {
@@ -119,44 +147,31 @@ export default function MonkBookingPage() {
         setUserEmail(user.primaryEmailAddress?.emailAddress || "");
     }
 
-    async function loadMonkAndServices() {
+    async function loadData() {
       if (!monkId) return;
       try {
         setLoading(true);
-        
-        // A. Fetch Monk Details
+        // 1. Monk
         const mRes = await fetch(`/api/monks/${monkId}`);
-        if (!mRes.ok) throw new Error("Monk not found");
         const mData = await mRes.json();
         setMonk(mData);
 
-        // B. Fetch All Services & Filter for this Monk
-        // Logic: Check if service.monkId matches OR if monk.services array contains service ID
+        // 2. Services & Auto-Select
         const sRes = await fetch('/api/services');
         const sData = await sRes.json();
+        const services = sData.filter((s: any) => s.monkId === monkId || mData.services?.includes(s._id));
         
-        const filteredServices = sData.filter((s: any) => {
-            // Check direct assignment
-            if (s.monkId === monkId) return true;
-            // Check if monk object has a list of service IDs (if your DB structure uses that)
-            if (mData.services && Array.isArray(mData.services)) {
-                return mData.services.some((id: any) => String(id) === String(s._id || s.id));
-            }
-            return false;
-        });
-
-        setAvailableServices(filteredServices);
-
-      } catch (error) { 
-          console.error(error); 
-      } finally { 
-          setLoading(false); 
-      }
+        if (services.length > 0) {
+            setSelectedService(services[0]);
+            setSelectedDateIndex(0); 
+        }
+      } catch (error) { console.error(error); } 
+      finally { setLoading(false); }
     }
-    loadMonkAndServices();
+    loadData();
   }, [monkId, user]);
 
-  // --- 2. CALENDAR DATES ---
+  // -- Calendar & Slots Logic --
   const calendarDates = useMemo(() => {
     const dates = [];
     const today = new Date();
@@ -165,36 +180,26 @@ export default function MonkBookingPage() {
       d.setDate(today.getDate() + i);
       dates.push({ 
         day: d.getDate(), 
-        weekday: d.toLocaleDateString(language==='mn'?'mn':'en', { weekday:'short'}), 
+        weekday: d.toLocaleDateString(lang==='mn'?'mn':'en', { weekday:'short'}), 
         full: d 
       });
     }
     return dates;
-  }, [language]);
+  }, [lang]);
 
-  // --- 3. DYNAMIC TIME SLOTS ---
   const currentDaySlots = useMemo(() => {
       if (selectedDateIndex === null) return [];
-      
       const dateObj = calendarDates[selectedDateIndex].full;
       const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' }); 
+      const dayConfig = monk?.schedule?.find(s => s.day === dayName) || { start: "09:00", end: "19:00", active: true };
       
-      // Default Schedule if none set
-      const defaultSchedule = { start: "09:00", end: "19:00", active: true };
-      
-      // Find schedule for this day
-      const dayConfig = monk?.schedule?.find(s => s.day === dayName) || (monk?.schedule ? null : defaultSchedule);
-
-      if (!dayConfig || !dayConfig.active) return []; // Day off
+      if (!dayConfig.active) return []; 
 
       const slots: string[] = [];
       const [startH, startM] = dayConfig.start.split(':').map(Number);
       const [endH, endM] = dayConfig.end.split(':').map(Number);
-      
-      let current = new Date(dateObj);
-      current.setHours(startH, startM, 0, 0);
-      const end = new Date(dateObj);
-      end.setHours(endH, endM, 0, 0);
+      let current = new Date(dateObj); current.setHours(startH, startM, 0, 0);
+      const end = new Date(dateObj); end.setHours(endH, endM, 0, 0);
 
       while (current < end) {
           slots.push(current.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit' }));
@@ -203,307 +208,249 @@ export default function MonkBookingPage() {
       return slots;
   }, [selectedDateIndex, monk, calendarDates]);
 
-  // --- 4. CHECK BOOKINGS ---
   useEffect(() => {
-    async function fetchSlots() {
-      if (selectedDateIndex === null || !monkId) return;
-      
-      const date = calendarDates[selectedDateIndex].full;
-      const dateString = date.toISOString().split('T')[0];
-      
-      try {
-        const res = await fetch(`/api/bookings?monkId=${monkId}&date=${dateString}`);
-        if (res.ok) {
-            const booked = await res.json();
-            setTakenSlots(booked);
-        } else {
-            setTakenSlots([]);
-        }
-      } catch (e) { console.error(e) }
-    }
-    fetchSlots();
+    if (selectedDateIndex === null || !monkId) return;
+    const dateStr = calendarDates[selectedDateIndex].full.toISOString().split('T')[0];
+    fetch(`/api/bookings?monkId=${monkId}&date=${dateStr}`).then(r => r.json()).then(setTakenSlots);
   }, [selectedDateIndex, monkId, calendarDates]);
 
-  // --- 5. SUBMIT BOOKING ---
   const handleBooking = async () => {
-    if (!isSignedIn) {
-      alert(t({mn: "Та захиалга өгөхийн тулд нэвтрэх шаардлагатай.", en: "Please sign in to book a ritual."}));
-      return;
-    }
-    if(!monkId || selectedDateIndex === null || !selectedTime || !selectedService) return;
-    
+    if (!isSignedIn) { alert("Please sign in."); return; }
     setIsSubmitting(true);
-    const dateString = calendarDates[selectedDateIndex].full.toISOString().split('T')[0];
-
-    try {
-        const res = await fetch('/api/bookings', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                monkId: monkId,
-                serviceId: selectedService._id || selectedService.id,
-                date: dateString,
-                time: selectedTime,
-                userName,
-                userEmail,
-                note: userNote
-            })
-        });
-
-        if(res.ok) {
-            setIsBooked(true);
-        } else {
-            alert(t({mn: "Захиалга амжилтгүй боллоо.", en: "Booking failed. Slot might be taken."}));
-        }
-    } catch (e) { console.error(e); }
-    finally { setIsSubmitting(false); }
+    const dateStr = calendarDates[selectedDateIndex!].full.toISOString().split('T')[0];
+    const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ monkId, serviceId: selectedService._id, date: dateStr, time: selectedTime, userName, userEmail, note: userNote })
+    });
+    if(res.ok) setIsBooked(true);
+    setIsSubmitting(false);
   };
 
-  // --- RENDER ---
   if (!mounted) return null;
-  const isNight = false;
+  if (loading) return <div className="h-screen w-full flex items-center justify-center bg-[#FDFBF7]"><Loader2 className="w-10 h-10 animate-spin text-amber-500" /></div>;
 
-  const theme = isNight ? {
-      textColor: "text-indigo-50",
-      borderColor: "border-indigo-800/50",
-      altarBg: "bg-[#05050a]/80 backdrop-blur-2xl border-indigo-500/20",
-      inputBg: "bg-indigo-950/30 border-indigo-500/30 text-indigo-100",
-      glowColor: "rgba(99,102,241,0.15)",
-      primaryBtn: "bg-indigo-600 text-white shadow-indigo-500/20",
-      btnDefault: "bg-indigo-950/40 border-indigo-800 text-indigo-300",
-      btnActive: "bg-indigo-500 border-indigo-400 text-white",
-      serviceCard: "bg-indigo-900/20 border-indigo-500/30 hover:bg-indigo-900/40"
-  } : {
-      textColor: "text-[#451a03]",
-      borderColor: "border-amber-200",
-      altarBg: "bg-white/80 backdrop-blur-2xl border-amber-200",
-      inputBg: "bg-white border-amber-200 text-amber-900",
-      glowColor: "rgba(251,191,36,0.15)",
-      primaryBtn: "bg-amber-600 text-white shadow-amber-900/20",
-      btnDefault: "bg-white border-amber-100 text-stone-500 hover:border-amber-300 hover:text-amber-700",
-      btnActive: "bg-amber-600 border-amber-600 text-white",
-      serviceCard: "bg-white border-amber-200 hover:border-amber-400 hover:shadow-lg"
+  // -- Theme Config --
+  const theme = {
+    glassPanel: isNight ? "bg-[#0f172a]/60 border-indigo-500/20 text-indigo-50" : "bg-white/60 border-amber-900/10 text-amber-950",
+    ticketBg: isNight ? "bg-[#0f172a]/80" : "bg-[#fffefc]/90",
+    border: isNight ? "border-indigo-500/20" : "border-amber-900/10",
+    accentText: isNight ? "text-cyan-400" : "text-amber-600",
+    accentGradient: isNight ? "from-cyan-900 to-blue-900" : "from-amber-200 to-orange-100",
+    badge: isNight ? "border-cyan-500/50 text-cyan-300" : "border-amber-600/30 text-amber-700",
+    slotActive: isNight ? "bg-cyan-600 border-cyan-500 text-white" : "bg-amber-500 border-amber-500 text-white",
+    input: isNight ? "bg-black/20 border-white/10 focus:border-cyan-500/50" : "bg-white/50 border-amber-900/10 focus:border-amber-500/50",
   };
-
-  if (loading) return <div className={`h-screen w-full flex items-center justify-center ${isNight ? "bg-[#020205]" : "bg-[#FDFBF7]"}`}><Loader2 className="w-12 h-12 animate-spin text-amber-500" /></div>;
-  if (!monk) return <div className="h-screen flex items-center justify-center">Monk not found</div>;
 
   return (
-    <div className={`min-h-screen transition-colors duration-1000 ${isNight ? "bg-[#020205]" : "bg-[#FDFBF7]"} font-ethereal overflow-x-hidden`} onMouseMove={(e) => { mouseX.set(e.clientX); mouseY.set(e.clientY); }}>
+    <div className={`min-h-screen font-ethereal relative overflow-x-hidden ${isNight ? 'bg-[#020617]' : 'bg-[#FDFBF7]'}`}>
       <OverlayNavbar />
-      <style>{pageStyles}</style>
-      
-      {isNight ? <NightAtmosphere /> : <DayAtmosphere />}
-      <motion.div className="fixed top-0 left-0 w-[800px] h-[800px] rounded-full pointer-events-none z-1 mix-blend-screen blur-[100px]" style={{ background: `radial-gradient(circle, ${theme.glowColor} 0%, transparent 70%)`, x: torchX, y: torchY }} />
+      <CosmicBackground isNight={isNight} />
 
-      <main className="relative z-10 container mx-auto px-4 lg:px-12 pt-28 pb-24 text-indigo-100">
-        <Link href="/monks" className={`inline-flex items-center gap-3 mb-8 group transition-colors ${theme.textColor} opacity-60 hover:opacity-100`}>
-            <div className={`p-2 rounded-full border ${theme.borderColor} group-hover:-translate-x-1 transition-transform`}><ArrowLeft size={14} /></div>
-            <span className="uppercase tracking-widest text-[10px] font-black">{t({mn: "Буцах", en: "Return"})}</span>
+      <main className="relative z-10 container mx-auto px-6 pt-32 pb-24">
+        
+        <Link href="/monks" className="inline-flex items-center gap-2 mb-8 opacity-60 hover:opacity-100 transition-opacity">
+            <div className={`p-2 rounded-full border ${isNight ? 'border-white/20' : 'border-black/10'}`}><ArrowLeft size={16} /></div>
+            <span className="text-[10px] uppercase tracking-widest font-bold">{t({mn: "Буцах", en: "Return"})}</span>
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
           
-          {/* --- LEFT: MONK INFO --- */}
-          <div className="lg:col-span-5 lg:sticky lg:top-32 space-y-8"> 
-             <LivingPortal 
-                image={monk.image} 
-                name={monk.name[language]} 
-                title={monk.title[language]}
-                isNight={isNight} 
-             />
-             <div className={`p-6 md:p-8 rounded-3xl border backdrop-blur-md ${theme.altarBg} ${theme.textColor}`}>
-                <h3 className="font-celestial text-lg mb-4 opacity-80">{t({mn: "Намтар", en: "Biography"})}</h3>
-                <p className="text-sm md:text-base leading-relaxed opacity-80">{monk.bio[language]}</p>
+          {/* --- LEFT: MONK DISPLAY --- */}
+          <div className="lg:col-span-4 lg:sticky lg:top-32 self-start space-y-8">
+             
+             {/* 3D Monk Card */}
+             <div className="relative aspect-[3/4] rounded-[30px] overflow-hidden shadow-2xl border-2 border-white/20 group">
+                <img src={monk!.image} alt={monk!.name[lang]} className="w-full h-full object-cover transform transition-transform duration-[1.5s] group-hover:scale-105" />
+                <div className={`absolute inset-0 bg-gradient-to-t ${isNight ? "from-[#020617]" : "from-[#451a03]"} via-transparent to-transparent opacity-90`} />
+                <div className="absolute bottom-0 left-0 w-full p-8 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/70 mb-2">{monk!.title[lang]}</p>
+                    <h1 className="text-4xl font-serif text-white">{monk!.name[lang]}</h1>
+                </div>
+             </div>
+
+             {/* Informative Stats */}
+             <div className={`p-6 rounded-3xl border backdrop-blur-md ${theme.glassPanel}`}>
+                <h3 className="font-celestial text-sm opacity-80 mb-4 pb-2 border-b border-current/10">{t({mn: "Товч Намтар", en: "The Reader"})}</h3>
+                <p className="text-sm leading-relaxed opacity-70 mb-4">{monk!.bio[lang]}</p>
+                <div className="flex gap-4">
+                    <div className={`flex items-center gap-2 text-xs font-bold ${theme.accentText}`}>
+                        <Stars size={14}/> <span>10+ Years Exp</span>
+                    </div>
+                    <div className={`flex items-center gap-2 text-xs font-bold ${theme.accentText}`}>
+                        <User size={14}/> <span>Certified</span>
+                    </div>
+                </div>
              </div>
           </div>
 
-          {/* --- RIGHT: BOOKING FLOW --- */}
-          <div className="lg:col-span-7">
-            <div className={`relative rounded-[3rem] border p-1 transition-all duration-1000 ${theme.altarBg}`}>
-                <div className="p-6 md:p-12 space-y-8 min-h-[600px] flex flex-col">
+          {/* --- RIGHT: BOOKING ENGINE --- */}
+          <div className="lg:col-span-8">
+            <motion.div 
+                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} 
+                className={`relative rounded-[40px] border backdrop-blur-3xl shadow-2xl overflow-hidden ${theme.glassPanel}`}
+            >
+                <div className="p-8 md:p-10 space-y-10">
                     
-                    {/* Header */}
-                    <div className="flex items-center justify-between pb-6 border-b border-current border-opacity-10">
-                         <div className="flex items-center gap-3">
-                             {isNight ? <Moon className="text-indigo-400" /> : <Sun className="text-amber-500" />}
-                             <span className={`font-celestial text-xl ${theme.textColor}`}>{t({mn: "Захиалга", en: "Booking"})}</span>
-                         </div>
-                         <div className="flex items-center gap-2 text-xs font-bold opacity-50">
-                             <Sparkles size={14} />
-                             {/* Progress Step Logic */}
-                             <span>
-                                {isBooked ? "Complete" 
-                                : selectedTime ? "Step 4/4" 
-                                : selectedDateIndex !== null ? "Step 3/4" 
-                                : selectedService ? "Step 2/4" 
-                                : "Step 1/4"}
-                             </span>
-                         </div>
-                    </div>
+                    {/* INFORMATIVE HERO TICKET */}
+                    {selectedService && <ServiceTicket service={selectedService} theme={theme} t={t} lang={lang} />}
 
                     <AnimatePresence mode="wait">
                         {isBooked ? (
-                            /* SUCCESS STATE */
-                            <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 text-center flex-1">
-                                <CheckCircle2 size={64} className={`${isNight ? "text-cyan-400" : "text-amber-600"} mb-6`} />
-                                <h3 className={`text-3xl font-celestial mb-4 ${theme.textColor}`}>{t({mn: "Амжилттай", en: "Fate Sealed"})}</h3>
-                                <p className={`mb-8 opacity-60 max-w-xs mx-auto ${theme.textColor}`}>{t({mn: "Таны цаг амжилттай баталгаажлаа.", en: "Your ritual has been scheduled."})}</p>
-                                <Link href="/services" className={`px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest ${theme.btnActive}`}>{t({mn: "Буцах", en: "Return Home"})}</Link>
+                            /* SUCCESS SCREEN */
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center">
+                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-20 h-20 mx-auto bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg mb-6">
+                                    <CheckCircle2 size={40} />
+                                </motion.div>
+                                <h2 className="text-3xl font-serif font-bold mb-4">{t({mn: "Баталгаажлаа", en: "Confirmed"})}</h2>
+                                <p className="opacity-60 mb-8">{t({mn: "Таны захиалга амжилттай бүртгэгдлээ.", en: "Your destiny has been aligned."})}</p>
+                                <Link href="/" className={`inline-block px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest ${isNight ? 'bg-white text-black' : 'bg-black text-white'}`}>
+                                    {t({mn: "Нүүр хуудас", en: "Return Home"})}
+                                </Link>
                             </motion.div>
                         ) : (
-                            /* FORM STEPS */
-                            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
-                                
-                                {/* 1. SERVICE SELECTION */}
-                                <div className="space-y-4">
-                                    <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-70 ${theme.textColor}`}>
-                                        <Scroll size={14} /> I. {t({mn: "Зан үйл сонгох", en: "Select Ritual"})}
-                                    </h4>
-                                    
-                                    {availableServices.length === 0 ? (
-                                        <p className="opacity-50 text-sm">No services found for this monk.</p>
-                                    ) : (
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {availableServices.map((s) => (
-                                                <button 
-                                                    key={s._id}
-                                                    onClick={() => { setSelectedService(s); setSelectedDateIndex(null); setSelectedTime(null); }}
-                                                    className={`w-full p-4 rounded-xl border text-left flex justify-between items-center transition-all ${selectedService?._id === s._id ? theme.btnActive : theme.serviceCard}`}
-                                                >
-                                                    <div>
-                                                        <span className="font-serif font-bold text-lg block">{s.name[language] || s.title[language]}</span>
-                                                        <span className="text-xs opacity-70">{s.duration}</span>
-                                                    </div>
-                                                    <span className="font-celestial font-bold">{Number(s.price).toLocaleString()}₮</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                            /* BOOKING STEPS */
+                            <>
+                                {/* 1. DATE SELECTOR */}
+                                <section>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] opacity-60">
+                                            <Calendar size={14} /> {t({mn: "Өдөр Сонгох", en: "Select Date"})}
+                                        </h4>
+                                        <span className="text-[10px] opacity-40">{t({mn: "Орон нутгийн цагаар", en: "Local Time"})}</span>
+                                    </div>
+                                    <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                                        {calendarDates.map((d, i) => (
+                                            <button 
+                                                key={i} onClick={() => { setSelectedDateIndex(i); setSelectedTime(null); }}
+                                                className={`
+                                                    shrink-0 w-16 h-24 rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center
+                                                    ${selectedDateIndex === i ? theme.slotActive + " shadow-lg scale-105" : "border-current/10 hover:bg-current/5"}
+                                                `}
+                                            >
+                                                <span className="text-[9px] font-black uppercase mb-1 opacity-70">{d.weekday}</span>
+                                                <span className="text-2xl font-serif font-bold">{d.day}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </section>
 
-                                {/* 2. DATE SELECTION */}
-                                <AnimatePresence>
-                                    {selectedService && (
-                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 overflow-hidden">
-                                            <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-70 ${theme.textColor}`}>
-                                                <Calendar size={14} /> II. {t({mn: "Өдөр Сонгох", en: "Select Day"})}
-                                            </h4>
-                                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x -mx-4 px-4 md:mx-0 md:px-0">
-                                                {calendarDates.map((d, i) => (
-                                                    <button 
-                                                        key={i} 
-                                                        onClick={() => { setSelectedDateIndex(i); setSelectedTime(null); }} 
-                                                        className={`shrink-0 w-20 h-24 rounded-2xl border transition-all flex flex-col items-center justify-center snap-center ${selectedDateIndex === i ? theme.btnActive : theme.btnDefault}`}
-                                                    >
-                                                        <span className="text-[10px] font-black uppercase mb-1">{d.weekday}</span>
-                                                        <span className="text-2xl font-serif font-bold">{d.day}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-
-                                {/* 3. TIME SELECTION */}
+                                {/* 2. TIME SELECTOR */}
                                 <AnimatePresence>
                                     {selectedDateIndex !== null && (
-                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 overflow-hidden">
-                                            <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-70 ${theme.textColor}`}>
-                                                <Clock size={14} /> III. {t({mn: "Цаг Сонгох", en: "Select Hour"})}
+                                        <motion.section initial={{opacity:0}} animate={{opacity:1}}>
+                                            <h4 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] opacity-60 mb-4">
+                                                <Clock size={14} /> {t({mn: "Цаг Сонгох", en: "Select Time"})}
                                             </h4>
                                             {currentDaySlots.length > 0 ? (
                                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                                                     {currentDaySlots.map((time, idx) => {
                                                         const isTaken = takenSlots.includes(time);
-                                                        const isBlocked = monk?.blockedSlots?.some(b => 
-                                                            b.date === calendarDates[selectedDateIndex].full.toISOString().split('T')[0] && 
-                                                            b.time === time
-                                                        );
-                                                        const isDisabled = isTaken || isBlocked;
-                                                        
                                                         return (
-                                                            <motion.button 
-                                                                key={time}
-                                                                initial={{ opacity: 0, y: 10 }} 
-                                                                animate={{ opacity: 1, y: 0 }} 
-                                                                transition={{ delay: idx * 0.05 }}
-                                                                disabled={isDisabled} 
-                                                                onClick={() => setSelectedTime(time)} 
-                                                                className={`relative py-3 rounded-xl text-sm font-bold border transition-all flex flex-col items-center justify-center overflow-hidden ${
-                                                                    selectedTime === time 
-                                                                        ? theme.btnActive 
-                                                                        : isDisabled 
-                                                                            ? "opacity-40 cursor-not-allowed bg-stone-100 border-stone-200 grayscale scale-95" 
-                                                                            : theme.btnDefault
-                                                                }`}
+                                                            <button 
+                                                                key={time} disabled={isTaken}
+                                                                onClick={() => setSelectedTime(time)}
+                                                                className={`
+                                                                    py-3 rounded-xl text-xs font-bold border transition-all relative
+                                                                    ${selectedTime === time ? theme.slotActive : isTaken ? "opacity-30 cursor-not-allowed bg-black/5 line-through" : "border-current/10 hover:bg-current/5"}
+                                                                `}
                                                             >
-                                                                <span className={isDisabled ? "line-through opacity-50" : ""}>{time}</span>
-                                                                {isTaken && (
-                                                                    <span className="text-[8px] absolute bottom-1 font-black uppercase tracking-tighter text-stone-400">
-                                                                        {t({mn: "Дүүрсэн", en: "Taken"})}
-                                                                    </span>
-                                                                )}
-                                                                {isBlocked && !isTaken && (
-                                                                    <span className="text-[8px] absolute bottom-1 font-black uppercase tracking-tighter text-red-300/70">
-                                                                        {t({mn: "Завгүй", en: "Busy"})}
-                                                                    </span>
-                                                                )}
-                                                            </motion.button>
+                                                                {time}
+                                                            </button>
                                                         )
                                                     })}
                                                 </div>
                                             ) : (
-                                                <div className="text-center py-8 opacity-50 border-2 border-dashed border-stone-200 rounded-xl">
-                                                    <p className="text-sm font-bold">{t({mn: "Энэ өдөр боломжгүй", en: "Monk is unavailable on this day"})}</p>
+                                                <div className="text-center py-6 opacity-50 border border-dashed rounded-xl border-current/20">
+                                                    <p className="text-xs">{t({mn: "Боломжит цаг байхгүй", en: "No available slots"})}</p>
                                                 </div>
                                             )}
-                                        </motion.div>
+                                        </motion.section>
                                     )}
                                 </AnimatePresence>
 
-                                {/* 4. USER DETAILS */}
+                                {/* 3. INPUT FORM & ACCORDION */}
                                 <AnimatePresence>
                                     {selectedTime && (
-                                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 pt-6 border-t border-current border-opacity-10">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="space-y-2">
-                                                    <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme.textColor}`}>Name</label>
-                                                    <input value={userName} onChange={e => setUserName(e.target.value)} className={`w-full p-4 rounded-xl border outline-none font-serif transition-all focus:ring-2 focus:ring-opacity-50 ${theme.inputBg}`} placeholder="Your Name" />
+                                        <motion.section 
+                                            initial={{ height: 0, opacity: 0 }} 
+                                            animate={{ height: "auto", opacity: 1 }} 
+                                            className="space-y-8 pt-8 border-t border-current/10"
+                                        >
+                                            {/* PROTOCOLS ACCORDION */}
+                                            <div className="rounded-2xl border border-current/10 p-2">
+                                                <InfoItem 
+                                                    icon={<Shield size={14}/>} 
+                                                    title={t({mn: "Бэлтгэл Ажил", en: "Preparation Protocols"})} 
+                                                    text={t({mn: "Та тайван орчинд, өөрийгөө бэлдсэн байх хэрэгтэй. Онлайн уулзалт тул интернет холболтоо шалгаарай.", en: "Ensure you are in a quiet space with stable internet. Center your mind 5 minutes prior to the session."})}
+                                                    theme={theme}
+                                                />
+                                                <InfoItem 
+                                                    icon={<Info size={14}/>} 
+                                                    title={t({mn: "Нууцлал", en: "Privacy Policy"})} 
+                                                    text={t({mn: "Таны хувийн мэдээлэл болон яриа бүрэн нууцлагдана.", en: "All sessions are strictly confidential. Your data is encrypted and never shared."})}
+                                                    theme={theme}
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest opacity-50 pl-2">Name</label>
+                                                    <div className="relative">
+                                                        <User size={14} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40"/>
+                                                        <input value={userName} onChange={e => setUserName(e.target.value)} className={`w-full pl-10 pr-4 py-4 rounded-xl border outline-none font-serif text-sm transition-all ${theme.input}`} placeholder="Full Name" />
+                                                    </div>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme.textColor}`}>Email</label>
-                                                    <input value={userEmail} onChange={e => setUserEmail(e.target.value)} className={`w-full p-4 rounded-xl border outline-none font-serif transition-all focus:ring-2 focus:ring-opacity-50 ${theme.inputBg}`} placeholder="contact@email.com" />
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest opacity-50 pl-2">Email</label>
+                                                    <div className="relative">
+                                                        <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40"/>
+                                                        <input value={userEmail} onChange={e => setUserEmail(e.target.value)} className={`w-full pl-10 pr-4 py-4 rounded-xl border outline-none font-serif text-sm transition-all ${theme.input}`} placeholder="Email Address" />
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme.textColor}`}>Intention / Note</label>
-                                                <textarea value={userNote} onChange={e => setUserNote(e.target.value)} className={`w-full p-4 rounded-xl border outline-none font-serif h-24 resize-none transition-all focus:ring-2 focus:ring-opacity-50 ${theme.inputBg}`} placeholder={t({mn: "Тусгай хүсэлт...", en: "Special requests..."})} />
+                                            
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-widest opacity-50 pl-2">Intention</label>
+                                                <div className="relative">
+                                                    <PenTool size={14} className="absolute left-4 top-4 opacity-40"/>
+                                                    <textarea value={userNote} onChange={e => setUserNote(e.target.value)} className={`w-full pl-10 pr-4 py-4 rounded-xl border outline-none font-serif text-sm h-24 resize-none transition-all ${theme.input}`} placeholder={t({mn: "Таны асуулт эсвэл зорилго...", en: "Your question or focus for the session..."})} />
+                                                </div>
                                             </div>
+
+                                            {/* ULTRA BUTTON */}
                                             {isSignedIn ? (
-                                                <button onClick={handleBooking} disabled={!userName || !userEmail || isSubmitting} className={`w-full py-5 rounded-2xl font-celestial font-bold text-sm uppercase tracking-widest transition-all overflow-hidden relative group disabled:opacity-50 disabled:cursor-not-allowed ${theme.primaryBtn}`}>
-                                                    <span className="relative z-10 flex items-center justify-center gap-3">
-                                                        {isSubmitting ? <Loader2 className="animate-spin" /> : <>{t({mn: "Баталгаажуулах", en: "Seal Fate"})} <CreditCard size={16} /></>}
-                                                    </span>
-                                                </button>
+                                                <motion.button 
+                                                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                                                    onClick={handleBooking} disabled={!userName || !userEmail || isSubmitting}
+                                                    className="w-full relative group h-16 rounded-2xl overflow-hidden shadow-2xl mt-2 disabled:grayscale disabled:opacity-50"
+                                                >
+                                                    <div className={`absolute inset-0 bg-gradient-to-r ${isNight ? 'from-cyan-600 to-blue-600' : 'from-amber-500 to-orange-600'} transition-all duration-300`} />
+                                                    <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.3)_50%,transparent_75%)] bg-[length:250%_250%] animate-[shimmer_2s_linear_infinite]" />
+                                                    
+                                                    <div className="relative z-10 flex items-center justify-center gap-3 text-white h-full font-bold uppercase tracking-[0.2em] text-sm">
+                                                        {isSubmitting ? <Loader2 className="animate-spin" /> : (
+                                                            <>
+                                                                <CreditCard size={16} /> <span>{t({mn: "Төлбөр Төлөх & Баталгаажуулах", en: "Complete Booking"})}</span> <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </motion.button>
                                             ) : (
                                                 <Link href="/sign-in" className="block w-full">
-                                                    <button className={`w-full py-5 rounded-2xl font-celestial font-bold text-sm uppercase tracking-widest transition-all overflow-hidden relative group bg-amber-600 text-white shadow-amber-900/20`}>
-                                                        <span className="relative z-10 flex items-center justify-center gap-3">
-                                                            {t({mn: "Нэвтэрч захиалга өгөх", en: "Sign In to Book"})} <Sparkles size={16} />
-                                                        </span>
+                                                    <button className="w-full h-14 rounded-2xl bg-zinc-800 text-white font-bold uppercase tracking-widest text-xs hover:bg-zinc-700 transition-colors">
+                                                        {t({mn: "Нэвтэрч захиалга өгөх", en: "Sign In to Book"})}
                                                     </button>
                                                 </Link>
                                             )}
-                                        </motion.div>
+                                        </motion.section>
                                     )}
                                 </AnimatePresence>
-
-                            </motion.div>
+                            </>
                         )}
                     </AnimatePresence>
                 </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </main>

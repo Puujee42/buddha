@@ -1,210 +1,236 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useMotionTemplate, useMotionValue, AnimatePresence } from "framer-motion";
 import { SignUpButton, SignInButton, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import {
-  Flower,
-  UserPlus,
-  Loader2,
-  ShieldCheck,
-  User,
-  ScrollText
+  Flower, UserPlus, Loader2, ShieldCheck, User, ScrollText, Sparkles, Orbit
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import OverlayNavbar from "../components/Navbar";
 
-// --- CUSTOM SVG: The Endless Knot ---
-const EndlessKnot = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className} fill="none" stroke="currentColor">
-     <path d="M30 30 L70 30 L70 70 L30 70 Z" strokeWidth="0.5" className="opacity-50" />
-     <path d="M30 30 Q50 10 70 30 T70 70 Q50 90 30 70 T30 30" strokeWidth="1" />
-     <path d="M20 50 L80 50" strokeWidth="0.5" strokeDasharray="2 2" />
-     <path d="M50 20 L50 80" strokeWidth="0.5" strokeDasharray="2 2" />
-     <circle cx="50" cy="50" r="45" strokeWidth="0.5" className="opacity-30" />
-  </svg>
+// ==========================================
+// 1. VISUAL EFFECTS COMPONENTS
+// ==========================================
+
+const Nebulas = () => (
+  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+    <motion.div 
+      animate={{ scale: [1, 1.2, 1], rotate: 360 }}
+      transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+      className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(251,191,36,0.1)_0%,_transparent_50%)]"
+    />
+    <div className="absolute inset-0 opacity-[0.05] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
+  </div>
 );
+
+// High-End Role Card with "Liquid" Selection
+const RoleSelector = ({ role, setRole, content }: any) => (
+  <div className="grid grid-cols-2 gap-4 mb-8">
+    {(["client", "monk"] as const).map((r) => {
+      const isActive = role === r;
+      return (
+        <motion.button
+          key={r}
+          onClick={() => setRole(r)}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`relative flex flex-col items-center justify-center py-6 rounded-[2rem] border overflow-hidden transition-all duration-300 ${
+            isActive 
+              ? "border-amber-500 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.4)]" 
+              : "border-transparent bg-white/40 hover:bg-white/60"
+          }`}
+        >
+          {/* Active Liquid Background */}
+          <AnimatePresence>
+            {isActive && (
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-gradient-to-br from-amber-100 to-white z-0"
+              />
+            )}
+          </AnimatePresence>
+
+          <div className={`relative z-10 flex flex-col items-center gap-3 ${isActive ? "text-amber-800" : "text-stone-500"}`}>
+            {r === "client" ? (
+                <div className={`p-3 rounded-full ${isActive ? 'bg-amber-500 text-white' : 'bg-stone-200'}`}>
+                    <User size={20} />
+                </div>
+            ) : (
+                <div className={`p-3 rounded-full ${isActive ? 'bg-amber-500 text-white' : 'bg-stone-200'}`}>
+                    <ScrollText size={20} />
+                </div>
+            )}
+            <span className="text-xs font-black uppercase tracking-widest">{content[`role${r.charAt(0).toUpperCase() + r.slice(1)}`]}</span>
+          </div>
+        </motion.button>
+      );
+    })}
+  </div>
+);
+
+// ==========================================
+// 2. MAIN PAGE
+// ==========================================
 
 export default function SignUpPage() {
   const { t } = useLanguage();
-  // State to track user role selection
   const [role, setRole] = useState<"client" | "monk">("client");
+  
+  // Mouse Torch Effect
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const torchBg = useMotionTemplate`radial-gradient(500px circle at ${mouseX}px ${mouseY}px, rgba(251, 191, 36, 0.08), transparent 80%)`;
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    mouseX.set(clientX);
+    mouseY.set(clientY);
+  };
 
   const content = {
-    leftTitle: t({ mn: "Xамт олонд <br/> нэгдээрэй", en: "Join the <br/>us" }),
-    leftDesc: t({
+    leftTitle: t({ mn: "Хязгааргүй<br/>Боломж", en: "Infinite<br/>Potential" }),
+    leftSubtitle: t({ mn: "Таны аялал эндээс эхэлнэ.", en: "Your journey starts here." }),
+    quote: t({
       mn: "\"Мянган бээрийн аялал нэг алхмаас эхэлдэг. Бидэнтэй нэгдэж, амар амгалан, гэгээрлийн төлөөх замаа өнөөдөр эхлүүлээрэй.\"",
       en: "\"A journey of a thousand miles begins with a single step. Join us and begin your path towards peace and enlightenment today.\""
     }),
-    beginJourney: t({ mn: "Аяллаа эхлүүлэх", en: "Begin Your Journey" }),
-    identifyDesc: t({ mn: "Таны зорилго юу вэ?", en: "How do you wish to join us?" }),
-    roleClient: t({ mn: "Би бол эрэлчин (Үйлчлүүлэгч)", en: "I am a Seeker (Client)" }),
-    roleMonk: t({ mn: "Би бол багш (Лам)", en: "I am a Guide (Monk)" }),
-    registerBtn: role === "monk" 
-      ? t({ mn: "Багшаар бүртгүүлэх", en: "Register as Monk" })
-      : t({ mn: "Сангхад нэгдэх", en: "Join the Sangha" }),
+    welcome: t({ mn: "Тавтай морил", en: "Welcome Home" }),
+    instruction: t({ mn: "Та хэн болохыг сонгоно уу?", en: "How will you join us?" }),
+    roleClient: t({ mn: "Эрэлчин", en: "Seeker" }),
+    roleMonk: t({ mn: "Багш (Лам)", en: "Guide" }),
+    registerBtn: role === "monk" ? t({ mn: "Багшаар бүртгүүлэх", en: "Register as Monk" }) : t({ mn: "Сангхад нэгдэх", en: "Join the Sangha" }),
     loginBtn: t({ mn: "Нэвтрэх", en: "Enter Sanctuary" }),
-    or: t({ mn: "- ЭСВЭЛ -", en: "- OR -" }),
-    agreeText: t({ mn: "Бүртгүүлснээр та ", en: "By registering, you agree to follow the " }),
-    eightfoldPath: t({ mn: "Найман зөв зам-ын дагуу байхыг зөвшөөрч байна.", en: "Eightfold Path of Conduct" }),
+    footer: t({ mn: "Эв нэгдэл • Нигүүлсэл • Мэргэн ухаан", en: "Unity • Compassion • Wisdom" }),
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-[#FFFBEB] font-serif selection:bg-[#F59E0B] selection:text-white overflow-hidden">
+    <div 
+      className="min-h-screen w-full flex bg-[#FDFBF7] font-serif overflow-hidden selection:bg-amber-200"
+      onMouseMove={handleMouseMove}
+    >
       <OverlayNavbar />
-      {/* --- LEFT SIDE (Unchanged) --- */}
-      <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-[#451a03]">
+
+      {/* --- LEFT SIDE: CINEMATIC VISUAL --- */}
+      <div className="hidden lg:flex w-5/12 relative overflow-hidden bg-[#2a1a12] items-center justify-center">
+        {/* Animated Layers */}
         <motion.div 
-           initial={{ scale: 1.1 }}
-           animate={{ scale: 1 }}
-           transition={{ duration: 10, ease: "easeOut" }}
-           className="absolute inset-0"
+           initial={{ scale: 1.2 }} animate={{ scale: 1 }} transition={{ duration: 20, ease: "easeOut" }}
+           className="absolute inset-0 z-0"
         >
           <img 
-            src="https://images.unsplash.com/photo-1518544866330-5296839aa64b?q=80&w=2574&auto=format&fit=crop" 
-            alt="Buddhist Temple" 
-            className="w-full h-full object-cover opacity-60 mix-blend-overlay"
+            src="https://images.unsplash.com/photo-1600609842388-3e4b7b250571?q=80&w=2574&auto=format&fit=crop" 
+            alt="Temple" 
+            className="w-full h-full object-cover opacity-40 mix-blend-overlay grayscale"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#451a03] via-[#78350F]/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#2a1a12] via-[#451a03]/60 to-transparent" />
         </motion.div>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 animate-pulse" />
-        <div className="relative z-10 m-auto max-w-lg px-12 text-center">
+        
+        <Nebulas />
+
+        {/* Content */}
+        <div className="relative z-10 px-12 text-center">
            <motion.div
-             initial={{ opacity: 0, y: 20 }}
+             initial={{ opacity: 0, y: 30 }}
              animate={{ opacity: 1, y: 0 }}
-             transition={{ delay: 0.5, duration: 1 }}
+             transition={{ duration: 1, delay: 0.2 }}
            >
-             <Flower className="w-16 h-16 text-[#FDE68A] mx-auto mb-8 animate-[spin_60s_linear_infinite]" />
+             <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-amber-200/20 backdrop-blur-md mb-8 text-amber-100/60">
+                <Orbit className="animate-spin-slow" size={14} />
+                <span className="text-[10px] font-black uppercase tracking-[0.3em]">{content.leftSubtitle}</span>
+             </div>
+             
              <h1 
-               className="text-5xl font-bold text-[#FDE68A] mb-6 drop-shadow-lg"
+               className="text-6xl font-black text-amber-50 mb-8 leading-[0.9] tracking-tighter drop-shadow-2xl"
                dangerouslySetInnerHTML={{ __html: content.leftTitle }}
              />
-             <p className="text-[#FDE68A]/70 text-lg leading-relaxed font-sans font-light">
-               {content.leftDesc}
+             
+             <div className="w-12 h-1 bg-amber-500/50 mx-auto mb-8 rounded-full" />
+             
+             <p className="text-amber-100/70 text-lg font-sans font-light leading-relaxed max-w-sm mx-auto italic">
+               {content.quote}
              </p>
            </motion.div>
         </div>
       </div>
 
-      {/* --- RIGHT SIDE --- */}
-      <div className="w-full lg:w-1/2 relative flex items-center justify-center p-6 sm:p-12">
-        {/* Background FX (Unchanged) */}
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#F59E0B]/5 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#D97706]/5 rounded-full blur-[80px] pointer-events-none" />
-        <motion.div 
-           animate={{ rotate: 360 }}
-           transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
-           className="absolute -left-24 -top-24 w-[600px] h-[600px] text-[#451a03]/5 pointer-events-none"
-        >
-            <EndlessKnot className="w-full h-full" />
-        </motion.div>
+      {/* --- RIGHT SIDE: INTERACTIVE FORM --- */}
+      <div className="w-full lg:w-7/12 relative flex flex-col items-center justify-center p-6 sm:p-12 md:p-24">
+        
+        {/* Magic Background Torch */}
+        <motion.div className="absolute inset-0 pointer-events-none" style={{ background: torchBg }} />
+        
+        <div className="absolute top-0 right-0 p-12 pointer-events-none opacity-5">
+            <Flower size={300} />
+        </div>
 
-        {/* --- AUTH CARD --- */}
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10 w-full max-w-md bg-white/50 backdrop-blur-md p-8 sm:p-12 rounded-[2.5rem] border border-white/60 shadow-[0_20px_50px_-10px_rgba(69,26,3,0.1)]"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: "circOut" }}
+          className="relative z-10 w-full max-w-lg"
         >
           {/* Header */}
-          <div className="text-center mb-8">
-             <Link href="/" className="inline-flex items-center gap-2 text-[#D97706] hover:text-[#B45309] transition-colors mb-6 group">
-                <Flower size={20} className="group-hover:rotate-180 transition-transform duration-700" />
-                <span className="font-bold font-sans uppercase tracking-widest text-xs">Гэвабол</span>
-             </Link>
-             <h2 className="text-3xl font-bold text-[#451a03] mb-3">{content.beginJourney}</h2>
-             <p className="text-[#78350F]/70 text-sm font-sans">{content.identifyDesc}</p>
+          <div className="text-center mb-12">
+             <motion.div 
+               initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
+               className="inline-block p-4 rounded-2xl bg-white shadow-xl mb-6 text-amber-600 border border-amber-100"
+             >
+                <Sparkles size={32} />
+             </motion.div>
+             <h2 className="text-4xl md:text-5xl font-bold text-[#2a1a12] mb-3 tracking-tight">{content.welcome}</h2>
+             <p className="text-[#5c4033] font-sans opacity-60 uppercase tracking-widest text-xs font-bold">{content.instruction}</p>
           </div>
 
-          {/* ROLE SELECTOR */}
-          <div className="grid grid-cols-2 gap-3 mb-8 p-1 bg-[#451a03]/5 rounded-2xl">
-            <button
-              onClick={() => setRole("client")}
-              className={`flex flex-col items-center justify-center py-4 rounded-xl transition-all duration-300 gap-2 ${
-                role === "client" 
-                ? "bg-white shadow-md text-[#D97706]" 
-                : "text-[#78350F]/60 hover:bg-white/50"
-              }`}
-            >
-              <User size={20} />
-              <span className="text-xs font-bold uppercase tracking-wider">{content.roleClient}</span>
-            </button>
-            <button
-              onClick={() => setRole("monk")}
-              className={`flex flex-col items-center justify-center py-4 rounded-xl transition-all duration-300 gap-2 ${
-                role === "monk" 
-                ? "bg-white shadow-md text-[#D97706]" 
-                : "text-[#78350F]/60 hover:bg-white/50"
-              }`}
-            >
-              <ScrollText size={20} />
-              <span className="text-xs font-bold uppercase tracking-wider">{content.roleMonk}</span>
-            </button>
-          </div>
+          {/* Role Selection */}
+          <RoleSelector role={role} setRole={setRole} content={content} />
 
-          {/* CLERK ACTIONS */}
-          <ClerkLoading>
-            <div className="flex flex-col items-center justify-center py-8 gap-4 text-[#D97706]">
-                <Loader2 size={32} className="animate-spin" />
-            </div>
-          </ClerkLoading>
+          {/* Auth Actions */}
+          <div className="space-y-4">
+            <ClerkLoading>
+                <div className="flex justify-center py-4"><Loader2 className="animate-spin text-amber-600" /></div>
+            </ClerkLoading>
 
-          <ClerkLoaded>
-            <div className="space-y-6">
-              
-              {/* 1. SIGN UP */}
-              {/* 
-                 IMPORTANT: 
-                 1. We pass 'role' in unsafeMetadata so we know who they are in the database.
-                 2. fallbackRedirectUrl: If monk, go to /onboarding/monk. If client, go home.
-              */}
-              <SignUpButton 
-                mode="modal"
-                unsafeMetadata={{ role: role }}
-                forceRedirectUrl={role === 'monk' ? "/onboarding/monk" : "/dashboard"}
-              >
-                <motion.button 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="relative w-full overflow-hidden rounded-2xl bg-[#D97706] p-5 text-[#FFFBEB] font-bold shadow-xl transition-all hover:bg-[#B45309] group cursor-pointer"
+            <ClerkLoaded>
+                {/* 1. Primary Register Button */}
+                <SignUpButton 
+                    mode="modal"
+                    unsafeMetadata={{ role: role }}
+                    forceRedirectUrl={role === 'monk' ? "/onboarding/monk" : "/dashboard"}
                 >
-                    <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                    <div className="flex items-center justify-center gap-3">
-                        <UserPlus size={18} />
-                        <span>{content.registerBtn}</span>
-                    </div>
-                </motion.button>
-              </SignUpButton>
+                    <motion.button 
+                        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                        className="group relative w-full h-16 rounded-[1.5rem] overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-900/20"
+                    >
+                        {/* Shimmer */}
+                        <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                        
+                        <div className="relative z-10 flex items-center justify-center gap-3 font-bold text-sm uppercase tracking-[0.2em]">
+                            <UserPlus size={18} /> {content.registerBtn}
+                        </div>
+                    </motion.button>
+                </SignUpButton>
 
-              <div className="text-center">
-                <span className="text-xs font-sans text-[#D97706]/60 font-bold uppercase tracking-widest block mb-1">
-                    {content.or}
-                </span>
-              </div>
+                {/* 2. Secondary Login Button */}
+                <div className="relative py-4">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-stone-200" /></div>
+                    <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-[#FDFBF7] px-4 text-stone-400">Or</span></div>
+                </div>
 
-              {/* 2. SIGN IN */}
-              <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-                  <motion.button 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-4 rounded-2xl border-2 border-[#451a03]/20 bg-transparent hover:border-[#451a03] hover:bg-[#451a03]/5 transition-all flex items-center justify-center gap-2 text-[#451a03] font-bold group cursor-pointer"
-                  >
-                    <ShieldCheck size={18} className="text-[#451a03] group-hover:scale-110 transition-transform" />
-                    <span>{content.loginBtn}</span>
-                  </motion.button>
-              </SignInButton>
+                <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+                    <motion.button 
+                        whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.02)" }} whileTap={{ scale: 0.98 }}
+                        className="w-full h-14 rounded-[1.5rem] border-2 border-stone-200 text-[#451a03] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-colors hover:border-amber-300"
+                    >
+                        <ShieldCheck size={16} /> {content.loginBtn}
+                    </motion.button>
+                </SignInButton>
+            </ClerkLoaded>
+          </div>
 
-            </div>
-          </ClerkLoaded>
-
-          <div className="mt-10 text-center border-t border-[#D97706]/10 pt-6">
-             <p className="text-[#78350F]/60 text-xs font-sans">
-                {content.agreeText}
-                <Link href="/" className="font-bold text-[#D97706] hover:underline ml-1">
-                   {content.eightfoldPath}
-                </Link>
-             </p>
+          <div className="mt-12 text-center opacity-40">
+             <p className="text-[10px] font-black uppercase tracking-[0.3em]">{content.footer}</p>
           </div>
 
         </motion.div>

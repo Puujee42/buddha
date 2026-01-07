@@ -108,7 +108,10 @@ export default function MajesticTarotSection() {
         const res = await fetch('/api/monks');
         const data: Monk[] = await res.json();
         
-        const mappedMonks: MonkData[] = data.map((m, i) => ({
+        // LIMIT TO 3 MONKS FOR PERFORMANCE
+        const limitedData = data.slice(0, 3);
+
+        const mappedMonks: MonkData[] = limitedData.map((m, i) => ({
           id: m._id?.toString() || `temp-${i}`,
           arcana: RUNES[i % RUNES.length],
           name: m.name,
@@ -177,9 +180,9 @@ export default function MajesticTarotSection() {
           </motion.div>
           
           <h2 className={`text-6xl md:text-8xl font-celestial font-light tracking-tighter ${theme.textColor}`}>
-            {t({ mn: "Дээд", en: "Supreme" })}{" "}
+            {t({ mn: "Мэргэ", en: "Tarot card" })}{" "}
             <span className={`italic text-transparent bg-clip-text bg-linear-to-b ${theme.titleGradient}`}>
-              Arcana
+              {t({ mn: "үзүүлэх", en: "prediction" })}
             </span>
           </h2>
           <div className={`w-40 h-px bg-linear-to-r from-transparent via-current to-transparent ${theme.mandalaColor}`} />

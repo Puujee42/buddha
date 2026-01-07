@@ -1,68 +1,136 @@
 "use client";
+
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Calendar, Clock, CheckCircle2, Loader2,
-  Sun, Orbit, Star, Users, Sparkles, LogIn
+  Sparkles, Star, User, ArrowRight, Hourglass, Shield, Info, ChevronDown
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useUser } from "@clerk/nextjs"; 
 import OverlayNavbar from "../../components/Navbar";
-import GoldenNirvanaFooter from "../../components/Footer";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { Service, Monk } from "@/database/types"; 
+import { Monk } from "@/database/types"; 
 
-// --- ALTAR FRAME (Unchanged) ---
-const AltarFrame = ({ color }: { color: string }) => (
-  <div className="absolute inset-0 pointer-events-none z-30">
-    <svg className="w-full h-full" viewBox="0 0 500 800" fill="none" preserveAspectRatio="none">
-      <defs>
-        <filter id="zodiac-glow">
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-      <motion.path
-        initial={{ pathLength: 0, strokeDashoffset: 0 }}
-        animate={{ pathLength: 1, strokeDashoffset: [0, 1] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-        d="M60 100 L60 60 L100 60 M400 60 L440 60 L440 100 M440 700 L440 740 L400 740 M100 740 L60 740 L60 700"
-        stroke={color} strokeWidth="1.5" strokeOpacity="0.5" strokeDasharray="5 5"
-      />
-      <g fill={color} className="opacity-20" style={{ fontSize: '14px' }} filter="url(#zodiac-glow)">
-        <motion.text
-          x="25" y="300" className="[writing-mode:vertical-rl] font-serif tracking-[1em]"
-          animate={{ y: [0, -15, 0], opacity: [0.2, 0.6, 0.2], scale: [1, 1.1, 1] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        >♈ ♉ ♊ ♋ ♌ ♍</motion.text>
-        <motion.text
-          x="475" y="300" className="[writing-mode:vertical-rl] font-serif tracking-[1em]"
-          animate={{ y: [0, 15, 0], opacity: [0.2, 0.6, 0.2], scale: [1, 1.1, 1] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        >♎ ♏ ♐ ♑ ♒ ♓</motion.text>
-      </g>
-      <motion.circle
-        cx="250" cy="60" r="30"
-        stroke={color} strokeWidth="0.5" strokeOpacity="0.2"
-        animate={{ rotate: 360, scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-      />
-      <motion.circle
-        cx="250" cy="740" r="40"
-        stroke={color} strokeWidth="0.5" strokeOpacity="0.2"
-        animate={{ rotate: -360, scale: [1, 1.2, 1], opacity: [0.2, 0.5, 0.2] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-      />
-    </svg>
+// ... (CosmicBackground remains the same) ...
+const CosmicBackground = ({ isNight }: { isNight: boolean }) => (
+  <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div className={`absolute inset-0 transition-colors duration-1000 ${
+      isNight 
+        ? "bg-[radial-gradient(ellipse_at_top,_#1e1b4b_0%,_#020617_100%)]" 
+        : "bg-[radial-gradient(ellipse_at_top,_#fffbeb_0%,_#fff7ed_100%)]"
+    }`} />
+    
+    <motion.div 
+      animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+      transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+      className={`absolute top-[-30%] left-[-20%] w-[80vw] h-[80vw] rounded-full blur-[120px] opacity-20 ${isNight ? "bg-cyan-900" : "bg-amber-200"}`}
+    />
+    <motion.div 
+      animate={{ rotate: -360, scale: [1, 1.3, 1] }}
+      transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
+      className={`absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 ${isNight ? "bg-fuchsia-900" : "bg-orange-100"}`}
+    />
+
+    <div className="absolute inset-0 opacity-[0.04] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
   </div>
 );
+
+// --- COMPONENT: THE HOLOGRAPHIC TICKET (Updated Monk Name Highlight) ---
+const ServiceTicket = ({ service, monkName, theme, lang }: any) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.2 }}
+    className={`relative w-full p-6 md:p-8 rounded-[2rem] overflow-hidden border backdrop-blur-md mb-8 ${theme.glassPanel}`}
+  >
+    <div className={`absolute top-0 left-0 w-1 h-full ${theme.accentBg}`} />
+    
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+        <div>
+            {/* Top Badges */}
+            <div className="flex items-center gap-3 mb-3">
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${theme.badgeBorder} ${theme.badgeText}`}>
+                    {service.type === 'divination' ? (lang === 'mn' ? "Мэргэ" : "Divination") : (lang === 'mn' ? "Зан үйл" : "Ritual")}
+                </span>
+                <span className={`flex items-center gap-1 text-[10px] font-bold opacity-60 ${theme.text}`}>
+                    <Hourglass size={12} /> {service.duration}
+                </span>
+            </div>
+
+            {/* Service Name */}
+            <h1 className={`text-3xl md:text-4xl font-serif font-black tracking-tight mb-2 ${theme.text}`}>
+                {service.name?.[lang]}
+            </h1>
+
+            {/* Monk Attribution (Highlighted) */}
+            <div className="flex items-center gap-2 mt-2">
+                <span className={`text-xs opacity-60 ${theme.text}`}>{lang === 'mn' ? 'Багш:' : 'Guide:'}</span>
+                <div className="relative group">
+                    {/* The Highlighted Name */}
+                    <span className={`text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r ${theme.monkGradient} drop-shadow-sm`}>
+                        {monkName}
+                    </span>
+                    <span className="absolute -bottom-1 left-0 w-full h-[1px] bg-gradient-to-r from-current to-transparent opacity-50" />
+                </div>
+                <div className={`p-1 rounded-full bg-yellow-500/10 text-yellow-600`}>
+                    <Star size={12} fill="currentColor" />
+                </div>
+            </div>
+
+            {/* Description */}
+            <p className={`mt-4 text-sm max-w-lg leading-relaxed opacity-70 ${theme.text}`}>
+                {service.description?.[lang] || (lang==='mn' ? "Таны хувь заяаны зам мөрийг тольдох ариун үйл." : "A sacred session to align your destiny path.")}
+            </p>
+        </div>
+
+        <div className="text-right">
+            <span className={`text-[10px] uppercase tracking-widest opacity-50 block mb-1 ${theme.text}`}>
+                {lang === 'mn' ? "Өргөл" : "Offering"}
+            </span>
+            <div className={`text-4xl font-serif font-medium ${theme.accentText}`}>
+                {Number(service.price).toLocaleString()}₮
+            </div>
+        </div>
+    </div>
+  </motion.div>
+);
+
+// --- COMPONENT: INFO ACCORDION ---
+const InfoItem = ({ icon, title, text, theme }: any) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className={`border-b ${theme.borderColor} last:border-0`}>
+            <button 
+                onClick={() => setIsOpen(!isOpen)} 
+                className="w-full flex items-center justify-between py-4 text-left group"
+            >
+                <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full bg-current/5 ${theme.accentText}`}>{icon}</div>
+                    <span className={`text-xs font-bold uppercase tracking-widest opacity-70 group-hover:opacity-100 ${theme.text}`}>{title}</span>
+                </div>
+                <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""} ${theme.text}`} />
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div 
+                        initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <p className={`pb-4 pl-12 text-sm leading-relaxed opacity-60 ${theme.text}`}>{text}</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
 
 export default function RitualBookingPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { t, language } = useLanguage();
+  const { t, language: lang } = useLanguage();
   const { resolvedTheme } = useTheme();
   const { user, isSignedIn } = useUser(); 
 
@@ -74,524 +142,326 @@ export default function RitualBookingPage() {
   const [loading, setLoading] = useState(true);
   const [isBooked, setIsBooked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [selectedDateIndex, setSelectedDateIndex] = useState<number | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [userName, setUserName] = useState(user?.fullName || ""); 
-  const [userEmail, setUserEmail] = useState(user?.primaryEmailAddress?.emailAddress || ""); 
+  const [takenSlots, setTakenSlots] = useState<string[]>([]);
+  
+  const [userName, setUserName] = useState(""); 
+  const [userEmail, setUserEmail] = useState(""); 
   const [userNote, setUserNote] = useState("");
-  const [showMonkSelector, setShowMonkSelector] = useState(false);
-  const [takenSlots, setTakenSlots] = useState<string[]>([]); 
 
-  // --- MOVED 'dates' HERE (Before useEffect) ---
-  const dates = useMemo(() => {
-    const arr = [];
-    const today = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      arr.push({
-        day: d.getDate(),
-        week: d.toLocaleDateString(language === 'mn' ? 'mn' : 'en', { weekday: 'short' }),
-        fullDate: d
-      });
-    }
-    return arr;
-  }, [language]);
-  // -------------------------------------------
+  const isNight = resolvedTheme === "dark";
 
-  useEffect(() => {
-    if (user && user.fullName) setUserName(user.fullName);
-    if (user && user.primaryEmailAddress?.emailAddress) setUserEmail(user.primaryEmailAddress.emailAddress);
-  }, [user]);
+  // --- THEME CONFIG (Updated with Monk Gradient) ---
+  const theme = isNight ? {
+    bg: "bg-[#020617]",
+    text: "text-indigo-50",
+    accentText: "text-cyan-400",
+    accentBg: "bg-cyan-500",
+    glassPanel: "bg-[#0f172a]/60 border-indigo-500/20",
+    badgeBorder: "border-cyan-500/30",
+    badgeText: "text-cyan-300",
+    borderColor: "border-white/10",
+    monkGradient: "from-cyan-400 to-blue-500", // Bright Cyan-Blue for Night
+    slotActive: "bg-cyan-600 border-cyan-500 text-white shadow-[0_0_15px_rgba(34,211,238,0.4)]",
+    slotDisabled: "opacity-30 bg-white/5 cursor-not-allowed",
+    slotDefault: "border-white/10 hover:bg-white/10 text-indigo-200",
+    input: "bg-black/20 border-white/10 focus:border-cyan-500/50 text-white placeholder-white/20",
+    btnGradient: "from-cyan-600 to-blue-600"
+  } : {
+    bg: "bg-[#FDFBF7]",
+    text: "text-amber-950",
+    accentText: "text-amber-600",
+    accentBg: "bg-amber-500",
+    glassPanel: "bg-white/60 border-amber-900/10 shadow-xl",
+    badgeBorder: "border-amber-600/20",
+    badgeText: "text-amber-700",
+    borderColor: "border-amber-900/10",
+    monkGradient: "from-amber-600 to-orange-700", // Deep Amber-Orange for Day
+    slotActive: "bg-amber-500 border-amber-500 text-white shadow-[0_5px_15px_rgba(245,158,11,0.3)] scale-105",
+    slotDisabled: "opacity-30 bg-black/5 cursor-not-allowed",
+    slotDefault: "border-amber-900/10 hover:bg-amber-50 text-amber-900",
+    input: "bg-white border-amber-900/10 focus:border-amber-500/50 text-amber-900 placeholder-amber-900/30",
+    btnGradient: "from-amber-500 to-orange-600"
+  };
 
   useEffect(() => {
     setMounted(true);
+    if(user) { setUserName(user.fullName || ""); setUserEmail(user.primaryEmailAddress?.emailAddress || ""); }
+
     async function loadData() {
       if (!id) return;
-      
       try {
         setLoading(true);
-        
-        // 1. Fetch Service
-        let fetchedService = null; // Store locally to use immediately
-        
-        const serviceRes = await fetch(`/api/services/${id}`);
-        if (serviceRes.ok) {
-          fetchedService = await serviceRes.json();
-          setService(fetchedService);
-        } else {
-            // Fallback: Fetch all
-            const allRes = await fetch('/api/services');
-            const allData = await allRes.json();
-            const found = allData.find((s: any) => String(s._id) === id || String(s.id) === id);
-            if (found) {
-                fetchedService = found;
-                setService(found);
-            }
+        let fetchedService = null;
+        const sRes = await fetch(`/api/services/${id}`);
+        if(sRes.ok) fetchedService = await sRes.json();
+        else {
+            const all = await (await fetch('/api/services')).json();
+            fetchedService = all.find((s:any) => s._id === id || s.id === id);
+        }
+        setService(fetchedService);
+
+        const mRes = await fetch('/api/monks');
+        const allMonks = await mRes.json();
+        setMonks(allMonks);
+
+        if(fetchedService?.monkId) {
+            const assigned = allMonks.find((m: Monk) => m._id === fetchedService.monkId);
+            if(assigned) setSelectedMonk(assigned);
+        } else if (allMonks.length > 0) {
+            setSelectedMonk(allMonks[0]); 
         }
 
-        // 2. Fetch Monks
-        const monksRes = await fetch('/api/monks');
-        if (monksRes.ok) {
-          const allMonks: Monk[] = await monksRes.json();
-          setMonks(allMonks);
-
-          // 3. Set Default Monk (Using the LOCAL variable 'fetchedService', not the state)
-          if (fetchedService && fetchedService.monkId) {
-             const preSelected = allMonks.find(m => String(m._id) === fetchedService.monkId);
-             if (preSelected) setSelectedMonk(preSelected);
-          } else if (allMonks.length > 0) {
-             // Only default to first monk if no specific monk was required
-             setSelectedMonk(allMonks[0]);
-          }
-        }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     }
     loadData();
-    
-    // REMOVED 'service' from dependencies to stop the loop
-  }, [id]);
-  // --- FETCH TAKEN SLOTS (Now 'dates' is defined above) ---
-  useEffect(() => {
-    async function fetchTakenSlots() {
-      if (selectedMonk && selectedDateIndex !== null) {
-        const selectedDate = dates[selectedDateIndex].fullDate.toISOString().split('T')[0]; // YYYY-MM-DD
-        try {
-          const res = await fetch(`/api/bookings?monkId=${selectedMonk._id?.toString()}&date=${selectedDate}`);
-          if (res.ok) {
-            const data = await res.json();
-            setTakenSlots(data);
-          } else {
-            setTakenSlots([]);
-          }
-        } catch (error) {
-          console.error("Failed to fetch taken slots:", error);
-          setTakenSlots([]);
-        }
-      } else {
-        setTakenSlots([]); 
-      }
+  }, [id, user]);
+
+  const dates = useMemo(() => {
+    const arr = [];
+    const today = new Date();
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      arr.push({
+        day: d.getDate(),
+        week: d.toLocaleDateString(lang === 'mn' ? 'mn' : 'en', { weekday: 'short' }),
+        fullDate: d
+      });
     }
-    fetchTakenSlots();
+    return arr;
+  }, [lang]);
+
+  const times = useMemo(() => ["10:00", "11:00", "14:00", "15:00", "16:00", "17:00", "18:00"], []);
+
+  useEffect(() => {
+    async function checkSlots() {
+        if(selectedMonk && selectedDateIndex !== null) {
+            const d = dates[selectedDateIndex].fullDate.toISOString().split('T')[0];
+            try {
+                const res = await fetch(`/api/bookings?monkId=${selectedMonk._id}&date=${d}`);
+                if(res.ok) setTakenSlots(await res.json());
+            } catch(e) {}
+        }
+    }
+    checkSlots();
   }, [selectedMonk, selectedDateIndex, dates]);
 
-
-  const isDark = false;
-
-  // --- SAFE DATA ACCESS HELPER ---
-  const displayTitle = service 
-    ? (service.title?.[language] || service.name?.[language] || (language === 'mn' ? "Нэргүй" : "Untitled")) 
-    : "";
-
-  const displayDesc = service 
-    ? (service.desc?.[language] || service.description || "") 
-    : "";
-
-  const theme = isDark ? {
-    accent: "#50F2CE", 
-    secondary: "#C72075", 
-    bg: "bg-[#05051a]",
-    card: "bg-[#0C164F]/80 border-cyan-400/10 backdrop-blur-3xl",
-    text: "text-white",
-    subText: "text-[#C72075]",
-    input: "bg-[#05051a]/60 border-cyan-400/20 text-white placeholder-cyan-400/20",
-    button: "bg-gradient-to-r from-[#C72075] to-[#7B337D] text-white",
-    glow: "shadow-[0_0_80px_-20px_rgba(199,32,117,0.3)]",
-    icon: <Orbit className="text-cyan-400 animate-pulse" size={32} />,
-    particle: "bg-cyan-400/20",
-    selectorBg: "bg-cyan-950/50"
-  } : {
-    accent: "#d97706",
-    secondary: "#f59e0b",
-    bg: "bg-[#FDFBF7]",
-    card: "bg-white border-stone-200",
-    text: "text-stone-900",
-    subText: "text-amber-700",
-    input: "bg-stone-50 border-stone-200 text-stone-900 placeholder-stone-400",
-    button: "bg-stone-900 text-white hover:bg-amber-700",
-    glow: "shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)]",
-    icon: <Sun className="text-amber-600 animate-spin-slow" size={32} />,
-    particle: "bg-amber-500/20",
-    selectorBg: "bg-stone-100"
-  };
-
-  const times = ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
-
   const handleBooking = async () => {
-    if (!isSignedIn) {
-      alert(t({mn: "Та захиалга өгөхийн тулд нэвтрэх шаардлагатай.", en: "Please sign in to book a ritual."}));
-      return;
-    }
-    if (!userName || !userEmail || !selectedTime || !selectedMonk || selectedDateIndex === null || !service) {
-      alert("Please fill all required fields and select a monk and time.");
-      return;
-    }
-
+    if (!isSignedIn) { alert("Please sign in."); return; }
     setIsSubmitting(true);
-    const selectedDate = dates[selectedDateIndex].fullDate.toISOString().split('T')[0]; 
-
     try {
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          monkId: selectedMonk._id?.toString(),
-          date: selectedDate,
-          time: selectedTime,
-          userName: userName,
-          userEmail: userEmail,
-          note: userNote,
-          serviceId: service._id || service.id, 
-        }),
-      });
-
-      if (response.ok) {
-        setIsBooked(true);
-        if (selectedMonk && selectedDateIndex !== null) {
-            const res = await fetch(`/api/bookings?monkId=${selectedMonk._id?.toString()}&date=${selectedDate}`);
-            if (res.ok) setTakenSlots(await res.json());
-        }
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || "Failed to book session. Please try again.");
-      }
-    } catch (error) {
-      console.error("Booking error:", error);
-      alert("An unexpected error occurred. Please try again later.");
-    } finally {
-      setIsSubmitting(false);
-    }
+        const d = dates[selectedDateIndex!].fullDate.toISOString().split('T')[0];
+        const res = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                monkId: selectedMonk?._id, serviceId: service._id,
+                date: d, time: selectedTime,
+                userName, userEmail, note: userNote
+            })
+        });
+        if(res.ok) setIsBooked(true);
+        else alert("Booking Failed");
+    } catch(e) { console.error(e); }
+    finally { setIsSubmitting(false); }
   };
 
   if (!mounted) return null;
-  if (loading) { 
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${theme.bg}`}>
-        <Loader2 className="animate-spin text-amber-600" size={48} />
-      </div>
-    );
-  }
-  if (!service) {
-    return (
-      <div className={`min-h-screen flex flex-col items-center justify-center p-6 ${theme.bg} ${theme.text}`}>
-        <h1 className="text-4xl font-serif mb-4">{t({mn: "Үйлчилгээ олдсонгүй", en: "Service Not Found"})}</h1>
-        <p className="mb-8 opacity-70">{t({mn: "Уучлаарай, таны хайсан үйлчилгээ олдсонгүй эсвэл устагдсан байна.", en: "Sorry, the ritual you are looking for could not be found."})}</p>
-        <Link href="/services" className={`px-8 py-3 rounded-full font-bold ${theme.button}`}>
-          <ArrowLeft size={16} className="inline-block mr-2" /> {t({mn: "Буцах", en: "Return to Services"})}
-        </Link>
-      </div>
-    );
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7]"><Loader2 className="animate-spin text-amber-600" /></div>;
+  if (!service) return <div>Not Found</div>;
 
   return (
-    <>
+    <div className={`min-h-screen font-ethereal relative overflow-x-hidden ${theme.bg}`}>
       <OverlayNavbar />
-      <div className={`min-h-screen transition-colors duration-1000 pt-32 pb-20 px-6 overflow-hidden ${theme.bg}`}>
+      <CosmicBackground isNight={isNight} />
+
+      <main className="relative z-10 container mx-auto px-6 pt-32 pb-24">
         
-        {/* --- BACKGROUND (Unchanged) --- */}
-        <div className="fixed inset-0 pointer-events-none z-0">
-          {isDark && (
-            <>
-              <motion.div
-                className="absolute top-1/2 left-1/4 w-[60%] h-[60%] rounded-full bg-[#C72075]/10 blur-[150px]"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4], rotate: [0, 180, 360] }}
-                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.div
-                className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#2E1B49]/30 blur-[130px]"
-                animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.9, 0.2], rotate: [0, -180, -360] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-              />
-            </>
-          )}
-          <div className={`absolute inset-0 opacity-[0.05] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] ${isDark ? 'invert' : ''}`} />
-        </div>
+        <Link href="/services" className={`inline-flex items-center gap-2 mb-8 opacity-60 hover:opacity-100 transition-opacity ${theme.text}`}>
+            <div className={`p-2 rounded-full border ${theme.borderColor}`}><ArrowLeft size={16} /></div>
+            <span className="text-[10px] uppercase tracking-widest font-bold">{t({mn: "Буцах", en: "Return"})}</span>
+        </Link>
 
-        <main className="container mx-auto max-w-6xl relative z-10">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
-            <Link href="/services" className={`inline-flex items-center gap-2 mb-12 text-[10px] font-black uppercase tracking-[0.4em] transition-opacity hover:opacity-100 ${theme.text} opacity-50`}>
-              <ArrowLeft size={14} /> {t({ mn: "Буцах", en: "Return to Path" })}
-            </Link>
-          </motion.div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start">
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          {/* --- LEFT: MONK PROFILE (STICKY) --- */}
+          <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-8">
+             <div className="group relative aspect-[3/4] rounded-[40px] overflow-hidden shadow-2xl">
+                <div className={`absolute inset-0 bg-gradient-to-t ${isNight ? "from-[#020617]" : "from-[#451a03]"} via-transparent to-transparent opacity-80 z-10`} />
+                <img src={selectedMonk?.image || "/default-monk.jpg"} alt="Monk" className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" />
+                
+                <div className="absolute bottom-0 left-0 w-full p-8 z-20 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/70 mb-2">{selectedMonk?.title?.[lang]}</p>
+                    <h2 className="text-3xl font-serif text-white">{selectedMonk?.name?.[lang]}</h2>
+                </div>
+             </div>
+
+             <div className={`p-6 rounded-3xl border backdrop-blur-md ${theme.glassPanel}`}>
+                <h3 className={`font-celestial text-sm opacity-80 mb-4 pb-2 border-b ${theme.borderColor} ${theme.text}`}>
+                    {t({mn: "Багшийн тухай", en: "About the Guide"})}
+                </h3>
+                <p className={`text-sm leading-relaxed opacity-70 mb-6 ${theme.text}`}>
+                    {selectedMonk?.bio?.[lang]}
+                </p>
+                
+                <div className="flex gap-3">
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-current/5 ${theme.accentText}`}>
+                        <Star size={12} fill="currentColor" /> <span className="text-[10px] font-bold uppercase tracking-wider">Master</span>
+                    </div>
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-current/5 ${theme.accentText}`}>
+                        <User size={12} /> <span className="text-[10px] font-bold uppercase tracking-wider">Certified</span>
+                    </div>
+                </div>
+             </div>
+          </div>
+
+          {/* --- RIGHT: BOOKING ENGINE (SCROLLABLE) --- */}
+          <div className="lg:col-span-8">
             
-            {/* LEFT: INFO */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1, type: "spring", stiffness: 100 }}
+            {/* 1. Service Ticket (Hero) with Monk Name Passed Down */}
+            <ServiceTicket service={service} monkName={selectedMonk?.name?.[lang]} theme={theme} lang={lang} />
+
+            <motion.div 
+                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                className={`relative rounded-[40px] border backdrop-blur-3xl overflow-hidden shadow-2xl ${theme.glassPanel}`}
             >
-              <motion.div
-                className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 mb-8 ${isDark ? "border-cyan-400/30 bg-[#0C164F]" : "border-amber-200 bg-white shadow-xl"}`}
-                animate={{ rotate: 360, scale: [1, 1.1, 1] }}
-                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-              >
-                {theme.icon}
-              </motion.div>
-              
-              <motion.h1
-                className={`text-6xl md:text-8xl font-serif font-black leading-[0.9] mb-8 tracking-tighter ${theme.text}`}
-                animate={{ scale: [1, 1.05, 1], opacity: [1, 0.8, 1] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              >
-                {displayTitle}
-              </motion.h1>
-
-              <motion.p
-                className={`text-lg leading-relaxed mb-10 opacity-70 ${isDark ? 'text-cyan-50' : theme.text} max-w-md`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.7 }}
-                transition={{ delay: 0.5, duration: 1 }}
-              >
-                {displayDesc}
-              </motion.p>
-
-              <div className="flex gap-10">
-                <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                  <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-2 ${theme.subText}`}>Cycle</p>
-                  <p className={`text-3xl font-serif ${theme.text}`}>{service?.duration}</p>
-                </motion.div>
-                <div className="w-px h-12 bg-current opacity-10" />
-                <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 1 }}>
-                  <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-2 ${theme.subText}`}>Offering</p>
-                  <p className={`text-3xl font-serif ${theme.text}`}>{Number(service?.price || 0).toLocaleString()}₮</p>
-                </motion.div>
-              </div>
-              
-              {/* MONK SELECTOR */}
-              <motion.button
-                onClick={() => setShowMonkSelector(!showMonkSelector)}
-                className={`mt-12 flex items-center gap-3 px-6 py-3 rounded-xl border transition-all ${isDark ? 'border-cyan-400/30 hover:bg-cyan-950/30' : 'border-amber-200 hover:bg-amber-50'}`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Users size={18} className={theme.subText} />
-                <span className={`text-xs font-black uppercase tracking-widest ${theme.text}`}>
-                  {showMonkSelector ? t({mn: "Хаах", en: "Close Selection"}) : t({mn: "Лам сонгох", en: "Select Monk"})}
-                </span>
-              </motion.button>
-
-              <AnimatePresence>
-                {showMonkSelector && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-6 space-y-3 overflow-hidden"
-                  >
-                    {monks.map((monk: Monk) => (
-                      <motion.div
-                        key={monk._id?.toString()}
-                        className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                          selectedMonk?._id === monk._id 
-                            ? isDark ? 'bg-cyan-950/60 border-cyan-400/50' : 'bg-amber-100 border-amber-300'
-                            : isDark ? 'bg-[#0C164F]/50 border-cyan-400/10 hover:border-cyan-400/30' : 'bg-white border-stone-100 hover:border-stone-300'
-                        }`}
-                        onClick={() => setSelectedMonk(monk)}
-                        whileHover={{ x: 5 }}
-                      >
-                        <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${isDark ? 'border-cyan-400/30' : 'border-amber-200'}`}>
-                          <img src={monk.image} alt={monk.name[language]} className="w-full h-full object-cover" />
-                        </div>
-                        <div>
-                           <h4 className={`font-serif text-lg ${theme.text}`}>{monk.name[language]}</h4>
-                           <p className={`text-[10px] uppercase tracking-wider opacity-60 ${theme.text}`}>{monk.title?.[language] || "Monk"}</p>
-                        </div>
-                        {selectedMonk?._id === monk._id && (
-                          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="ml-auto">
-                            <CheckCircle2 size={20} className={isDark ? "text-cyan-400" : "text-amber-600"} />
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {!showMonkSelector && selectedMonk && (
-                 <motion.div 
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className={`mt-8 flex items-center gap-4 p-4 rounded-xl border ${isDark ? 'border-cyan-400/10 bg-cyan-950/20' : 'border-stone-200 bg-white/50'}`}
-                 >
-                    <div className="w-10 h-10 rounded-full overflow-hidden">
-                       <img src={selectedMonk.image} alt="selected" className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                       <p className={`text-[10px] uppercase opacity-50 ${theme.text}`}>Conducted by</p>
-                       <p className={`font-serif ${theme.text}`}>{selectedMonk.name[language]}</p>
-                    </div>
-                 </motion.div>
-              )}
-            </motion.div>
-
-            {/* RIGHT: BOOKING FORM */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-              className={`relative rounded-[3rem] p-8 md:p-12 overflow-hidden border transition-all duration-1000 ${theme.card} ${theme.glow}`}
-            >
-              <AltarFrame color={theme.accent} />
-              
-              <AnimatePresence mode="wait">
-                {isBooked ? (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="py-20 text-center relative z-40"
-                  >
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1], rotate: [0, 360, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <CheckCircle2 size={64} className={`${isDark ? "text-cyan-400" : "text-amber-600"} mx-auto mb-6`} />
-                    </motion.div>
-                    <h3 className={`text-3xl font-serif font-black mb-4 ${theme.text}`}>{t({mn: "Захиалга Баталгаажлаа", en: "Fate Aligned"})}</h3>
-                    <p className={`opacity-60 mb-10 ${theme.text}`}>{t({mn: "Таны захиалгыг хүлээн авлаа.", en: "The Celestial Guard has received your signal."})}</p>
-                    <Link href="/services" className={`px-10 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest ${theme.button}`}>
-                      {t({mn: "Буцах", en: "Return"})}
-                    </Link>
-                  </motion.div>
-                ) : (
-                  <motion.div key="form" className="relative z-40 space-y-10">
-                    {/* STEP 1: DATE */}
-                    <div className="space-y-6">
-                      <h2 className={`text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2 ${theme.subText}`}>
-                        <Calendar size={14} /> I. {t({mn: "Өдөр Сонгох", en: "Choose Date"})}
-                      </h2>
-                      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                        {dates.map((d, i) => (
-                          <motion.button
-                            key={i}
-                            onClick={() => setSelectedDateIndex(i)}
-                            className={`shrink-0 w-20 h-24 rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-300
-                              ${selectedDateIndex === i
-                                ? `scale-105 ${isDark ? 'bg-cyan-500 text-white border-cyan-400 shadow-[0_0_15px_#50F2CE60]' : 'bg-stone-900 text-white border-stone-900 shadow-xl'}`
-                                : `border-transparent ${isDark ? 'bg-cyan-950/40 text-cyan-200/40 hover:bg-cyan-950/60' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'}`
-                              }`}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <span className="text-[10px] uppercase font-black mb-1">{d.week}</span>
-                            <span className="text-2xl font-serif font-bold">{d.day}</span>
-                          </motion.button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* STEP 2: TIME */}
-                    <AnimatePresence>
-                      {selectedDateIndex !== null && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="space-y-6"
-                        >
-                          <h2 className={`text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2 ${theme.subText}`}>
-                            <Clock size={14} /> II. {t({mn: "Цаг Сонгох", en: "Choose Time"})}
-                          </h2>
-                          <div className="grid grid-cols-3 gap-3">
-                            {times.map((time, idx) => {
-                                const isTaken = takenSlots.includes(time);
-                                return (
-                                <motion.button
-                                    key={time}
-                                    onClick={() => !isTaken && setSelectedTime(time)} // Only select if not taken
-                                    disabled={isTaken} // Disable if taken
-                                    className={`py-3 rounded-xl font-black text-[10px] transition-all border-2
-                                    ${selectedTime === time
-                                        ? `${isDark ? 'bg-cyan-400 text-[#05051a] border-cyan-400' : 'bg-amber-700 text-white border-amber-700'}`
-                                        : isTaken // Style for taken slots
-                                            ? `bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed`
-                                            : `border-transparent ${isDark ? 'bg-cyan-950/40 text-cyan-200/40 hover:bg-cyan-950/60' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`
-                                    }`}
-                                    whileHover={!isTaken ? { scale: 1.05 } : {}}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                >
-                                    {time} {isTaken && (language === 'mn' ? "(Завгүй)" : "(Taken)")}
-                                </motion.button>
-                                );
-                            })}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* STEP 3: DETAILS */}
-                    <AnimatePresence>
-                      {selectedTime && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="space-y-4"
-                        >
-                          <h2 className={`text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2 ${theme.subText}`}>
-                            <Star size={14} /> III. {t({mn: "Мэдээлэл", en: "Your Details"})}
-                          </h2>
-                          <motion.input
-                            className={`w-full p-4 rounded-2xl border-2 outline-none transition-all font-serif text-lg ${theme.input} focus:border-opacity-100`}
-                            placeholder={t({mn: "Таны нэр", en: "Your Name"})}
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)}
-                            whileFocus={{ scale: 1.01 }}
-                          />
-                          <motion.input
-                            type="email"
-                            className={`w-full p-4 rounded-2xl border-2 outline-none transition-all font-serif text-lg ${theme.input} focus:border-opacity-100`}
-                            placeholder={t({mn: "Таны И-мэйл", en: "Your Email"})}
-                            value={userEmail}
-                            onChange={(e) => setUserEmail(e.target.value)}
-                            whileFocus={{ scale: 1.01 }}
-                          />
-                          <motion.textarea
-                            className={`w-full p-4 rounded-2xl border-2 outline-none h-24 resize-none transition-all font-serif text-lg ${theme.input} focus:border-opacity-100`}
-                            placeholder={t({mn: "Тэмдэглэл (заавал биш)", en: "Notes (Optional)"})}
-                            value={userNote}
-                            onChange={(e) => setUserNote(e.target.value)}
-                            whileFocus={{ scale: 1.01 }}
-                          />
-                          
-                          {isSignedIn ? (
-                            <motion.button
-                              disabled={!userName || !userEmail || !selectedMonk || selectedDateIndex === null || !selectedTime || isSubmitting}
-                              onClick={handleBooking}
-                              className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 disabled:opacity-30 shadow-xl ${theme.button}`}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              {isSubmitting ? <Loader2 className="animate-spin" /> : <>
-                                {t({mn: "Захиалах", en: "Book Ritual"})} <Sparkles size={16} />
-                              </>}
-                            </motion.button>
-                          ) : (
-                            <Link href="/sign-in" className="block w-full">
-                              <motion.button
-                                className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 shadow-xl bg-amber-600 text-white`}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                              >
-                                {t({mn: "Нэвтэрч захиалга өгөх", en: "Sign In to Book"})} <LogIn size={16} />
-                              </motion.button>
+               <div className="p-8 md:p-12 space-y-12">
+                  <AnimatePresence mode="wait">
+                    {isBooked ? (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center">
+                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-24 h-24 mx-auto bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg mb-6">
+                                <CheckCircle2 size={48} />
+                            </motion.div>
+                            <h2 className={`text-3xl font-serif font-bold mb-4 ${theme.text}`}>{t({mn: "Баталгаажлаа", en: "Confirmed"})}</h2>
+                            <p className={`opacity-60 mb-8 ${theme.text}`}>{t({mn: "Таны цаг амжилттай бүртгэгдлээ.", en: "Your ritual has been securely booked."})}</p>
+                            <Link href="/">
+                                <button className={`px-10 py-3 rounded-full font-bold uppercase tracking-widest text-xs ${isNight ? 'bg-white text-black' : 'bg-black text-white'}`}>
+                                    {t({mn: "Нүүр хуудас", en: "Return Home"})}
+                                </button>
                             </Link>
-                          )}
                         </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    ) : (
+                        <div className="space-y-10">
+                            
+                            <section>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h4 className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] opacity-60 ${theme.text}`}>
+                                        <Calendar size={14} /> {t({mn: "I. Өдөр Сонгох", en: "I. Select Date"})}
+                                    </h4>
+                                </div>
+                                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                                    {dates.map((d, i) => (
+                                        <button 
+                                            key={i} 
+                                            onClick={() => { setSelectedDateIndex(i); setSelectedTime(null); }}
+                                            className={`
+                                                relative shrink-0 w-20 h-28 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 border-2
+                                                ${selectedDateIndex === i ? theme.slotActive : theme.slotDefault}
+                                            `}
+                                        >
+                                            <span className="text-[10px] font-bold uppercase mb-1 opacity-70">{d.week}</span>
+                                            <span className="text-3xl font-serif font-bold">{d.day}</span>
+                                            {selectedDateIndex === i && <motion.div layoutId="dot" className="absolute bottom-3 w-1 h-1 bg-white rounded-full" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <AnimatePresence>
+                                {selectedDateIndex !== null && (
+                                    <motion.section 
+                                        initial={{ opacity: 0, height: 0 }} 
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        className="space-y-6 overflow-hidden"
+                                    >
+                                        <h4 className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] opacity-60 ${theme.text}`}>
+                                            <Clock size={14} /> {t({mn: "II. Цаг Сонгох", en: "II. Select Time"})}
+                                        </h4>
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                            {times.map((time) => {
+                                                const isTaken = takenSlots.includes(time);
+                                                return (
+                                                    <button 
+                                                        key={time} disabled={isTaken}
+                                                        onClick={() => setSelectedTime(time)}
+                                                        className={`
+                                                            py-4 rounded-xl text-xs font-bold border transition-all relative overflow-hidden
+                                                            ${selectedTime === time ? theme.slotActive : isTaken ? theme.slotDisabled : theme.slotDefault}
+                                                        `}
+                                                    >
+                                                        {time}
+                                                        {isTaken && <div className="absolute inset-0 flex items-center justify-center"><div className="w-[80%] h-[1px] bg-current opacity-50 rotate-45" /></div>}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </motion.section>
+                                )}
+                            </AnimatePresence>
+
+                            <AnimatePresence>
+                                {selectedTime && (
+                                    <motion.section
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        className={`space-y-8 pt-8 border-t ${theme.borderColor}`}
+                                    >
+                                        <div className={`rounded-2xl border ${theme.borderColor} p-1`}>
+                                            <InfoItem 
+                                                icon={<Shield size={14}/>} 
+                                                title={t({mn: "Бэлтгэл", en: "Protocol"})} 
+                                                text={t({mn: "Та тайван орчинд, өөрийгөө бэлдсэн байх хэрэгтэй.", en: "Ensure you are in a quiet space. Center your mind prior to the session."})}
+                                                theme={theme}
+                                            />
+                                            <InfoItem 
+                                                icon={<Info size={14}/>} 
+                                                title={t({mn: "Нууцлал", en: "Privacy"})} 
+                                                text={t({mn: "Таны мэдээлэл бүрэн нууцлагдана.", en: "All sessions are strictly confidential."})}
+                                                theme={theme}
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <input value={userName} onChange={e => setUserName(e.target.value)} className={`w-full p-4 rounded-xl border outline-none font-serif text-sm transition-all ${theme.input}`} placeholder={t({mn:"Таны Нэр", en:"Full Name"})} />
+                                            <input value={userEmail} onChange={e => setUserEmail(e.target.value)} className={`w-full p-4 rounded-xl border outline-none font-serif text-sm transition-all ${theme.input}`} placeholder={t({mn:"И-мэйл", en:"Email Address"})} />
+                                        </div>
+                                        <textarea value={userNote} onChange={e => setUserNote(e.target.value)} className={`w-full p-4 rounded-xl border outline-none font-serif h-24 resize-none transition-all ${theme.input}`} placeholder={t({mn: "Хүсэлт / Зорилго...", en: "Intention or questions..."})} />
+
+                                        {isSignedIn ? (
+                                            <motion.button 
+                                                whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                                                onClick={handleBooking} disabled={!userName || !userEmail || isSubmitting}
+                                                className={`w-full h-16 rounded-2xl overflow-hidden relative group mt-4 shadow-xl ${!userName || !userEmail ? 'opacity-50 grayscale' : ''}`}
+                                            >
+                                                <div className={`absolute inset-0 bg-gradient-to-r ${theme.btnGradient}`} />
+                                                <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.3)_50%,transparent_75%)] bg-[length:250%_250%] animate-[shimmer_2s_linear_infinite]" />
+                                                <div className="relative z-10 flex items-center justify-center gap-3 text-white h-full font-black uppercase tracking-[0.2em] text-sm">
+                                                    {isSubmitting ? <Loader2 className="animate-spin" /> : <> <Sparkles size={18}/> {t({mn: "Баталгаажуулах", en: "Confirm Booking"})} <ArrowRight size={18}/></>}
+                                                </div>
+                                            </motion.button>
+                                        ) : (
+                                            <Link href="/sign-in" className="block w-full">
+                                                <button className="w-full h-14 rounded-2xl bg-zinc-800 text-white font-bold uppercase tracking-widest text-xs hover:bg-zinc-700 transition-colors">
+                                                    {t({mn: "Нэвтэрч захиалга өгөх", en: "Sign In to Book"})}
+                                                </button>
+                                            </Link>
+                                        )}
+                                    </motion.section>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
+                  </AnimatePresence>
+               </div>
             </motion.div>
           </div>
-        </main>
-      </div>
-    </>
+
+        </div>
+      </main>
+    </div>
   );
 }
