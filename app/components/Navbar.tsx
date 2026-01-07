@@ -72,14 +72,14 @@ export default function OverlayNavbar() {
       {/* ========================================================= */}
       <motion.header 
         className="fixed z-50 left-0 right-0 hidden md:flex justify-center pointer-events-none"
-        animate={{ y: isScrolled ? 15 : 0 }}
+        animate={{ y: isScrolled ? 15 : 20 }}
         transition={{ type: "spring", stiffness: 200, damping: 25 }}
       >
         <nav className={`
-          pointer-events-auto flex items-center justify-between transition-all duration-700
+          pointer-events-auto flex items-center justify-between transition-all duration-700 rounded-full border backdrop-blur-2xl shadow-2xl
           ${isScrolled 
-            ? "w-[85%] lg:w-[1100px] py-3 px-10 rounded-full border backdrop-blur-2xl shadow-2xl" 
-            : "w-full max-w-[1400px] py-8 px-12 bg-transparent border-transparent"}
+            ? "w-[85%] lg:w-[1100px] py-3 px-10" 
+            : "w-[90%] lg:w-[1200px] py-5 px-12"}
           ${isDark 
             ? "bg-[#1a0505]/80 border-amber-900/40 text-amber-50 shadow-black" 
             : "bg-white/80 border-amber-100 text-[#451a03] shadow-amber-900/10"}
