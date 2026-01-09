@@ -44,7 +44,7 @@ export default function GoldenNirvanaFooter() {
     }),
     location: t({ mn: "Улаанбаатар, Монгол", en: "Ulaanbaatar, Mongolia" }),
     peace: t({ mn: "Амгалан", en: "Peace" }),
-    gandantitle: t({ mn: "Гэвабол", en: "Gevabol" }),
+    gandantitle: t({ mn: "Гэвабaл", en: "Gevabal" }),
   };
 
   const theme = isDark ? {

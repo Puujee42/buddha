@@ -199,7 +199,7 @@ export default function MissionPage() {
                     The Global Sangha
                  </h2>
                  <p className={`text-2xl font-serif italic ${isNight ? 'text-indigo-400' : 'text-amber-600'}`}>
-                    "Gevabol at your fingertips"
+                    "Gevabal at your fingertips"
                  </p>
               </header>
 

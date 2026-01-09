@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, MessageSquare, Clock } from "lucide-react";
 
 interface Message {
   _id: string;
@@ -18,12 +18,32 @@ interface ChatWindowProps {
   currentUserName: string;
 }
 
-export default function ChatWindow({ bookingId, currentUserId, currentUserName }: ChatWindowProps) {
+export default function ChatWindow({
+  bookingId,
+  currentUserId,
+  currentUserName,
+}: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Helper: Format time
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Helper: Get Initials
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  };
 
   // Poll for messages
   useEffect(() => {
@@ -34,8 +54,8 @@ export default function ChatWindow({ bookingId, currentUserId, currentUserName }
         if (res.ok) {
           const data = await res.json();
           if (isMounted) {
-             setMessages(data);
-             setLoading(false);
+            setMessages(data);
+            setLoading(false);
           }
         }
       } catch (error) {
@@ -44,7 +64,7 @@ export default function ChatWindow({ bookingId, currentUserId, currentUserName }
     };
 
     fetchMessages();
-    const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+    const interval = setInterval(fetchMessages, 3000);
 
     return () => {
       isMounted = false;
@@ -52,10 +72,13 @@ export default function ChatWindow({ bookingId, currentUserId, currentUserName }
     };
   }, [bookingId]);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
   }, [messages]);
 
@@ -87,31 +110,79 @@ export default function ChatWindow({ bookingId, currentUserId, currentUserName }
   };
 
   return (
-    <div className="flex flex-col h-[500px] bg-stone-50 rounded-2xl border border-stone-200 overflow-hidden">
+    <div className="flex flex-col h-[600px] w-full max-w-md mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-stone-100 font-sans">
+      {/* Header */}
+      <div className="bg-white p-4 border-b border-stone-100 flex items-center justify-between shadow-sm z-10">
+        <div className="flex items-center gap-3">
+          <div className="bg-amber-100 p-2 rounded-full text-amber-600">
+            <MessageSquare size={20} />
+          </div>
+          <div>
+            <h3 className="font-bold text-stone-800 text-sm">Booking Discussion</h3>
+            <p className="text-xs text-stone-500 flex items-center gap-1">
+              ID: <span className="font-mono">{bookingId.slice(0, 8)}...</span>
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-xs text-stone-400 bg-stone-50 px-2 py-1 rounded-full border border-stone-100">
+          <Clock size={12} />
+          <span>Live</span>
+        </div>
+      </div>
+
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-6 bg-stone-50 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent" 
+        ref={scrollRef}
+      >
         {loading ? (
-          <div className="flex justify-center items-center h-full text-stone-400">
-            <Loader2 className="animate-spin" />
+          <div className="flex flex-col items-center justify-center h-full gap-2 text-stone-400">
+            <Loader2 className="animate-spin text-amber-500" size={32} />
+            <span className="text-xs font-medium">Loading conversation...</span>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-stone-400 opacity-50">
-            <p className="text-sm">No messages yet. Say hello!</p>
+          <div className="flex flex-col items-center justify-center h-full text-stone-400">
+            <div className="bg-white p-4 rounded-full shadow-sm mb-3">
+                <MessageSquare size={32} className="text-stone-300" />
+            </div>
+            <p className="text-sm font-medium">No messages yet</p>
+            <p className="text-xs opacity-70">Start the conversation below</p>
           </div>
         ) : (
           messages.map((msg) => {
             const isMe = msg.senderId === currentUserId;
             return (
-              <div key={msg._id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[75%] p-3 rounded-2xl text-sm ${
-                    isMe
-                      ? "bg-[#D97706] text-white rounded-br-none"
-                      : "bg-white border border-stone-200 text-[#451a03] rounded-bl-none"
-                  }`}
-                >
-                  {!isMe && <p className="text-[10px] font-bold opacity-50 mb-1">{msg.senderName}</p>}
-                  <p>{msg.text}</p>
+              <div
+                key={msg._id}
+                className={`flex gap-3 ${isMe ? "flex-row-reverse" : "flex-row"}`}
+              >
+                {/* Avatar */}
+                <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
+                    isMe 
+                    ? "bg-amber-100 text-amber-700 border-amber-200" 
+                    : "bg-white text-stone-600 border-stone-200"
+                }`}>
+                    {getInitials(msg.senderName)}
+                </div>
+
+                {/* Message Bubble */}
+                <div className={`flex flex-col max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
+                  <div className="flex items-center gap-2 mb-1 px-1">
+                    {!isMe && <span className="text-[10px] font-semibold text-stone-500">{msg.senderName}</span>}
+                  </div>
+                  
+                  <div
+                    className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm leading-relaxed ${
+                      isMe
+                        ? "bg-amber-600 text-white rounded-tr-none"
+                        : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                  <span className="text-[10px] text-stone-400 mt-1 px-1">
+                    {msg.createdAt ? formatTime(msg.createdAt) : "Just now"}
+                  </span>
                 </div>
               </div>
             );
@@ -120,22 +191,24 @@ export default function ChatWindow({ bookingId, currentUserId, currentUserName }
       </div>
 
       {/* Input Area */}
-      <div className="p-3 bg-white border-t border-stone-100 flex gap-2">
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Type a message..."
-          className="flex-1 p-3 rounded-xl border border-stone-200 bg-stone-50 focus:outline-none focus:border-[#D97706]"
-        />
-        <button
-          onClick={sendMessage}
-          disabled={sending || !inputText.trim()}
-          className="p-3 bg-[#D97706] text-white rounded-xl hover:bg-[#B45309] disabled:opacity-50 transition-colors"
-        >
-          {sending ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
-        </button>
+      <div className="p-4 bg-white border-t border-stone-100">
+        <div className="flex items-end gap-2 bg-stone-50 p-1.5 rounded-3xl border border-stone-200 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all">
+          <input
+            type="text"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Type your message..."
+            className="flex-1 bg-transparent border-none focus:ring-0 px-4 py-2.5 text-sm text-stone-800 placeholder-stone-400"
+          />
+          <button
+            onClick={sendMessage}
+            disabled={sending || !inputText.trim()}
+            className="p-2.5 rounded-full bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:hover:bg-amber-600 transition-colors shadow-sm flex-shrink-0"
+          >
+            {sending ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
+          </button>
+        </div>
       </div>
     </div>
   );

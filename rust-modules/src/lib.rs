@@ -1,22 +1,107 @@
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+// =========================================
+// STRUCTS
+// =========================================
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct LanguageContent {
-    mn: String,
-    en: String,
+struct ScheduleItem {
+    day: String,
+    active: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Monk {
     #[serde(rename = "_id")]
     id: String,
-    name: LanguageContent,
-    title: LanguageContent,
-    video: Option<String>,
-    // Add other fields if necessary, ignoring unknown fields
+    #[serde(default)]
+    isAvailable: bool, // Matches JS camelCase
+    #[serde(default)]
+    schedule: Vec<ScheduleItem>,
+    
+    // Flatten allows us to keep all other fields dynamically without defining them
     #[serde(flatten)]
     extra: std::collections::HashMap<String, serde_json::Value>,
+}
+
+// =========================================
+// EXPORTED FUNCTIONS
+// =========================================
+
+#[wasm_bindgen]
+pub fn filter_monks(json_data: &str, day_name: &str) -> String {
+    let monks: Vec<Monk> = match serde_json::from_str(json_data) {
+        Ok(m) => m,
+        Err(_) => return String::from("[]"),
+    };
+
+    let filtered: Vec<Monk> = monks.into_iter().filter(|m| {
+        // 1. Global Availability Check
+        if !m.isAvailable {
+            return false;
+        }
+
+        // 2. Date/Day Filter
+        if !day_name.is_empty() {
+            // If monk has NO schedule defined, we assume they are generally available
+            if m.schedule.is_empty() {
+                return true;
+            }
+
+            // Check if this day exists and is active in their schedule
+            let day_schedule = m.schedule.iter().find(|s| s.day.eq_ignore_ascii_case(day_name));
+            
+            if let Some(s) = day_schedule {
+                return s.active;
+            } else {
+                return false; 
+            }
+        }
+
+        true
+    }).collect();
+
+    serde_json::to_string(&filtered).unwrap_or_else(|_| String::from("[]"))
+}
+
+#[wasm_bindgen]
+pub fn fuzzy_search(json_data: &str, query: &str) -> String {
+    let items: Vec<serde_json::Value> = match serde_json::from_str(json_data) {
+        Ok(v) => v,
+        Err(_) => return String::from("[]"),
+    };
+
+    if query.is_empty() {
+        return json_data.to_string();
+    }
+
+    let query_lower = query.to_lowercase();
+
+    let filtered: Vec<&serde_json::Value> = items.iter().filter(|item| {
+        value_contains_string(item, &query_lower)
+    }).collect();
+
+    serde_json::to_string(&filtered).unwrap_or_else(|_| String::from("[]"))
+}
+
+// Recursive helper to search for a string in any JSON value
+fn value_contains_string(value: &serde_json::Value, query: &str) -> bool {
+    match value {
+        Value::String(s) => s.to_lowercase().contains(query),
+        Value::Object(map) => map.values().any(|v| value_contains_string(v, query)),
+        Value::Array(arr) => arr.iter().any(|v| value_contains_string(v, query)),
+        // Numbers, bools, nulls don't match text queries usually, unless we convert them
+        _ => false,
+    }
+}
+
+// Keep the old function for backward compatibility if needed, or update it
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct LanguageContent {
+    mn: String,
+    en: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -29,19 +114,31 @@ struct MonkOutput {
     score: u32,
 }
 
-// Simulated Arcana (Runes)
 const RUNES: [&str; 8] = ["ᚠ", "ᚢ", "ᚦ", "ᚨ", "ᚱ", "ᚲ", "ᚷ", "ᚹ"];
 
 #[wasm_bindgen]
 pub fn process_monks(json_data: &str) -> String {
-    let monks: Vec<Monk> = match serde_json::from_str(json_data) {
+   // Re-implement or keep as is. The previous implementation was a simulation.
+   // Let's keep it but make it robust.
+   // We need a partial struct for this because the input JSON might be complex
+   
+    #[derive(Serialize, Deserialize, Debug)]
+    struct PartialMonk {
+        #[serde(rename = "_id")]
+        id: String,
+        name: LanguageContent,
+        title: LanguageContent,
+        video: Option<String>,
+    }
+
+    let monks: Vec<PartialMonk> = match serde_json::from_str(json_data) {
         Ok(m) => m,
         Err(_) => return String::from("[]"),
     };
 
     let mut processed: Vec<MonkOutput> = monks.iter().enumerate().map(|(i, m)| {
-        // Simulated "Heavy" Calculation for compatibility/ranking
-        let score = calculate_score(m);
+        let name_len = m.name.en.len() as u32;
+        let score = (name_len * 7) % 100;
         
         MonkOutput {
             id: m.id.clone(),
@@ -53,19 +150,7 @@ pub fn process_monks(json_data: &str) -> String {
         }
     }).collect();
 
-    // Sort by score descending
     processed.sort_by(|a, b| b.score.cmp(&a.score));
-
-    // Take top 3
     let top_3: Vec<MonkOutput> = processed.into_iter().take(3).collect();
-
     serde_json::to_string(&top_3).unwrap_or_else(|_| String::from("[]"))
-}
-
-fn calculate_score(monk: &Monk) -> u32 {
-    // Simulate complex math using name length and random factors
-    let name_len = monk.name.en.len() as u32;
-    // In a real app, this would be complex astrology or algo
-    let seed = name_len * 7; 
-    seed % 100
 }

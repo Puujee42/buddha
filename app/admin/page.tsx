@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,9 +39,15 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [editingMonk, setEditingMonk] = useState<any>(null);
+  const [wasm, setWasm] = useState<typeof import("rust-modules") | null>(null);
 
   const isAdmin = user?.publicMetadata?.role === "admin";
   const isDark = false;
+
+  useEffect(() => {
+    // Load Rust WASM module
+    import("rust-modules").then(mod => setWasm(mod)).catch(err => console.error("WASM load failed", err));
+  }, []);
 
   // --- FETCH DATA ---
   const fetchAdminData = async () => {
@@ -170,10 +176,24 @@ export default function AdminDashboard() {
   
   if (!isAdmin) return null;
 
-  // Filters
-  const filteredUsers = data?.users.filter(u => (u.name?.mn?.toLowerCase() || u.name?.en?.toLowerCase() || "").includes(searchTerm.toLowerCase()));
-  const filteredBookings = data?.bookings.filter(b => (b.clientName?.toLowerCase() || "").includes(searchTerm.toLowerCase()));
-  const filteredServices = data?.services.filter(s => (s.name?.mn?.toLowerCase() || s.name?.en?.toLowerCase() || "").includes(searchTerm.toLowerCase()));
+  // Filters with Rust WASM
+  const getFilteredData = (items: any[], term: string) => {
+    if (!items) return [];
+    if (wasm) {
+        try {
+            const result = wasm.fuzzy_search(JSON.stringify(items), term);
+            return JSON.parse(result);
+        } catch (e) {
+            console.error("Rust search error:", e);
+        }
+    }
+    // Fallback JS
+    return items.filter(item => JSON.stringify(item).toLowerCase().includes(term.toLowerCase()));
+  };
+
+  const filteredUsers = useMemo(() => getFilteredData(data?.users || [], searchTerm), [data?.users, searchTerm, wasm]);
+  const filteredBookings = useMemo(() => getFilteredData(data?.bookings || [], searchTerm), [data?.bookings, searchTerm, wasm]);
+  const filteredServices = useMemo(() => getFilteredData(data?.services || [], searchTerm), [data?.services, searchTerm, wasm]);
 
   return (
     <div className={`min-h-screen font-sans ${isDark ? "bg-[#05051a] text-white" : "bg-[#FDFBF7] text-[#451a03]"}`}>

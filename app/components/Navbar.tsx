@@ -22,7 +22,7 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const CONTENT = {
-  logo: { mn: "Гэвабол", en: "Gevabol" },
+  logo: { mn: "Гэвабaл", en: "Gevabal" },
   login: { mn: "Нэвтрэх", en: "Sign In" },
   register: { mn: "Бүртгүүлэх", en: "Register" },
   dashboard: { mn: "Самбар", en: "Panel" },

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { 
   motion, 
@@ -59,12 +59,16 @@ export default function DivineTarotShowcase() {
   const [monks, setMonks] = useState<Monk[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
+  const [wasm, setWasm] = useState<typeof import("rust-modules") | null>(null);
 
   // Theme Sync
   const isDark = false;
 
   useEffect(() => {
     setMounted(true);
+    // Load Rust WASM module
+    import("rust-modules").then(mod => setWasm(mod)).catch(err => console.error("WASM load failed", err));
+
     async function fetchMonks() {
       try {
         const response = await fetch('/api/monks');
@@ -82,27 +86,48 @@ export default function DivineTarotShowcase() {
   }, []);
 
   // --- FILTERING LOGIC ---
-  const filteredMonks = monks.filter(monk => {
-    // 1. Global Availability Check
-    if (!monk.isAvailable) return false;
-
-    // 2. Date Filter
-    if (selectedDate) {
-      // If monk has NO schedule defined, we assume they are generally available 
-      if (!monk.schedule || monk.schedule.length === 0) return true;
-
-      const [y, m, d] = selectedDate.split('-').map(Number);
-      const date = new Date(y, m - 1, d);
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-
-      // Check if this day exists and is active in their schedule
-      const daySchedule = monk.schedule.find(s => s.day === dayName);
+  const filteredMonks = useMemo<Monk[]>(() => {
+    // Use Rust WASM if available for accelerated filtering
+    if (wasm && monks.length > 0) {
+      let dayName = "";
+      if (selectedDate) {
+         const [y, m, d] = selectedDate.split('-').map(Number);
+         const date = new Date(y, m - 1, d);
+         dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+      }
       
-      return daySchedule ? daySchedule.active : false; 
+      try {
+        const result = wasm.filter_monks(JSON.stringify(monks), dayName);
+        return JSON.parse(result) as Monk[];
+      } catch (e) {
+        console.error("Rust filter error:", e);
+        // Fallthrough to JS
+      }
     }
 
-    return true;
-  });
+    // Fallback JS Logic
+    return monks.filter(monk => {
+      // 1. Global Availability Check
+      if (!monk.isAvailable) return false;
+
+      // 2. Date Filter
+      if (selectedDate) {
+        // If monk has NO schedule defined, we assume they are generally available 
+        if (!monk.schedule || monk.schedule.length === 0) return true;
+
+        const [y, m, d] = selectedDate.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+        // Check if this day exists and is active in their schedule
+        const daySchedule = monk.schedule.find(s => s.day === dayName);
+        
+        return daySchedule ? daySchedule.active : false; 
+      }
+
+      return true;
+    });
+  }, [monks, selectedDate, wasm]);
 
   if (!mounted) return <div className="min-h-screen bg-[#05051a]" />;
 
