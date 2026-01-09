@@ -4,22 +4,65 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ShieldAlert, Users, Calendar, LayoutDashboard, 
+import {
+  ShieldAlert, Users, Calendar, LayoutDashboard,
   Search, Trash2, CheckCircle, XCircle,
   Loader2, UserCog, ScrollText, TrendingUp, Check, X,
   FileText, Clock, Edit
 } from "lucide-react";
-import OverlayNavbar from "../components/Navbar"; 
+import OverlayNavbar from "../components/Navbar";
 import { useTheme } from "next-themes";
 import MonkEditModal from "./MonkEditModal";
 
 // --- TYPES ---
+// --- TYPES ---
+interface LocalizedString {
+  mn?: string;
+  en?: string;
+  [key: string]: string | undefined;
+}
+
+interface User {
+  _id: string;
+  name?: LocalizedString | any; // handling flexible structures seen in code
+  email?: string;
+  image?: string;
+  role?: string;
+  monkStatus?: string;
+  createdAt: string | Date;
+  // properties used in applications view
+  title?: LocalizedString;
+  yearsOfExperience?: number;
+}
+
+interface Service {
+  id: string;
+  name?: LocalizedString;
+  price?: number;
+  duration?: string;
+  monkName?: LocalizedString;
+  status?: string;
+  description?: LocalizedString;
+}
+
+interface Booking {
+  _id: string;
+  serviceName?: LocalizedString | string;
+  price?: number;
+  clientName?: string;
+  clientEmail?: string;
+  date: string | Date;
+  time?: string;
+  status?: string;
+}
+
+interface Application extends User { }
+
 interface AdminData {
-  users: any[];
-  bookings: any[];
-  services: any[];
-  applications: any[];
+  users: User[];
+  bookings: Booking[];
+  services: Service[];
+  applications: Application[];
   stats: {
     totalUsers: number;
     totalMonks: number;
@@ -32,7 +75,7 @@ export default function AdminDashboard() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const { resolvedTheme } = useTheme();
-  
+
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "users" | "bookings" | "services" | "applications">("overview");
@@ -54,16 +97,16 @@ export default function AdminDashboard() {
     try {
       const res = await fetch("/api/admin/data", { cache: "no-store" });
       if (res.ok) {
-          const json = await res.json();
-          // Filter users to find pending applications if API doesn't separate them
-          if (!json.applications) {
-             json.applications = json.users.filter((u: any) => u.monkStatus === 'pending');
-          }
-          setData(json);
+        const json = await res.json();
+        // Filter users to find pending applications if API doesn't separate them
+        if (!json.applications) {
+          json.applications = json.users.filter((u: any) => u.monkStatus === 'pending');
+        }
+        setData(json);
       } else {
-          router.push("/");
+        router.push("/");
       }
-    } catch (e) { console.error(e); } 
+    } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
 
@@ -83,7 +126,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
       });
-      
+
       if (res.ok) {
         await fetchAdminData();
         setEditingMonk(null);
@@ -100,23 +143,23 @@ export default function AdminDashboard() {
   const handleApplication = async (userId: string, action: 'approve' | 'reject') => {
     setProcessingId(userId);
     try {
-        const res = await fetch(`/api/admin/applications/${userId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action })
-        });
-        if (res.ok) await fetchAdminData();
-    } catch (e) { console.error(e); } 
+      const res = await fetch(`/api/admin/applications/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      if (res.ok) await fetchAdminData();
+    } catch (e) { console.error(e); }
     finally { setProcessingId(null); }
   };
-  
+
   // 2. Delete User
   const handleDeleteUser = async (userId: string) => {
     if (!confirm("Та энэ хэрэглэгчийг устгахдаа итгэлтэй байна уу?")) return;
     setProcessingId(userId);
     try {
       const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
-      if (res.ok) setData((prev) => prev ? ({...prev, users: prev.users.filter(u => u._id !== userId)}) : null);
+      if (res.ok) setData((prev) => prev ? ({ ...prev, users: prev.users.filter(u => u._id !== userId) }) : null);
     } catch (e) { console.error(e); } finally { setProcessingId(null); }
   };
 
@@ -131,61 +174,61 @@ export default function AdminDashboard() {
       });
 
       if (res.ok && data) {
-        const updatedServices = data.services.map(s => 
-            s.id === serviceId ? { ...s, status: action === 'approve' ? 'active' : 'rejected' } : s
+        const updatedServices = data.services.map(s =>
+          s.id === serviceId ? { ...s, status: action === 'approve' ? 'active' : 'rejected' } : s
         );
         setData({ ...data, services: updatedServices });
       }
-    } catch (e) { console.error(e); } 
+    } catch (e) { console.error(e); }
     finally { setProcessingId(null); }
   };
 
   const handleDeleteService = async (serviceId: string) => {
-      if (!confirm("Та энэ үйлчилгээг устгахдаа итгэлтэй байна уу?")) return;
-      setProcessingId(serviceId);
-      try {
-          const res = await fetch(`/api/admin/services/${serviceId}`, { method: 'DELETE' });
-          if(res.ok && data) {
-              setData({ ...data, services: data.services.filter(s => s.id !== serviceId) });
-          }
-      } catch(e) { console.error(e); } finally { setProcessingId(null); }
+    if (!confirm("Та энэ үйлчилгээг устгахдаа итгэлтэй байна уу?")) return;
+    setProcessingId(serviceId);
+    try {
+      const res = await fetch(`/api/admin/services/${serviceId}`, { method: 'DELETE' });
+      if (res.ok && data) {
+        setData({ ...data, services: data.services.filter(s => s.id !== serviceId) });
+      }
+    } catch (e) { console.error(e); } finally { setProcessingId(null); }
   };
 
   // 4. Handle Bookings
   const handleBookingAction = async (bookingId: string, action: 'confirmed' | 'rejected') => {
-      setProcessingId(bookingId);
-      try {
-          const res = await fetch(`/api/bookings/${bookingId}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ status: action })
-          });
-          if(res.ok && data) {
-              const updatedBookings = data.bookings.map(b => b._id === bookingId ? {...b, status: action} : b);
-              setData({...data, bookings: updatedBookings});
-          }
-      } catch(e) { console.error(e); } finally { setProcessingId(null); }
+    setProcessingId(bookingId);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: action })
+      });
+      if (res.ok && data) {
+        const updatedBookings = data.bookings.map(b => b._id === bookingId ? { ...b, status: action } : b);
+        setData({ ...data, bookings: updatedBookings });
+      }
+    } catch (e) { console.error(e); } finally { setProcessingId(null); }
   }
 
   // Loading State
   if (!isLoaded || loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB] dark:bg-[#05051a]">
-        <Loader2 className="animate-spin text-amber-600" size={48} />
+      <Loader2 className="animate-spin text-amber-600" size={48} />
     </div>
   );
-  
+
   if (!isAdmin) return null;
 
   // Filters with Rust WASM
-  const getFilteredData = (items: any[], term: string) => {
+  const getFilteredData = <T,>(items: T[], term: string): T[] => {
     if (!items) return [];
     if (wasm) {
-        try {
-            const result = wasm.fuzzy_search(JSON.stringify(items), term);
-            return JSON.parse(result);
-        } catch (e) {
-            console.error("Rust search error:", e);
-        }
+      try {
+        const result = wasm.fuzzy_search(JSON.stringify(items), term);
+        return JSON.parse(result);
+      } catch (e) {
+        console.error("Rust search error:", e);
+      }
     }
     // Fallback JS
     return items.filter(item => JSON.stringify(item).toLowerCase().includes(term.toLowerCase()));
@@ -198,191 +241,190 @@ export default function AdminDashboard() {
   return (
     <div className={`min-h-screen font-sans ${isDark ? "bg-[#05051a] text-white" : "bg-[#FDFBF7] text-[#451a03]"}`}>
       <OverlayNavbar />
-      
+
       <main className="container mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-20">
-        
+
         {/* HEADER */}
         <header className="mb-8 md:mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="w-full md:w-auto">
             <div className="flex items-center gap-3 mb-2">
-               <ShieldAlert className="text-red-500 w-5 h-5" />
-               <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] opacity-60">Admin System</span>
+              <ShieldAlert className="text-red-500 w-5 h-5" />
+              <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] opacity-60">Admin System</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-serif font-black">Удирдлагын самбар</h1>
             <p className="opacity-60 text-sm mt-1">Хэрэглэгч, лам нар болон захиалгуудыг удирдах.</p>
           </div>
           <div className="flex items-center justify-between w-full md:w-auto gap-4 p-3 rounded-2xl bg-black/5 md:bg-transparent dark:bg-white/5 md:dark:bg-transparent">
-             <div className="text-left md:text-right">
-                <p className="text-xs font-bold uppercase">{user?.fullName}</p>
-                <span className="text-red-500 text-[10px] font-black uppercase tracking-tighter">Super Admin</span>
-             </div>
-             <div className="scale-110 md:scale-125"><UserButton /></div>
+            <div className="text-left md:text-right">
+              <p className="text-xs font-bold uppercase">{user?.fullName}</p>
+              <span className="text-red-500 text-[10px] font-black uppercase tracking-tighter">Super Admin</span>
+            </div>
+            <div className="scale-110 md:scale-125"><UserButton /></div>
           </div>
         </header>
 
         {/* NAVIGATION & SEARCH */}
         <div className="space-y-4 mb-8">
-            {/* Horizontal Scrollable Tabs */}
-           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-              {[
-                { id: "overview", icon: LayoutDashboard, label: "Тойм" },
-                { id: "applications", icon: FileText, label: "Хүсэлтүүд" },
-                { id: "services", icon: ScrollText, label: "Үйлчилгээ" },
-                { id: "users", icon: Users, label: "Хэрэглэгч" },
-                { id: "bookings", icon: Calendar, label: "Захиалга" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                    activeTab === tab.id 
-                    ? "bg-[#D97706] text-white shadow-lg shadow-amber-900/20" 
-                    : `${isDark ? "bg-white/5" : "bg-black/5"} opacity-60 hover:opacity-100`
+          {/* Horizontal Scrollable Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+            {[
+              { id: "overview", icon: LayoutDashboard, label: "Тойм" },
+              { id: "applications", icon: FileText, label: "Хүсэлтүүд" },
+              { id: "services", icon: ScrollText, label: "Үйлчилгээ" },
+              { id: "users", icon: Users, label: "Хэрэглэгч" },
+              { id: "bookings", icon: Calendar, label: "Захиалга" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab.id
+                  ? "bg-[#D97706] text-white shadow-lg shadow-amber-900/20"
+                  : `${isDark ? "bg-white/5" : "bg-black/5"} opacity-60 hover:opacity-100`
                   }`}
-                >
-                  <tab.icon size={14} /> 
-                  {tab.label}
-                  {/* Badge for Pending Items */}
-                  {tab.id === 'applications' && data?.applications && data.applications.length > 0 && (
-                      <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] animate-pulse">
-                          {data.applications.length}
-                      </span>
-                  )}
-                  {tab.id === 'services' && data?.services && data.services.filter(s => s.status === 'pending').length > 0 && (
-                      <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px]">
-                          {data.services.filter(s => s.status === 'pending').length}
-                      </span>
-                  )}
-                </button>
-              ))}
-           </div>
+              >
+                <tab.icon size={14} />
+                {tab.label}
+                {/* Badge for Pending Items */}
+                {tab.id === 'applications' && data?.applications && data.applications.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] animate-pulse">
+                    {data.applications.length}
+                  </span>
+                )}
+                {tab.id === 'services' && data?.services && data.services.filter(s => s.status === 'pending').length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px]">
+                    {data.services.filter(s => s.status === 'pending').length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
 
-           <div className="relative w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" size={18} />
-              <input 
-                placeholder="Хэрэглэгч, захиалга эсвэл үйлчилгээ хайх..." 
-                value={searchTerm} 
-                onChange={(e) => setSearchTerm(e.target.value)} 
-                className={`pl-12 pr-4 py-4 rounded-2xl w-full outline-none border transition-all text-sm ${isDark ? "bg-[#0C164F] border-white/10" : "bg-white border-amber-100"}`} 
-              />
-           </div>
+          <div className="relative w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" size={18} />
+            <input
+              placeholder="Хэрэглэгч, захиалга эсвэл үйлчилгээ хайх..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`pl-12 pr-4 py-4 rounded-2xl w-full outline-none border transition-all text-sm ${isDark ? "bg-[#0C164F] border-white/10" : "bg-white border-amber-100"}`}
+            />
+          </div>
         </div>
 
         {/* CONTENT */}
         <AnimatePresence mode="wait">
-          
+
           {/* 1. OVERVIEW */}
           {activeTab === "overview" && (
             <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-               <StatCard title="Нийт хэрэглэгч" value={data?.stats.totalUsers || 0} icon={Users} color="bg-blue-500" />
-               <StatCard title="Идэвхтэй лам нар" value={data?.stats.totalMonks || 0} icon={UserCog} color="bg-amber-500" />
-               <StatCard title="Нийт захиалга" value={data?.stats.totalBookings || 0} icon={Calendar} color="bg-purple-500" />
-               <StatCard title="Орлого" value={data?.stats.revenue || 0} icon={TrendingUp} color="bg-green-500" />
-               
-               {data?.applications && data.applications.length > 0 && (
-                   <div className="col-span-full bg-red-500/10 border border-red-500/20 p-5 md:p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
-                       <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
-                           <div className="p-4 bg-red-500 text-white rounded-2xl shadow-lg shadow-red-900/20"><ShieldAlert size={28} /></div>
-                           <div>
-                               <h3 className="font-black text-lg">Лам болох хүсэлтүүд</h3>
-                               <p className="opacity-70 text-sm">{data.applications.length} хэрэглэгч зөвшөөрөл хүлээж байна.</p>
-                           </div>
-                       </div>
-                       <button onClick={() => setActiveTab('applications')} className="w-full md:w-auto bg-red-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-all">
-                           Шалгах
-                       </button>
-                   </div>
-               )}
+              <StatCard title="Нийт хэрэглэгч" value={data?.stats.totalUsers || 0} icon={Users} color="bg-blue-500" />
+              <StatCard title="Идэвхтэй лам нар" value={data?.stats.totalMonks || 0} icon={UserCog} color="bg-amber-500" />
+              <StatCard title="Нийт захиалга" value={data?.stats.totalBookings || 0} icon={Calendar} color="bg-purple-500" />
+              <StatCard title="Орлого" value={data?.stats.revenue || 0} icon={TrendingUp} color="bg-green-500" />
+
+              {data?.applications && data.applications.length > 0 && (
+                <div className="col-span-full bg-red-500/10 border border-red-500/20 p-5 md:p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
+                    <div className="p-4 bg-red-500 text-white rounded-2xl shadow-lg shadow-red-900/20"><ShieldAlert size={28} /></div>
+                    <div>
+                      <h3 className="font-black text-lg">Лам болох хүсэлтүүд</h3>
+                      <p className="opacity-70 text-sm">{data.applications.length} хэрэглэгч зөвшөөрөл хүлээж байна.</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setActiveTab('applications')} className="w-full md:w-auto bg-red-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-all">
+                    Шалгах
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
 
           {/* 2. APPLICATIONS */}
           {activeTab === "applications" && (
             <motion.div key="applications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {data?.applications?.map((app) => (
-                        <div key={app._id} className={`p-6 rounded-[2rem] border ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
-                            <div className="flex items-center gap-4 mb-4">
-                                <img src={app.image || "/default-avatar.png"} className="w-14 h-14 rounded-2xl object-cover" alt="applicant" />
-                                <div>
-                                    <h4 className="font-black text-base">{app.name?.mn || app.name?.en}</h4>
-                                    <p className="text-xs opacity-50">{app.title?.mn || app.title?.en}</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-2 mb-6 text-xs">
-                                <span className="bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md">{app.yearsOfExperience} жилийн туршлага</span>
-                                <span className="bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md">{app.email}</span>
-                            </div>
-                            <div className="flex gap-2">
-                                <button onClick={() => handleApplication(app._id, 'approve')} className="flex-1 py-4 bg-green-500 text-white rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-green-600 transition-colors">
-                                    {processingId === app._id ? <Loader2 size={14} className="animate-spin"/> : <Check size={14}/>} Зөвшөөрөх
-                                </button>
-                                <button onClick={() => handleApplication(app._id, 'reject')} className="flex-1 py-4 bg-red-500/10 text-red-500 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
-                                    <X size={14}/> Татгалзах
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                    {data?.applications?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Хүлээгдэж буй хүсэлт алга.</p>}
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {data?.applications?.map((app) => (
+                  <div key={app._id} className={`p-6 rounded-[2rem] border ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
+                    <div className="flex items-center gap-4 mb-4">
+                      <img src={app.image || "/default-avatar.png"} className="w-14 h-14 rounded-2xl object-cover" alt="applicant" />
+                      <div>
+                        <h4 className="font-black text-base">{app.name?.mn || app.name?.en}</h4>
+                        <p className="text-xs opacity-50">{app.title?.mn || app.title?.en}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mb-6 text-xs">
+                      <span className="bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md">{app.yearsOfExperience} жилийн туршлага</span>
+                      <span className="bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md">{app.email}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleApplication(app._id, 'approve')} className="flex-1 py-4 bg-green-500 text-white rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-green-600 transition-colors">
+                        {processingId === app._id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Зөвшөөрөх
+                      </button>
+                      <button onClick={() => handleApplication(app._id, 'reject')} className="flex-1 py-4 bg-red-500/10 text-red-500 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
+                        <X size={14} /> Татгалзах
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {data?.applications?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Хүлээгдэж буй хүсэлт алга.</p>}
+              </div>
             </motion.div>
           )}
 
           {/* 3. SERVICES */}
           {activeTab === "services" && (
             <motion.div key="services" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredServices?.map((s) => (
-                    <div key={s.id} className={`p-6 rounded-[2rem] border relative overflow-hidden flex flex-col justify-between ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
-                        <div className="mb-4">
-                            <div className="flex justify-between items-start mb-2">
-                                <h4 className="font-black text-sm">{s.name?.mn || s.name?.en}</h4>
-                                <StatusBadge status={s.status || 'pending'} />
-                            </div>
-                            <p className="text-xs opacity-50 mb-1 font-bold">Үнэ: {s.price}₮ • {s.duration}</p>
-                            <p className="text-[10px] opacity-40">Лам: {s.monkName?.mn || s.monkName?.en || "Тодорхойгүй"}</p>
-                        </div>
-
-                        <div className="flex gap-2 border-t pt-4 border-black/5 dark:border-white/5">
-                            {(!s.status || s.status === 'pending') && (
-                                <>
-                                    <button 
-                                        onClick={() => handleServiceAction(s.id, 'approve')}
-                                        disabled={processingId === s.id}
-                                        className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold text-[10px] uppercase hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        {processingId === s.id ? <Loader2 size={14} className="animate-spin"/> : <Check size={14} />} Зөвшөөрөх
-                                    </button>
-                                    <button 
-                                        onClick={() => handleServiceAction(s.id, 'reject')}
-                                        disabled={processingId === s.id}
-                                        className="flex-1 py-3 bg-amber-500/10 text-amber-600 rounded-xl font-bold text-[10px] uppercase hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <X size={14} /> Татгалзах
-                                    </button>
-                                </>
-                            )}
-                            <button 
-                                onClick={() => handleDeleteService(s.id)}
-                                disabled={processingId === s.id}
-                                className="py-3 px-4 bg-red-500/10 text-red-500 rounded-xl font-bold text-[10px] uppercase hover:bg-red-500/20 transition-colors flex items-center justify-center"
-                                title="Устгах"
-                            >
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                        {s.status === 'active' && <p className="text-[10px] text-green-600 text-center font-bold mt-2 opacity-60">Сайт дээр идэвхтэй</p>}
+              {filteredServices?.map((s) => (
+                <div key={s.id} className={`p-6 rounded-[2rem] border relative overflow-hidden flex flex-col justify-between ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
+                  <div className="mb-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-black text-sm">{s.name?.mn || s.name?.en}</h4>
+                      <StatusBadge status={s.status || 'pending'} />
                     </div>
-                ))}
-                {filteredServices?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Үйлчилгээ олдсонгүй.</p>}
+                    <p className="text-xs opacity-50 mb-1 font-bold">Үнэ: {s.price}₮ • {s.duration}</p>
+                    <p className="text-[10px] opacity-40">Лам: {s.monkName?.mn || s.monkName?.en || "Тодорхойгүй"}</p>
+                  </div>
+
+                  <div className="flex gap-2 border-t pt-4 border-black/5 dark:border-white/5">
+                    {(!s.status || s.status === 'pending') && (
+                      <>
+                        <button
+                          onClick={() => handleServiceAction(s.id, 'approve')}
+                          disabled={processingId === s.id}
+                          className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold text-[10px] uppercase hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                        >
+                          {processingId === s.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Зөвшөөрөх
+                        </button>
+                        <button
+                          onClick={() => handleServiceAction(s.id, 'reject')}
+                          disabled={processingId === s.id}
+                          className="flex-1 py-3 bg-amber-500/10 text-amber-600 rounded-xl font-bold text-[10px] uppercase hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <X size={14} /> Татгалзах
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => handleDeleteService(s.id)}
+                      disabled={processingId === s.id}
+                      className="py-3 px-4 bg-red-500/10 text-red-500 rounded-xl font-bold text-[10px] uppercase hover:bg-red-500/20 transition-colors flex items-center justify-center"
+                      title="Устгах"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  {s.status === 'active' && <p className="text-[10px] text-green-600 text-center font-bold mt-2 opacity-60">Сайт дээр идэвхтэй</p>}
+                </div>
+              ))}
+              {filteredServices?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Үйлчилгээ олдсонгүй.</p>}
             </motion.div>
           )}
 
           {/* 4. USERS */}
           {activeTab === "users" && (
-            <motion.div 
-              key="users" 
-              initial={{ opacity: 0, y: 10 }} 
-              animate={{ opacity: 1, y: 0 }} 
+            <motion.div
+              key="users"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
               {filteredUsers?.map((u) => (
@@ -401,24 +443,24 @@ export default function AdminDashboard() {
                       <p className="text-[10px] opacity-30 mt-1">Бүртгүүлсэн: {new Date(u.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                     {u.role === 'monk' && (
-                        <button 
-                            onClick={() => setEditingMonk(u)}
-                            className="p-2 hover:bg-amber-500/10 hover:text-amber-500 rounded-lg transition-colors"
-                            title="Мэдээллийг засах"
-                        >
-                            <Edit size={16} />
-                        </button>
-                     )}
-                     <button 
-                        onClick={() => handleDeleteUser(u._id)}
-                        disabled={processingId === u._id || u.role === 'admin'}
-                        className={`p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors ${u.role === 'admin' ? 'hidden' : ''}`}
-                        title="Хэрэглэгчийг устгах"
+                    {u.role === 'monk' && (
+                      <button
+                        onClick={() => setEditingMonk(u)}
+                        className="p-2 hover:bg-amber-500/10 hover:text-amber-500 rounded-lg transition-colors"
+                        title="Мэдээллийг засах"
+                      >
+                        <Edit size={16} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteUser(u._id)}
+                      disabled={processingId === u._id || u.role === 'admin'}
+                      className={`p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors ${u.role === 'admin' ? 'hidden' : ''}`}
+                      title="Хэрэглэгчийг устгах"
                     >
-                        {processingId === u._id ? <Loader2 size={16} className="animate-spin"/> : <Trash2 size={16} />}
+                      {processingId === u._id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                     </button>
                   </div>
                 </div>
@@ -429,13 +471,13 @@ export default function AdminDashboard() {
 
           {/* 5. BOOKINGS */}
           {activeTab === "bookings" && (
-            <motion.div 
-              key="bookings" 
-              initial={{ opacity: 0, y: 10 }} 
-              animate={{ opacity: 1, y: 0 }} 
+            <motion.div
+              key="bookings"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               className="space-y-4"
             >
-               <div className="overflow-x-auto rounded-[2rem] border border-black/5 dark:border-white/5">
+              <div className="overflow-x-auto rounded-[2rem] border border-black/5 dark:border-white/5">
                 <table className={`w-full text-left text-sm ${isDark ? "bg-white/5" : "bg-white"}`}>
                   <thead className={`uppercase text-[10px] font-black tracking-wider ${isDark ? "bg-black/20 text-white/50" : "bg-amber-50 text-amber-900/50"}`}>
                     <tr>
@@ -451,8 +493,8 @@ export default function AdminDashboard() {
                       <tr key={b._id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                         <td className="p-6">
                           <div className="font-bold">
-                            {typeof b.serviceName === 'object' 
-                              ? (b.serviceName?.mn || b.serviceName?.en || "Тодорхойгүй") 
+                            {typeof b.serviceName === 'object'
+                              ? (b.serviceName?.mn || b.serviceName?.en || "Тодорхойгүй")
                               : b.serviceName}
                           </div>
                           <div className="text-xs opacity-50">{b.price}₮</div>
@@ -462,37 +504,37 @@ export default function AdminDashboard() {
                           <div className="text-xs opacity-50">{b.clientEmail}</div>
                         </td>
                         <td className="p-6">
-                           <div className="flex items-center gap-2">
-                              <Clock size={14} className="opacity-50"/>
-                              <span>{new Date(b.date).toLocaleDateString()}</span>
-                           </div>
-                           <div className="text-xs opacity-50 pl-6">{b.time}</div>
+                          <div className="flex items-center gap-2">
+                            <Clock size={14} className="opacity-50" />
+                            <span>{new Date(b.date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="text-xs opacity-50 pl-6">{b.time}</div>
                         </td>
                         <td className="p-6">
-                           <StatusBadge status={b.status} />
+                          <StatusBadge status={b.status} />
                         </td>
                         <td className="p-6 text-right">
                           <div className="flex items-center justify-end gap-2">
-                             {b.status === 'pending' ? (
-                               <>
-                                <button 
+                            {b.status === 'pending' ? (
+                              <>
+                                <button
                                   onClick={() => handleBookingAction(b._id, 'confirmed')}
                                   className="p-2 bg-green-500/10 text-green-600 rounded-lg hover:bg-green-500 hover:text-white transition-all"
                                   title="Баталгаажуулах"
                                 >
                                   <CheckCircle size={16} />
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleBookingAction(b._id, 'rejected')}
                                   className="p-2 bg-red-500/10 text-red-600 rounded-lg hover:bg-red-500 hover:text-white transition-all"
                                   title="Цуцлах"
                                 >
                                   <XCircle size={16} />
                                 </button>
-                               </>
-                             ) : (
-                               <span className="text-xs opacity-30 font-bold uppercase">Шийдвэрлэгдсэн</span>
-                             )}
+                              </>
+                            ) : (
+                              <span className="text-xs opacity-30 font-bold uppercase">Шийдвэрлэгдсэн</span>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -500,18 +542,18 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
                 {filteredBookings?.length === 0 && <div className="p-10 text-center opacity-50">Захиалга олдсонгүй.</div>}
-               </div>
+              </div>
             </motion.div>
           )}
 
         </AnimatePresence>
 
         {/* MODALS */}
-        <MonkEditModal 
-            isOpen={!!editingMonk} 
-            monk={editingMonk} 
-            onClose={() => setEditingMonk(null)} 
-            onSave={handleSaveMonk} 
+        <MonkEditModal
+          isOpen={!!editingMonk}
+          monk={editingMonk}
+          onClose={() => setEditingMonk(null)}
+          onSave={handleSaveMonk}
         />
       </main>
     </div>
@@ -521,48 +563,48 @@ export default function AdminDashboard() {
 // --- HELPER COMPONENTS ---
 
 function StatCard({ title, value, icon: Icon, color }: { title: string, value: number, icon: any, color: string }) {
-    return (
-        <div className="bg-white dark:bg-white/5 border border-amber-100 dark:border-white/10 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
-            <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-white shadow-lg shadow-black/5 z-10 group-hover:scale-110 transition-transform`}>
-                <Icon size={24} />
-            </div>
-            <div className="z-10">
-                <p className="opacity-50 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
-                <h3 className="text-3xl font-black font-serif">{value.toLocaleString()}</h3>
-            </div>
-            {/* Background Decor */}
-            <div className={`absolute -right-6 -bottom-6 opacity-10 ${color.replace('bg-', 'text-')} transform rotate-12`}>
-                <Icon size={120} />
-            </div>
-        </div>
-    );
+  return (
+    <div className="bg-white dark:bg-white/5 border border-amber-100 dark:border-white/10 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+      <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-white shadow-lg shadow-black/5 z-10 group-hover:scale-110 transition-transform`}>
+        <Icon size={24} />
+      </div>
+      <div className="z-10">
+        <p className="opacity-50 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
+        <h3 className="text-3xl font-black font-serif">{value.toLocaleString()}</h3>
+      </div>
+      {/* Background Decor */}
+      <div className={`absolute -right-6 -bottom-6 opacity-10 ${color.replace('bg-', 'text-')} transform rotate-12`}>
+        <Icon size={120} />
+      </div>
+    </div>
+  );
 }
 
-function StatusBadge({ status }: { status: string }) {
-    const styles = {
-        active: "bg-green-500 text-white",
-        confirmed: "bg-green-500 text-white",
-        pending: "bg-amber-500 text-white",
-        rejected: "bg-red-500 text-white",
-        cancelled: "bg-gray-500 text-white",
-    };
-    
-    // Translation map
-    const labels: Record<string, string> = {
-        active: "Идэвхтэй",
-        confirmed: "Баталгаажсан",
-        pending: "Хүлээгдэж буй",
-        rejected: "Татгалзсан",
-        cancelled: "Цуцлагдсан"
-    };
-    
-    // Default to gray if status unknown
-    const activeStyle = styles[status as keyof typeof styles] || "bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
-    const label = labels[status] || status; // Use Mongolian label or fallback to English key
+function StatusBadge({ status }: { status?: string }) {
+  const styles = {
+    active: "bg-green-500 text-white",
+    confirmed: "bg-green-500 text-white",
+    pending: "bg-amber-500 text-white",
+    rejected: "bg-red-500 text-white",
+    cancelled: "bg-gray-500 text-white",
+  };
 
-    return (
-        <span className={`${activeStyle} px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider`}>
-            {label}
-        </span>
-    );
+  // Translation map
+  const labels: Record<string, string> = {
+    active: "Идэвхтэй",
+    confirmed: "Баталгаажсан",
+    pending: "Хүлээгдэж буй",
+    rejected: "Татгалзсан",
+    cancelled: "Цуцлагдсан"
+  };
+
+  // Default to gray if status unknown
+  const activeStyle = styles[status as keyof typeof styles] || "bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
+  const label = labels[status] || status; // Use Mongolian label or fallback to English key
+
+  return (
+    <span className={`${activeStyle} px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider`}>
+      {label}
+    </span>
+  );
 }
