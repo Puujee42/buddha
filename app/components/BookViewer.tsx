@@ -52,18 +52,18 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
 
     return (
         <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-            {/* Backdrop */}
+            {/* Backdrop - Solid black, no blur */}
             <div className="absolute inset-0 bg-black pointer-events-auto" onClick={onClose} />
 
-            {/* Modal */}
+            {/* Modal - Solid, no transparency */}
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="bg-stone-900 border border-stone-700 w-full max-w-4xl h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
+                className="bg-stone-900 border-2 border-stone-700 w-full max-w-4xl h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
             >
-                {/* Header */}
-                <div className="p-6 border-b border-stone-800 bg-stone-900 flex justify-between items-center">
+                {/* Header - Solid */}
+                <div className="p-6 border-b-2 border-stone-800 bg-stone-900 flex justify-between items-center">
                     <div className="flex items-center gap-3 text-amber-500">
                         <BookOpen className="w-6 h-6" />
                         <h2 className="text-xl font-serif font-bold text-stone-200">Digital Ritual Book</h2>
@@ -76,9 +76,9 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
                 {/* Content Container */}
                 <div className="flex-1 flex overflow-hidden">
 
-                    {/* Left Panel: Search & Hierarchy */}
-                    <div className="w-1/3 border-r border-stone-800 flex flex-col bg-[#0c0c0c]">
-                        <div className="p-4 border-b border-stone-800">
+                    {/* Left Panel: Search & Hierarchy - Solid */}
+                    <div className="w-1/3 border-r-2 border-stone-800 flex flex-col bg-stone-950">
+                        <div className="p-4 border-b-2 border-stone-800">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 w-4 h-4" />
                                 <input
@@ -86,7 +86,7 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
                                     placeholder="Search rituals..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full bg-stone-800/50 text-stone-200 pl-10 pr-4 py-2 rounded-xl text-sm border border-stone-700 focus:border-amber-500/50 focus:outline-none placeholder:text-stone-600"
+                                    className="w-full bg-stone-800 text-stone-200 pl-10 pr-4 py-2 rounded-xl text-sm border-2 border-stone-700 focus:border-amber-500 focus:outline-none placeholder:text-stone-600"
                                 />
                             </div>
                         </div>
@@ -111,7 +111,7 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
                                                     initial={{ opacity: 0, height: 0 }}
                                                     animate={{ opacity: 1, height: "auto" }}
                                                     exit={{ opacity: 0, height: 0 }}
-                                                    className="bg-stone-900/50"
+                                                    className="bg-stone-900 border-l-2 border-stone-800"
                                                 >
                                                     {cat.items.map((item, i) => (
                                                         <button

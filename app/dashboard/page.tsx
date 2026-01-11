@@ -189,15 +189,14 @@ export default function DashboardPage() {
     // --- VIDEO CALL STATE ---
     const [activeRoomToken, setActiveRoomToken] = useState<string | null>(null);
     const [activeRoomName, setActiveRoomName] = useState<string | null>(null);
+    const [activeBookingForRoom, setActiveBookingForRoom] = useState<Booking | null>(null);
     const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
+    const [showJoinNotification, setShowJoinNotification] = useState(false);
 
     // --- MODALS ---
     const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
-
-    // Ritual Room Modal (Chat + Video Trigger)
-    const [activeBookingForRoom, setActiveBookingForRoom] = useState<Booking | null>(null);
 
     // --- FORMS ---
     const [serviceForm, setServiceForm] = useState({ nameEn: "", nameMn: "", price: 0, duration: "30 min" });
