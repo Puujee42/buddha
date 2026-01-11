@@ -60,7 +60,7 @@ export default function Hero() {
         </video>
         {/* Cinematic Gradient Overlay to ensure text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent md:from-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent md:to-black/20 to-transparent" />
       </div>
 
       {/* --- TOP NAVIGATION BAR (Integrated into Hero) --- */}

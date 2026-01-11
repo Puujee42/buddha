@@ -599,8 +599,8 @@ function StatusBadge({ status }: { status?: string }) {
   };
 
   // Default to gray if status unknown
-  const activeStyle = styles[status as keyof typeof styles] || "bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
-  const label = labels[status] || status; // Use Mongolian label or fallback to English key
+  const activeStyle = styles[(status || "") as keyof typeof styles] || "bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
+  const label = (status && labels[status]) || status || "Unknown"; // Use Mongolian label or fallback to English key
 
   return (
     <span className={`${activeStyle} px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider`}>

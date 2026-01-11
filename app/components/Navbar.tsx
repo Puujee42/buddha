@@ -241,8 +241,6 @@ export default function OverlayNavbar() {
         </nav>
       </div>
 
-      {/* Spacing for mobile content */}
-      <div className="md:hidden h-28 pointer-events-none" />
     </>
   );
 }

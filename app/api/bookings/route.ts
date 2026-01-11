@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       monkId,
       date,
       time,
-      status: { $ne: "rejected" } // If previous was rejected, slot is free
+      status: { $nin: ["rejected", "cancelled"] } // If previous was rejected or cancelled, slot is free
     });
 
     if (existing) {
