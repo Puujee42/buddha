@@ -300,9 +300,30 @@ export default function RitualBookingPage() {
                     userName, userEmail, note: userNote
                 })
             });
-            if (res.ok) setIsBooked(true);
-            else alert("Booking Failed");
-        } catch (e) { console.error(e); }
+
+            if (res.ok) {
+                setIsBooked(true);
+            } else {
+                const errorData = await res.json();
+                const errorMessage = errorData.message || "Booking Failed";
+
+                // Show specific error messages
+                if (res.status === 400 && errorMessage.includes("past")) {
+                    alert(lang === 'mn'
+                        ? "Өнгөрсөн цагт захиалга өгөх боломжгүй. Өөр цаг сонгоно уу."
+                        : "Cannot book times in the past. Please select a future time.");
+                } else if (res.status === 409) {
+                    alert(lang === 'mn'
+                        ? "Энэ цаг аль хэдийн захиалагдсан байна. Өөр цаг сонгоно уу."
+                        : "This time slot is already taken. Please choose another time.");
+                } else {
+                    alert(errorMessage);
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            alert(lang === 'mn' ? "Алдаа гарлаа" : "An error occurred");
+        }
         finally { setIsSubmitting(false); }
     };
 

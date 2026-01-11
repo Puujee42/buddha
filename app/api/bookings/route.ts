@@ -19,31 +19,31 @@ export async function GET(request: Request) {
     }
 
     const { db } = await connectToDatabase();
-    
+
     // Build query dynamically
     const query: any = {};
-    
+
     if (monkId) {
-        query.monkId = monkId;
+      query.monkId = monkId;
     }
     if (userEmail) {
-        query.userEmail = userEmail;
+      query.userEmail = userEmail;
     }
-    
+
     // Optional date filter
     if (searchParams.get("date")) {
-        query.date = searchParams.get("date");
+      query.date = searchParams.get("date");
     }
 
     const bookings = await db.collection("bookings")
-        .find(query)
-        // Sort by Date ascending (so upcoming meetings are top), then Time
-        .sort({ date: 1, time: 1 }) 
-        .toArray();
+      .find(query)
+      // Sort by Date ascending (so upcoming meetings are top), then Time
+      .sort({ date: 1, time: 1 })
+      .toArray();
 
     // If requesting specific monk and date, just return the times array for easy checking
     if (monkId && searchParams.get("date")) {
-        return NextResponse.json(bookings.filter(b => b.status !== 'rejected' && b.status !== 'cancelled').map(b => b.time));
+      return NextResponse.json(bookings.filter(b => b.status !== 'rejected' && b.status !== 'cancelled').map(b => b.time));
     }
 
     return NextResponse.json(bookings);
@@ -56,15 +56,26 @@ export async function POST(request: Request) {
   try {
     const { userId: authUserId } = await auth();
     if (!authUserId) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { monkId, date, time, userName, userEmail, serviceId, note } = body; 
+    const { monkId, date, time, userName, userEmail, serviceId, note } = body;
 
     const { db } = await connectToDatabase();
 
-    // 1. Check Availability
+    // 1. Validate that the booking time is not in the past
+    const [hours, minutes] = time.split(':').map(Number);
+    // Parse the date string (YYYY-MM-DD) and set local hours/minutes
+    const [year, month, day] = date.split('-').map(Number);
+    const bookingDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+
+    const now = new Date();
+    if (bookingDateTime < now) {
+      return NextResponse.json({ message: "Cannot book times in the past. It is already " + now.toLocaleTimeString() }, { status: 400 });
+    }
+
+    // 2. Check Availability
     // We check if a slot is taken for this specific Monk
     const existing = await db.collection("bookings").findOne({
       monkId,
@@ -77,38 +88,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Slot already taken" }, { status: 409 });
     }
 
-    // 2. Fetch Monk & Service Details (For the Email Notification)
+    // 3. Fetch Monk & Service Details (For the Email Notification)
     let monk = null;
     if (ObjectId.isValid(monkId)) {
-        monk = await db.collection("users").findOne({ _id: new ObjectId(monkId) });
+      monk = await db.collection("users").findOne({ _id: new ObjectId(monkId) });
     }
 
     let serviceName = "Spiritual Session";
-    
+
     if (serviceId) {
-        // Check standard services collection (uses ObjectId)
-        if (ObjectId.isValid(serviceId)) {
-            const serviceDoc = await db.collection("services").findOne({ _id: new ObjectId(serviceId) });
-            if (serviceDoc) {
-                 serviceName = serviceDoc.title?.en || serviceDoc.title?.mn || serviceName;
-            }
+      // Check standard services collection (uses ObjectId)
+      if (ObjectId.isValid(serviceId)) {
+        const serviceDoc = await db.collection("services").findOne({ _id: new ObjectId(serviceId) });
+        if (serviceDoc) {
+          serviceName = serviceDoc.title?.en || serviceDoc.title?.mn || serviceName;
         }
-        
-        // If not found, check inside the monk's profile (uses UUID strings)
-        if (serviceName === "Spiritual Session" && monk && monk.services) {
-             const embedded = monk.services.find((s: any) => s.id === serviceId);
-             if (embedded) {
-                 serviceName = embedded.name?.en || embedded.name?.mn || serviceName;
-             }
+      }
+
+      // If not found, check inside the monk's profile (uses UUID strings)
+      if (serviceName === "Spiritual Session" && monk && monk.services) {
+        const embedded = monk.services.find((s: any) => s.id === serviceId);
+        if (embedded) {
+          serviceName = embedded.name?.en || embedded.name?.mn || serviceName;
         }
+      }
     }
 
-    // 3. Save Booking
+    // 4. Save Booking
     const newBooking = {
       monkId,
       clientId: body.userId || null,
       clientName: userName,
-      serviceName: { en: serviceName, mn: serviceName }, 
+      serviceName: { en: serviceName, mn: serviceName },
       date,
       time,
       userEmail,
@@ -119,19 +130,19 @@ export async function POST(request: Request) {
 
     const result = await db.collection("bookings").insertOne(newBooking);
 
-    // 4. Send Email
+    // 5. Send Email
     // Wrapped in try/catch so booking succeeds even if email fails
     try {
-        await sendBookingNotification({
-          userEmail,
-          userName,
-          monkName: monk?.name?.en || monk?.name?.mn || "The Monk",
-          serviceName: serviceName,
-          date,
-          time
-        });
+      await sendBookingNotification({
+        userEmail,
+        userName,
+        monkName: monk?.name?.en || monk?.name?.mn || "The Monk",
+        serviceName: serviceName,
+        date,
+        time
+      });
     } catch (emailError) {
-        console.error("Failed to send email:", emailError);
+      console.error("Failed to send email:", emailError);
     }
 
     return NextResponse.json({ success: true, id: result.insertedId });

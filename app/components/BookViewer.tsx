@@ -60,7 +60,7 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="bg-stone-900 border-2 border-stone-700 w-full max-w-4xl h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
+                className="bg-stone-950 border-4 border-amber-600 w-full max-w-6xl h-[90vh] rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col pointer-events-auto"
             >
                 {/* Header - Solid */}
                 <div className="p-6 border-b-2 border-stone-800 bg-stone-900 flex justify-between items-center">
@@ -77,8 +77,8 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
                 <div className="flex-1 flex overflow-hidden">
 
                     {/* Left Panel: Search & Hierarchy - Solid */}
-                    <div className="w-1/3 border-r-2 border-stone-800 flex flex-col bg-stone-950">
-                        <div className="p-4 border-b-2 border-stone-800">
+                    <div className="w-1/4 border-r-4 border-stone-800 flex flex-col bg-stone-950">
+                        <div className="p-4 border-b-4 border-stone-800">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 w-4 h-4" />
                                 <input
@@ -136,9 +136,9 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
                     </div>
 
                     {/* Right Panel: Details - MAXIMUM CLARITY */}
-                    <div className="w-2/3 flex flex-col bg-white">
+                    <div className="w-3/4 flex flex-col bg-white">
                         {selectedItem ? (
-                            <div className="p-12 h-full overflow-y-auto">
+                            <div className="p-16 h-full overflow-y-auto">
                                 {/* Title Section - Large and Bold */}
                                 <div className="mb-8 pb-8 border-b-4 border-amber-400">
                                     <h1 className="text-5xl font-serif font-black text-black mb-4 leading-tight">
