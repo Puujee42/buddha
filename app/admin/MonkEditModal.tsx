@@ -83,26 +83,26 @@ export default function MonkEditModal({ monk, isOpen, onClose, onSave }: MonkEdi
       <div className="bg-white dark:bg-[#0C164F] w-full max-w-4xl rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
         
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-gray-50/50 dark:bg-white/5">
+        <div className="p-6 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-white dark:bg-white/5">
           <div>
-             <h2 className="text-xl font-black font-serif text-amber-900 dark:text-amber-100">Лам засах</h2>
-             <p className="text-xs opacity-60">Мэдээллийг шинэчлэх</p>
+             <h2 className="text-2xl font-black font-serif text-amber-600 dark:text-amber-400">Лам засах</h2>
+             <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Мэдээллийг шинэчлэх</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors">
-            <X size={20} />
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors">
+            <X size={24} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-100 dark:border-white/10 px-6">
+        <div className="flex border-b border-gray-200 dark:border-white/10 px-6 bg-gray-50 dark:bg-black/20">
             {["basic", "details", "bio"].map((tab) => (
                 <button
                     key={tab}
                     onClick={() => setActiveTab(tab as any)}
-                    className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors ${
+                    className={`py-4 px-6 text-sm font-bold uppercase tracking-wider border-b-2 transition-all ${
                         activeTab === tab 
-                        ? "border-amber-500 text-amber-600 dark:text-amber-400" 
-                        : "border-transparent opacity-50 hover:opacity-100"
+                        ? "border-amber-500 text-amber-600 dark:text-amber-400 bg-white dark:bg-white/5" 
+                        : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                     }`}
                 >
                     {{ basic: "Үндсэн", details: "Дэлгэрэнгүй", bio: "Намтар & Бусад" }[tab]}
@@ -125,7 +125,7 @@ export default function MonkEditModal({ monk, isOpen, onClose, onSave }: MonkEdi
                     
                     <div className="col-span-full">
                         <InputGroup label="Зураг (URL)" value={formData.image} onChange={(v:string) => handleChange("image", v)} />
-                        {formData.image && <img src={formData.image} alt="Preview" className="w-20 h-20 rounded-xl mt-2 object-cover border" />}
+                        {formData.image && <img src={formData.image} alt="Preview" className="w-20 h-20 rounded-xl mt-2 object-cover border-2 border-amber-500" />}
                     </div>
                 </div>
             )}
@@ -138,20 +138,20 @@ export default function MonkEditModal({ monk, isOpen, onClose, onSave }: MonkEdi
                     </div>
 
                     <div className="space-y-3">
-                        <label className="text-xs font-bold uppercase opacity-70">Мэргэшил (Specialties)</label>
+                        <label className="text-xs font-bold uppercase text-gray-700 dark:text-gray-300">Мэргэшил (Specialties)</label>
                         <div className="flex flex-wrap gap-2">
                             {formData.specialties?.map((spec: string, index: number) => (
                                 <div key={index} className="flex items-center gap-2">
                                     <input 
-                                        className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-amber-500"
+                                        className="bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-amber-500"
                                         value={spec}
                                         onChange={(e) => handleSpecialtyChange(index, e.target.value)}
                                     />
-                                    <button type="button" onClick={() => removeSpecialty(index)} className="text-red-500 hover:bg-red-500/10 p-2 rounded-lg"><Trash2 size={14}/></button>
+                                    <button type="button" onClick={() => removeSpecialty(index)} className="text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors"><Trash2 size={16}/></button>
                                 </div>
                             ))}
-                            <button type="button" onClick={addSpecialty} className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-500/10 px-3 py-2 rounded-lg hover:bg-amber-500/20">
-                                <Plus size={14} /> Нэмэх
+                            <button type="button" onClick={addSpecialty} className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-500/10 px-4 py-2 rounded-lg hover:bg-amber-500/20 transition-colors border border-amber-500/20">
+                                <Plus size={16} /> Нэмэх
                             </button>
                         </div>
                     </div>
@@ -212,10 +212,10 @@ export default function MonkEditModal({ monk, isOpen, onClose, onSave }: MonkEdi
 function InputGroup({ label, value, onChange, type = "text", textarea = false, rows = 3 }: any) {
     return (
         <div className="space-y-1">
-            <label className="text-xs font-bold uppercase opacity-70 block">{label}</label>
+            <label className="text-xs font-bold uppercase text-gray-700 dark:text-gray-300 block">{label}</label>
             {textarea ? (
                 <textarea 
-                    className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-500 transition-colors"
+                    className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-500 transition-colors"
                     rows={rows}
                     value={value || ""}
                     onChange={(e) => onChange(e.target.value)}
@@ -223,7 +223,7 @@ function InputGroup({ label, value, onChange, type = "text", textarea = false, r
             ) : (
                 <input 
                     type={type}
-                    className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-500 transition-colors"
+                    className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-500 transition-colors"
                     value={value || ""}
                     onChange={(e) => onChange(e.target.value)}
                 />

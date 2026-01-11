@@ -122,22 +122,30 @@ export default function AdminDashboard() {
   // --- ACTIONS ---
 
   // 0. Create Service
-  const handleCreateService = async (serviceData: any) => {
+  const [editingService, setEditingService] = useState<any>(null); // New state for editing service
+
+  // 0. Create/Edit Service Helper
+  const handleSaveService = async (serviceData: any, id?: string) => {
     try {
-      const res = await fetch("/api/services", {
-        method: "POST",
+      const method = id ? "PUT" : "POST";
+      const url = id ? `/api/admin/services/${id}` : "/api/services";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(serviceData)
       });
+
       if (res.ok) {
         await fetchAdminData();
         setIsServiceModalOpen(false);
+        setEditingService(null);
       } else {
-        alert("Failed to create service");
+        alert("Failed to save service");
       }
     } catch (e) {
       console.error(e);
-      alert("Error creating service");
+      alert("Error saving service");
     }
   };
 
@@ -396,7 +404,7 @@ export default function AdminDashboard() {
           {activeTab === "services" && (
             <motion.div key="services" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               <div className="flex justify-end">
-                <button 
+                <button
                   onClick={() => setIsServiceModalOpen(true)}
                   className="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase shadow-lg shadow-amber-900/20 hover:bg-amber-600 transition-all flex items-center gap-2"
                 >
@@ -405,49 +413,58 @@ export default function AdminDashboard() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredServices?.map((s) => (
-                <div key={s.id} className={`p-6 rounded-[2rem] border relative overflow-hidden flex flex-col justify-between ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
-                  <div className="mb-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-black text-sm">{s.name?.mn || s.name?.en}</h4>
-                      <StatusBadge status={s.status || 'pending'} />
+                {filteredServices?.map((s) => (
+                  <div key={s.id} className={`p-6 rounded-[2rem] border relative overflow-hidden flex flex-col justify-between ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
+                    <div className="mb-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-black text-sm">{s.name?.mn || s.name?.en}</h4>
+                        <StatusBadge status={s.status || 'pending'} />
+                      </div>
+                      <p className="text-xs opacity-50 mb-1 font-bold">Үнэ: {s.price}₮ • {s.duration}</p>
+                      <p className="text-[10px] opacity-40">Лам: {s.monkName?.mn || s.monkName?.en || "Тодорхойгүй"}</p>
                     </div>
-                    <p className="text-xs opacity-50 mb-1 font-bold">Үнэ: {s.price}₮ • {s.duration}</p>
-                    <p className="text-[10px] opacity-40">Лам: {s.monkName?.mn || s.monkName?.en || "Тодорхойгүй"}</p>
-                  </div>
 
-                  <div className="flex gap-2 border-t pt-4 border-black/5 dark:border-white/5">
-                    {(!s.status || s.status === 'pending') && (
-                      <>
-                        <button
-                          onClick={() => handleServiceAction(s.id, 'approve')}
-                          disabled={processingId === s.id}
-                          className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold text-[10px] uppercase hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
-                        >
-                          {processingId === s.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Зөвшөөрөх
-                        </button>
-                        <button
-                          onClick={() => handleServiceAction(s.id, 'reject')}
-                          disabled={processingId === s.id}
-                          className="flex-1 py-3 bg-amber-500/10 text-amber-600 rounded-xl font-bold text-[10px] uppercase hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <X size={14} /> Татгалзах
-                        </button>
-                      </>
-                    )}
-                    <button
-                      onClick={() => handleDeleteService(s.id)}
-                      disabled={processingId === s.id}
-                      className="py-3 px-4 bg-red-500/10 text-red-500 rounded-xl font-bold text-[10px] uppercase hover:bg-red-500/20 transition-colors flex items-center justify-center"
-                      title="Устгах"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <div className="flex gap-2 border-t pt-4 border-black/5 dark:border-white/5">
+                      <button
+                        onClick={() => {
+                          setEditingService(s);
+                          setIsServiceModalOpen(true);
+                        }}
+                        className="flex-1 py-3 bg-blue-500/10 text-blue-600 rounded-xl font-bold text-[10px] uppercase hover:bg-blue-500/20 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Edit size={14} /> Засах
+                      </button>
+                      {(!s.status || s.status === 'pending') && (
+                        <>
+                          <button
+                            onClick={() => handleServiceAction(s.id, 'approve')}
+                            disabled={processingId === s.id}
+                            className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold text-[10px] uppercase hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                          >
+                            {processingId === s.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Зөвшөөрөх
+                          </button>
+                          <button
+                            onClick={() => handleServiceAction(s.id, 'reject')}
+                            disabled={processingId === s.id}
+                            className="flex-1 py-3 bg-amber-500/10 text-amber-600 rounded-xl font-bold text-[10px] uppercase hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <X size={14} /> Татгалзах
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => handleDeleteService(s.id)}
+                        disabled={processingId === s.id}
+                        className="py-3 px-4 bg-red-500/10 text-red-500 rounded-xl font-bold text-[10px] uppercase hover:bg-red-500/20 transition-colors flex items-center justify-center"
+                        title="Устгах"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    {s.status === 'active' && <p className="text-[10px] text-green-600 text-center font-bold mt-2 opacity-60">Сайт дээр идэвхтэй</p>}
                   </div>
-                  {s.status === 'active' && <p className="text-[10px] text-green-600 text-center font-bold mt-2 opacity-60">Сайт дээр идэвхтэй</p>}
-                </div>
-              ))}
-              {filteredServices?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Үйлчилгээ олдсонгүй.</p>}
+                ))}
+                {filteredServices?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Үйлчилгээ олдсонгүй.</p>}
               </div>
             </motion.div>
           )}
@@ -588,10 +605,14 @@ export default function AdminDashboard() {
           onClose={() => setEditingMonk(null)}
           onSave={handleSaveMonk}
         />
-        <ServiceCreateModal 
+        <ServiceCreateModal
           isOpen={isServiceModalOpen}
-          onClose={() => setIsServiceModalOpen(false)}
-          onSave={handleCreateService}
+          onClose={() => {
+            setIsServiceModalOpen(false);
+            setEditingService(null);
+          }}
+          onSave={handleSaveService}
+          initialData={editingService}
         />
       </main>
     </div>
