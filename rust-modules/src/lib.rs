@@ -17,7 +17,8 @@ struct Monk {
     #[serde(rename = "_id")]
     id: String,
     #[serde(default)]
-    isAvailable: bool, // Matches JS camelCase
+    #[serde(rename = "isAvailable")]
+    is_available: bool, // Matches JS camelCase
     #[serde(default)]
     schedule: Vec<ScheduleItem>,
     
@@ -39,7 +40,7 @@ pub fn filter_monks(json_data: &str, day_name: &str) -> String {
 
     let filtered: Vec<Monk> = monks.into_iter().filter(|m| {
         // 1. Global Availability Check
-        if !m.isAvailable {
+        if !m.is_available {
             return false;
         }
 

@@ -9,4 +9,7 @@ fi
 cd rust-modules
 wasm-pack build --target bundler
 
+# Remove .gitignore to allow committing the pkg to git (needed for Vercel)
+rm -f pkg/.gitignore
+
 echo "Build complete. Now run: npm install ./rust-modules/pkg"
