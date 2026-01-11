@@ -7,7 +7,7 @@ import { ThemeProvider } from 'next-themes'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 
-const playfair = Playfair_Display({ 
+const playfair = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-playfair',
   display: 'swap',
@@ -26,17 +26,17 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-  <ClerkProvider>
-    <LanguageProvider>
-      <html lang="en" suppressHydrationWarning>
-      <body className={`${playfair.variable} ${lato.variable} font-sans`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-          <Footer />
-        </ThemeProvider>
-      </body>
-    </html>
-    </LanguageProvider>
-  </ClerkProvider>
+    <ClerkProvider>
+      <LanguageProvider>
+        <html lang="en" suppressHydrationWarning>
+          <body className={`${playfair.variable} ${lato.variable} font-sans`}>
+            <ThemeProvider attribute="class" forcedTheme="light" defaultTheme="light" enableSystem={false}>
+              {children}
+              <Footer />
+            </ThemeProvider>
+          </body>
+        </html>
+      </LanguageProvider>
+    </ClerkProvider>
   )
 }

@@ -22,12 +22,13 @@ interface Props {
   roomName: string;
   onLeave: () => void;
   isMonk?: boolean;
+  bookingId?: string; // New prop for auto-cleanup
 }
 
-export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, isMonk = false }: Props) {
+export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, isMonk = false, bookingId }: Props) {
   const [isBookOpen, setIsBookOpen] = React.useState(false);
 
-  // --- TIMER LOGIC (30 MIN LIMIT) ---
+  // --- TIMER LOGIC (30 MIN LIMIT + AUTO CLEANUP) ---
   const [timeLeft, setTimeLeft] = React.useState(30 * 60); // 30 minutes in seconds
 
   React.useEffect(() => {
@@ -35,14 +36,20 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          onLeave(); // Auto-end
+          // Auto-complete booking to delete chat history
+          if (bookingId) {
+            fetch(`/api/bookings/${bookingId}/complete`, { method: 'POST' })
+              .then(() => console.log('Session auto-completed and chat deleted'))
+              .catch(err => console.error('Auto-complete failed:', err));
+          }
+          onLeave(); // Close the room
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [onLeave]);
+  }, [onLeave, bookingId]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);

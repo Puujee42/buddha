@@ -514,10 +514,9 @@ export default function DashboardPage() {
             token={activeRoomToken}
             serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL!}
             roomName={activeRoomName}
+            bookingId={activeRoomName} // Pass bookingId for auto-cleanup
             isMonk={isMonk}
             onLeave={async () => {
-                // End call logic: just close video, don't necessarily end booking or reload
-                // We might want to keep the chat open
                 setActiveRoomToken(null);
                 setActiveRoomName(null);
             }}
