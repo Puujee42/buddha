@@ -110,7 +110,7 @@ export default function ChatWindow({
   };
 
   return (
-    <div className="flex flex-col h-[600px] w-full max-w-md mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-stone-100 font-sans">
+    <div className="flex flex-col h-full w-full bg-white md:rounded-2xl shadow-xl overflow-hidden border border-stone-100 font-sans">
       {/* Header */}
       <div className="bg-white p-4 border-b border-stone-100 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-3">
@@ -131,8 +131,8 @@ export default function ChatWindow({
       </div>
 
       {/* Messages Area */}
-      <div 
-        className="flex-1 overflow-y-auto p-4 space-y-6 bg-stone-50 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent" 
+      <div
+        className="flex-1 overflow-y-auto p-4 space-y-6 bg-stone-50 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent"
         ref={scrollRef}
       >
         {loading ? (
@@ -143,7 +143,7 @@ export default function ChatWindow({
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-stone-400">
             <div className="bg-white p-4 rounded-full shadow-sm mb-3">
-                <MessageSquare size={32} className="text-stone-300" />
+              <MessageSquare size={32} className="text-stone-300" />
             </div>
             <p className="text-sm font-medium">No messages yet</p>
             <p className="text-xs opacity-70">Start the conversation below</p>
@@ -157,12 +157,11 @@ export default function ChatWindow({
                 className={`flex gap-3 ${isMe ? "flex-row-reverse" : "flex-row"}`}
               >
                 {/* Avatar */}
-                <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
-                    isMe 
-                    ? "bg-amber-100 text-amber-700 border-amber-200" 
-                    : "bg-white text-stone-600 border-stone-200"
-                }`}>
-                    {getInitials(msg.senderName)}
+                <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border-2 ${isMe
+                  ? "bg-amber-100 text-amber-700 border-amber-200"
+                  : "bg-white text-stone-600 border-stone-200"
+                  }`}>
+                  {getInitials(msg.senderName)}
                 </div>
 
                 {/* Message Bubble */}
@@ -170,13 +169,12 @@ export default function ChatWindow({
                   <div className="flex items-center gap-2 mb-1 px-1">
                     {!isMe && <span className="text-[10px] font-semibold text-stone-500">{msg.senderName}</span>}
                   </div>
-                  
+
                   <div
-                    className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm leading-relaxed ${
-                      isMe
-                        ? "bg-amber-600 text-white rounded-tr-none"
-                        : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"
-                    }`}
+                    className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm leading-relaxed ${isMe
+                      ? "bg-amber-600 text-white rounded-tr-none"
+                      : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"
+                      }`}
                   >
                     {msg.text}
                   </div>
@@ -191,22 +189,22 @@ export default function ChatWindow({
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-white border-t border-stone-100">
-        <div className="flex items-end gap-2 bg-stone-50 p-1.5 rounded-3xl border border-stone-200 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all">
+      <div className="p-3 md:p-4 bg-white border-t border-stone-100">
+        <div className="flex items-end gap-2 bg-stone-50 p-2 md:p-1.5 rounded-3xl border border-stone-200 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all">
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="Type your message..."
-            className="flex-1 bg-transparent border-none focus:ring-0 px-4 py-2.5 text-sm text-stone-800 placeholder-stone-400"
+            className="flex-1 bg-transparent border-none focus:ring-0 px-3 md:px-4 py-3 md:py-2.5 text-sm text-stone-800 placeholder-stone-400"
           />
           <button
             onClick={sendMessage}
             disabled={sending || !inputText.trim()}
-            className="p-2.5 rounded-full bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:hover:bg-amber-600 transition-colors shadow-sm flex-shrink-0"
+            className="p-3 md:p-2.5 rounded-full bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:hover:bg-amber-600 transition-colors shadow-sm flex-shrink-0 active:scale-95"
           >
-            {sending ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
+            {sending ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
           </button>
         </div>
       </div>
