@@ -150,7 +150,7 @@ export default function AboutPage() {
               {/* Background Video Parallax */}
               <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0 z-0">
                 <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-60">
-                  <source src="/try.mp4" type="video/mp4" />
+                   <source src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133950/num2_ocygii.mp4"  type="video/mp4" />
                 </video>
               </motion.div>
               

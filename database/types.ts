@@ -60,6 +60,7 @@ export interface Monk {
     };
     price: number; // in local currency
     duration: string; // e.g., "30 min", "1 hour"
+    status?: 'pending' | 'active' | 'rejected';
   }[];
   schedule?: { 
     day: string; 

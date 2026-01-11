@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { currentUser } from "@clerk/nextjs/server";
+import { ObjectId } from "mongodb";
 
 export async function GET() {
   try {
@@ -57,20 +58,62 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden: Only admins can create standard services" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { db } = await connectToDatabase();
-
-    if (!body.title || !body.type || !body.price) {
-        return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    const { 
+      name, 
+      title, 
+      type, 
+      price, 
+      duration, 
+      desc, 
+      subtitle, 
+      image, 
+      quote, 
+      id 
+    } = await request.json();
+    
+    if (!price || !type) {
+        return NextResponse.json({ error: "Missing required fields (price, type)" }, { status: 400 });
     }
 
-    const result = await db.collection("services").insertOne({
-        ...body,
+    const { db } = await connectToDatabase();
+    
+    // Construct service object ensuring schema compliance
+    const newService = {
+        id: id || new ObjectId().toString(),
+        name,
+        title,
+        type,
+        price: Number(price),
+        duration,
+        desc,
+        subtitle,
+        image,
+        quote,
         createdAt: new Date(),
-    });
+        updatedAt: new Date(),
+    };
+
+    const result = await db.collection("services").insertOne(newService);
+
+    // Broadcast this new service to ALL monks
+    await db.collection("users").updateMany(
+      { role: "monk" },
+      { 
+        $push: { 
+          services: {
+            id: newService.id,
+            name: newService.name,
+            price: newService.price,
+            duration: newService.duration,
+            status: 'active'
+          }
+        } 
+      } as any
+    );
 
     return NextResponse.json({ message: "Service created", id: result.insertedId }, { status: 201 });
   } catch (error) {
+    console.error("Service Creation Error:", error);
     return NextResponse.json({ error: "Failed to create service" }, { status: 500 });
   }
 }

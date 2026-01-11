@@ -8,11 +8,12 @@ import {
   ShieldAlert, Users, Calendar, LayoutDashboard,
   Search, Trash2, CheckCircle, XCircle,
   Loader2, UserCog, ScrollText, TrendingUp, Check, X,
-  FileText, Clock, Edit
+  FileText, Clock, Edit, Plus
 } from "lucide-react";
 import OverlayNavbar from "../components/Navbar";
 import { useTheme } from "next-themes";
 import MonkEditModal from "./MonkEditModal";
+import ServiceCreateModal from "./ServiceCreateModal";
 
 // --- TYPES ---
 // --- TYPES ---
@@ -82,6 +83,7 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [editingMonk, setEditingMonk] = useState<any>(null);
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [wasm, setWasm] = useState<typeof import("rust-modules") | null>(null);
 
   const isAdmin = user?.publicMetadata?.role === "admin";
@@ -118,6 +120,26 @@ export default function AdminDashboard() {
   }, [isLoaded, user, isAdmin, router]);
 
   // --- ACTIONS ---
+
+  // 0. Create Service
+  const handleCreateService = async (serviceData: any) => {
+    try {
+      const res = await fetch("/api/services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(serviceData)
+      });
+      if (res.ok) {
+        await fetchAdminData();
+        setIsServiceModalOpen(false);
+      } else {
+        alert("Failed to create service");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error creating service");
+    }
+  };
 
   const handleSaveMonk = async (id: string, updatedData: any) => {
     try {
@@ -210,15 +232,6 @@ export default function AdminDashboard() {
     } catch (e) { console.error(e); } finally { setProcessingId(null); }
   }
 
-  // Loading State
-  if (!isLoaded || loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB] dark:bg-[#05051a]">
-      <Loader2 className="animate-spin text-amber-600" size={48} />
-    </div>
-  );
-
-  if (!isAdmin) return null;
-
   // Filters with Rust WASM
   const getFilteredData = <T,>(items: T[], term: string): T[] => {
     if (!items) return [];
@@ -237,6 +250,15 @@ export default function AdminDashboard() {
   const filteredUsers = useMemo(() => getFilteredData(data?.users || [], searchTerm), [data?.users, searchTerm, wasm]);
   const filteredBookings = useMemo(() => getFilteredData(data?.bookings || [], searchTerm), [data?.bookings, searchTerm, wasm]);
   const filteredServices = useMemo(() => getFilteredData(data?.services || [], searchTerm), [data?.services, searchTerm, wasm]);
+
+  // Loading State
+  if (!isLoaded || loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB] dark:bg-[#05051a]">
+      <Loader2 className="animate-spin text-amber-600" size={48} />
+    </div>
+  );
+
+  if (!isAdmin) return null;
 
   return (
     <div className={`min-h-screen font-sans ${isDark ? "bg-[#05051a] text-white" : "bg-[#FDFBF7] text-[#451a03]"}`}>
@@ -372,7 +394,17 @@ export default function AdminDashboard() {
 
           {/* 3. SERVICES */}
           {activeTab === "services" && (
-            <motion.div key="services" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <motion.div key="services" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <div className="flex justify-end">
+                <button 
+                  onClick={() => setIsServiceModalOpen(true)}
+                  className="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase shadow-lg shadow-amber-900/20 hover:bg-amber-600 transition-all flex items-center gap-2"
+                >
+                  <Plus size={16} /> Шинэ Үйлчилгээ
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredServices?.map((s) => (
                 <div key={s.id} className={`p-6 rounded-[2rem] border relative overflow-hidden flex flex-col justify-between ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
                   <div className="mb-4">
@@ -416,6 +448,7 @@ export default function AdminDashboard() {
                 </div>
               ))}
               {filteredServices?.length === 0 && <p className="col-span-full text-center opacity-50 py-10">Үйлчилгээ олдсонгүй.</p>}
+              </div>
             </motion.div>
           )}
 
@@ -554,6 +587,11 @@ export default function AdminDashboard() {
           monk={editingMonk}
           onClose={() => setEditingMonk(null)}
           onSave={handleSaveMonk}
+        />
+        <ServiceCreateModal 
+          isOpen={isServiceModalOpen}
+          onClose={() => setIsServiceModalOpen(false)}
+          onSave={handleCreateService}
         />
       </main>
     </div>

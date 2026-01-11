@@ -56,7 +56,7 @@ export default function Hero() {
           playsInline
           className="w-full h-full object-cover brightness-90 md:brightness-100"
         >
-          <source src="/video.mp4" type="video/mp4" />
+          <source src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133484/video_kakyvu.mp4" type="video/mp4" />
         </video>
         {/* Cinematic Gradient Overlay to ensure text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent md:from-black/40" />

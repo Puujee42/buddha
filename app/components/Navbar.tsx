@@ -181,7 +181,10 @@ export default function OverlayNavbar() {
       {/* ========================================================= */}
       <div className="md:hidden fixed bottom-6 left-0 right-0 z-50 px-5 flex justify-center">
         <nav className={`
-          flex items-center justify-between w-full max-w-[440px] px-3 py-3 rounded-full border shadow-[0_-15px_50px_rgba(0,0,0,0.2)] backdrop-blur-3xl transition-all duration-700
+          flex items-center justify-between text-black
+          
+          
+          w-full max-w-[440px] px-3 py-3 rounded-full border shadow-[0_-15px_50px_rgba(0,0,0,0.2)] backdrop-blur-3xl transition-all duration-700
           ${isDark ? "bg-[#1a0505]/95 border-amber-900/50 shadow-black" : "bg-white/95 border-amber-100 shadow-amber-900/10"}
         `}>
           {mobileNav.map((item) => {

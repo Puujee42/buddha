@@ -175,11 +175,21 @@ export default function MonkBookingPage() {
                     return isDirectMatch || isReferenced;
                 });
 
-                setAvailableServices(services);
+                // Unique filtering by name
+                const uniqueServicesMap = new Map();
+                services.forEach((s: any) => {
+                    const key = s.name?.[lang] || s.title?.[lang] || s.name?.mn || s.name?.en || s.id; // Fallback to ID
+                    if (!uniqueServicesMap.has(key)) {
+                        uniqueServicesMap.set(key, s);
+                    }
+                });
+                const uniqueServices = Array.from(uniqueServicesMap.values());
 
-                if (services.length > 0) {
+                setAvailableServices(uniqueServices);
+
+                if (uniqueServices.length > 0) {
                     // Try to match initialServiceId from query params, otherwise fallback to first
-                    const initial = services.find((s: any) => s._id === initialServiceId) || services[0];
+                    const initial = uniqueServices.find((s: any) => s._id === initialServiceId) || uniqueServices[0];
                     setSelectedService(initial);
                     setSelectedDateIndex(0);
                 }
@@ -187,7 +197,7 @@ export default function MonkBookingPage() {
             finally { setLoading(false); }
         }
         loadData();
-    }, [monkId, user, initialServiceId]);
+    }, [monkId, user, initialServiceId, lang]);
 
     // -- Calendar & Slots Logic --
     const calendarDates = useMemo(() => {

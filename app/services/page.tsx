@@ -102,8 +102,22 @@ export default function CelestialServices() {
       try {
         const res = await fetch('/api/services');
         const data = await res.json();
-        const validServices = Array.isArray(data) ? data.filter(item => item.price) : [];
-        setServices(validServices);
+        
+        // Use a Map to store unique services by name (prefer MN name as key, fallback to EN)
+        const uniqueServicesMap = new Map();
+        
+        if (Array.isArray(data)) {
+            data.forEach((item: any) => {
+                if (item.price) { // Ensure valid item
+                    const key = item.name?.mn || item.name?.en || item.title?.mn || item.title?.en;
+                    if (key && !uniqueServicesMap.has(key)) {
+                        uniqueServicesMap.set(key, item);
+                    }
+                }
+            });
+        }
+
+        setServices(Array.from(uniqueServicesMap.values()));
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     }

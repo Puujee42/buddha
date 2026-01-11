@@ -27,21 +27,25 @@ export async function DELETE(request: Request, props: Props) {
     const { db } = await connectToDatabase();
     
     // 1. Try deleting from 'services' collection (Standard Services)
-    if (ObjectId.isValid(id)) {
-        const result = await db.collection("services").deleteOne({ _id: new ObjectId(id) });
-        if (result.deletedCount > 0) {
-            return NextResponse.json({ message: "Service deleted successfully" });
-        }
+    // We check both _id (if valid ObjectId) and id field to ensure we catch it
+    const serviceQuery = ObjectId.isValid(id) 
+        ? { $or: [{ _id: new ObjectId(id) }, { id: id }] }
+        : { id: id };
+
+    const result = await db.collection("services").deleteOne(serviceQuery);
+    
+    if (result.deletedCount > 0) {
+        return NextResponse.json({ message: "Service deleted successfully" });
     }
 
     // 2. Try deleting from 'users' collection (Monk Services)
     // We remove the service from the 'services' array where id matches
-    const result = await db.collection("users").updateOne(
+    const userResult = await db.collection("users").updateOne(
         { "services.id": id },
         { $pull: { services: { id: id } } as any }
     );
 
-    if (result.modifiedCount > 0) {
+    if (userResult.modifiedCount > 0) {
         return NextResponse.json({ message: "Monk service deleted successfully" });
     }
 
@@ -69,7 +73,7 @@ export async function PATCH(request: Request, props: Props) {
 
     // 2. Try updating in 'users' collection (Monk Services)
     // We search for a user document where "services.id" matches the id
-    const result = await db.collection("users").updateOne(
+    const monkServiceResult = await db.collection("users").updateOne(
       { "services.id": id },
       { 
         $set: { 
@@ -78,11 +82,24 @@ export async function PATCH(request: Request, props: Props) {
       }
     );
 
-    if (result.matchedCount > 0) {
+    if (monkServiceResult.matchedCount > 0) {
         return NextResponse.json({ message: `Service ${newStatus}` });
     }
 
-    // 3. Optional: If you had an approval flow for standard services, handle here.
+    // 3. Try updating in 'services' collection (Standard Services)
+    // Use ObjectId if valid AND fallback to string 'id' field
+    const serviceQuery = ObjectId.isValid(id) 
+        ? { $or: [{ _id: new ObjectId(id) }, { id: id }] }
+        : { id: id };
+
+    const standardServiceResult = await db.collection("services").updateOne(
+        serviceQuery,
+        { $set: { status: newStatus } }
+    );
+
+    if (standardServiceResult && standardServiceResult.matchedCount > 0) {
+        return NextResponse.json({ message: `Standard service ${newStatus}` });
+    }
     
     return NextResponse.json({ message: "Service not found" }, { status: 404 });
 

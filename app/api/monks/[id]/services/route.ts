@@ -17,16 +17,41 @@ export async function PATCH(request: Request, props: Props) {
     }
 
     const { db } = await connectToDatabase();
+    const objectId = new ObjectId(id);
 
-    // Update the 'users' collection so it shows up on the public profile
-    const result = await db.collection("users").updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { services: services } }
-    );
-
-    if (result.matchedCount === 0) {
+    // 1. Fetch existing monk profile to check current statuses
+    const existingMonk = await db.collection("users").findOne({ _id: objectId });
+    if (!existingMonk) {
       return NextResponse.json({ message: "Monk profile not found" }, { status: 404 });
     }
+
+    const existingServices = existingMonk.services || [];
+
+    // 2. Process incoming services
+    // - If service ID exists, preserve its status
+    // - If new, set status to 'pending'
+    // - Force override any user-provided status to prevent bypassing approval
+    const processedServices = services.map((newSvc: any) => {
+      const existingSvc = existingServices.find((s: any) => s.id === newSvc.id);
+      
+      // Default to 'pending' for new services or if legacy data is missing status
+      let status = 'pending';
+      
+      if (existingSvc && existingSvc.status) {
+        status = existingSvc.status;
+      }
+
+      return {
+        ...newSvc,
+        status: status 
+      };
+    });
+
+    // 3. Update the 'users' collection
+    const result = await db.collection("users").updateOne(
+      { _id: objectId },
+      { $set: { services: processedServices } }
+    );
 
     return NextResponse.json({ message: "Services updated", success: true });
 
