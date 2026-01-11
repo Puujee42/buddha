@@ -270,7 +270,7 @@ export default function RitualBookingPage() {
     const times = useMemo(() => [
         "10:00", "10:30", "11:00", "11:30",
         "14:00", "14:30", "15:00", "15:30",
-        "16:00", "16:30", "17:00", "17:30", "18:00", "01:00"
+        "16:00", "16:30", "17:00", "17:30", "18:00", "01:25"
     ], []);
 
     useEffect(() => {
@@ -290,7 +290,12 @@ export default function RitualBookingPage() {
         if (!isSignedIn) { alert("Please sign in."); return; }
         setIsSubmitting(true);
         try {
-            const d = dates[selectedDateIndex!].fullDate.toISOString().split('T')[0];
+            // Use local date string instead of UTC ISO string to avoid timezone shifting
+            const year = dates[selectedDateIndex!].fullDate.getFullYear();
+            const month = String(dates[selectedDateIndex!].fullDate.getMonth() + 1).padStart(2, '0');
+            const day = String(dates[selectedDateIndex!].fullDate.getDate()).padStart(2, '0');
+            const d = `${year}-${month}-${day}`;
+
             const res = await fetch('/api/bookings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

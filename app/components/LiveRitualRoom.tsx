@@ -63,32 +63,34 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
   return (
     <div className="fixed inset-0 z-50 bg-[#05051a] flex flex-col">
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent pointer-events-none">
-        <div className="pointer-events-auto">
-          <h2 className="text-white font-serif text-xl tracking-widest">SPACE</h2>
-          <div className="flex items-center gap-3">
-            <p className="text-cyan-400 text-xs uppercase tracking-[0.2em]">{roomName}</p>
-            <div className={`text-xs font-mono font-bold px-2 py-0.5 rounded border border-white/10 bg-black/40 ${timerColor}`}>
+      <div className="absolute top-0 left-0 right-0 z-10 p-2 md:p-4 flex flex-wrap justify-between items-center bg-gradient-to-b from-black/80 to-transparent pointer-events-none gap-2">
+        <div className="pointer-events-auto flex flex-col">
+          <h2 className="text-white font-serif text-sm md:text-xl tracking-widest leading-none">SPACE</h2>
+          <div className="flex items-center gap-2">
+            <p className="text-cyan-400 text-[10px] md:text-xs uppercase tracking-[0.1em] md:tracking-[0.2em] truncate max-w-[120px] md:max-w-none">
+              {roomName}
+            </p>
+            <div className={`text-[10px] md:text-xs font-mono font-bold px-1.5 py-0.5 rounded border border-white/10 bg-black/40 ${timerColor}`}>
               {formatTime(timeLeft)}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 pointer-events-auto">
+        <div className="flex items-center gap-2 md:gap-3 pointer-events-auto">
           {isMonk && (
             <button
               onClick={() => setIsBookOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-black px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-amber-500/20"
+              className="bg-amber-500 hover:bg-amber-600 text-black px-2 md:px-4 py-1.5 md:py-2 rounded-full font-bold text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-2 transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap"
             >
-              <BookOpen size={16} /> Nom (Book)
+              <BookOpen size={14} className="md:w-4 md:h-4" /> Nom
             </button>
           )}
 
           <button
             onClick={onLeave}
-            className="bg-red-500/20 hover:bg-red-500/40 text-red-200 px-4 py-2 rounded-full border border-red-500/30 backdrop-blur-md flex items-center gap-2 transition-all"
+            className="bg-red-500/20 hover:bg-red-500/40 text-red-200 px-2 md:px-4 py-1.5 md:py-2 rounded-full border border-red-500/30 backdrop-blur-md flex items-center gap-1.5 md:gap-2 transition-all text-[10px] md:text-xs whitespace-nowrap active:scale-95"
           >
-            <X size={18} /> End Ritual
+            <X size={14} className="md:w-4 md:h-4" /> End
           </button>
         </div>
       </div>

@@ -55,6 +55,7 @@ interface Booking {
     date: string;
     time: string;
     status: string;
+    callStatus?: string;
 }
 
 // English keys for DB/Logic, Mongolian for Display
@@ -274,7 +275,12 @@ export default function DashboardPage() {
                 setLoading(false);
             }
         }
-        if (isLoaded && user) fetchData();
+        if (isLoaded && user) {
+            fetchData();
+            // Polling for updates (especially for clients to see when a monk starts a call)
+            const pollInterval = setInterval(fetchData, 8000); // 8 second polling
+            return () => clearInterval(pollInterval);
+        }
     }, [isLoaded, user]);
 
     // --- LOGIC: GENERATE SLOTS FOR BLOCKING UI ---
@@ -444,13 +450,23 @@ export default function DashboardPage() {
     };
 
 
-    const joinVideoCall = async (id: string) => {
-        setJoiningRoomId(id);
+    const joinVideoCall = async (booking: Booking) => {
+        setJoiningRoomId(booking._id);
         try {
-            const res = await fetch(`/api/livekit?room=${id}&username=${user?.fullName}`);
+            // If monk, signal call is starting
+            if (isMonk) {
+                await fetch(`/api/bookings/${booking._id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ callStatus: 'active' })
+                });
+            }
+
+            const res = await fetch(`/api/livekit?room=${booking._id}&username=${user?.fullName}`);
             const data = await res.json();
             setActiveRoomToken(data.token);
-            setActiveRoomName(id);
+            setActiveRoomName(booking._id);
+            setActiveBookingForRoom(booking);
         } catch (e) { console.error(e); } finally { setJoiningRoomId(null); }
     };
 
@@ -515,6 +531,13 @@ export default function DashboardPage() {
             bookingId={activeRoomName} // Pass bookingId for auto-cleanup
             isMonk={isMonk}
             onLeave={async () => {
+                if (isMonk && activeRoomName) {
+                    await fetch(`/api/bookings/${activeRoomName}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ callStatus: 'ended' })
+                    });
+                }
                 setActiveRoomToken(null);
                 setActiveRoomName(null);
             }}
@@ -725,10 +748,20 @@ export default function DashboardPage() {
                                             <div className="flex flex-col items-end gap-2">
                                                 {b.status === 'confirmed' ? (
                                                     <>
-                                                        {availability.isOpen ? (
+                                                        {b.callStatus === 'active' ? (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setActiveBookingForRoom(b);
+                                                                    joinVideoCall(b); // Auto-join call if active
+                                                                }}
+                                                                className="px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-black uppercase flex items-center gap-2 shadow-lg shadow-green-500/20 hover:bg-green-700 animate-bounce"
+                                                            >
+                                                                <Video size={14} /> Join Video Call
+                                                            </button>
+                                                        ) : availability.isOpen ? (
                                                             <button
                                                                 onClick={() => setActiveBookingForRoom(b)}
-                                                                className="px-4 py-2 bg-[#D97706] text-white rounded-lg text-xs font-black uppercase flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-[#B45309] animate-pulse"
+                                                                className="px-4 py-2 bg-[#D97706] text-white rounded-lg text-xs font-black uppercase flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-[#B45309]"
                                                             >
                                                                 <MessageCircle size={14} /> {TEXT.enterRoom}
                                                             </button>
@@ -819,13 +852,16 @@ export default function DashboardPage() {
 
                                 {/* Video Call Trigger */}
                                 <div className="mb-4 space-y-2">
-                                    <button
-                                        onClick={() => joinVideoCall(activeBookingForRoom._id)}
-                                        disabled={joiningRoomId === activeBookingForRoom._id}
-                                        className="w-full py-4 bg-[#05051a] text-white rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg"
-                                    >
-                                        {joiningRoomId === activeBookingForRoom._id ? <Loader2 className="animate-spin" /> : <Video size={20} />} {TEXT.startVideo}
-                                    </button>
+                                    {(isMonk || activeBookingForRoom.callStatus === 'active') && (
+                                        <button
+                                            onClick={() => joinVideoCall(activeBookingForRoom)}
+                                            disabled={joiningRoomId === activeBookingForRoom._id}
+                                            className={`w-full py-4 text-white rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg ${activeBookingForRoom.callStatus === 'active' ? 'bg-green-600 hover:bg-green-700 animate-pulse' : 'bg-[#05051a] hover:bg-black'}`}
+                                        >
+                                            {joiningRoomId === activeBookingForRoom._id ? <Loader2 className="animate-spin" /> : <Video size={20} />}
+                                            {activeBookingForRoom.callStatus === 'active' ? 'Join Video Call' : TEXT.startVideo}
+                                        </button>
+                                    )}
 
                                     {isMonk && (
                                         <button
