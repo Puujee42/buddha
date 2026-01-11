@@ -135,36 +135,48 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
                         </div>
                     </div>
 
-                    {/* Right Panel: Details */}
+                    {/* Right Panel: Details - MAXIMUM CLARITY */}
                     <div className="w-2/3 flex flex-col bg-white">
                         {selectedItem ? (
-                            <div className="p-8 h-full overflow-y-auto">
-                                <div className="mb-6 pb-6 border-b border-stone-300">
-                                    <h1 className="text-3xl font-serif font-bold text-amber-600 mb-2">{selectedItem.name}</h1>
-                                    <span className="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-widest border border-amber-200">
+                            <div className="p-12 h-full overflow-y-auto">
+                                {/* Title Section - Large and Bold */}
+                                <div className="mb-8 pb-8 border-b-4 border-amber-400">
+                                    <h1 className="text-5xl font-serif font-black text-black mb-4 leading-tight">
+                                        {selectedItem.name}
+                                    </h1>
+                                    <span className="inline-block px-5 py-2 rounded-full bg-amber-500 text-white text-sm font-black uppercase tracking-widest shadow-lg">
                                         Ritual Details
                                     </span>
                                 </div>
 
-                                <div className="prose prose-lg max-w-none text-stone-900 leading-relaxed">
-                                    <p className="whitespace-pre-wrap text-black">{selectedItem.desc || "No description available."}</p>
+                                {/* Description - Large, Clear, Black Text */}
+                                <div className="mb-12">
+                                    <h2 className="text-2xl font-bold text-black mb-6 uppercase tracking-wide">Description</h2>
+                                    <p className="text-2xl font-medium text-black leading-relaxed whitespace-pre-wrap">
+                                        {selectedItem.desc || "No description available."}
+                                    </p>
                                 </div>
 
-                                <div className="mt-12 p-6 bg-amber-50 rounded-2xl border border-amber-200">
-                                    <div className="flex items-center gap-3 text-amber-700 mb-2">
-                                        <FileText size={18} />
-                                        <span className="text-xs font-bold uppercase tracking-wider">Instructions</span>
+                                {/* Instructions Box - High Contrast */}
+                                <div className="mt-12 p-8 bg-amber-100 rounded-3xl border-4 border-amber-400">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="p-3 rounded-full bg-amber-500">
+                                            <FileText size={24} className="text-white" />
+                                        </div>
+                                        <h3 className="text-xl font-black uppercase tracking-wider text-black">Instructions</h3>
                                     </div>
-                                    <p className="text-sm text-stone-700">
+                                    <p className="text-xl font-medium text-black leading-relaxed">
                                         Perform this ritual with a clear mind and focused intention. Ensure all necessary preparations are completed before beginning.
                                     </p>
                                 </div>
                             </div>
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-stone-400 p-8 text-center">
-                                <BookOpen size={64} className="mb-4 text-stone-300" />
-                                <h3 className="text-xl font-bold mb-2 text-stone-600">Select a Ritual</h3>
-                                <p className="max-w-xs text-stone-500">Browse the categories on the left or use the search bar to find a specific ritual.</p>
+                            <div className="h-full flex flex-col items-center justify-center text-stone-500 p-12 text-center">
+                                <BookOpen size={80} className="mb-6 text-stone-400" />
+                                <h3 className="text-3xl font-bold mb-4 text-black">Select a Ritual</h3>
+                                <p className="text-xl text-stone-600 max-w-md leading-relaxed">
+                                    Browse the categories on the left or use the search bar to find a specific ritual.
+                                </p>
                             </div>
                         )}
                     </div>

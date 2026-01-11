@@ -425,7 +425,7 @@ export default function RitualBookingPage() {
                                                     </h3>
                                                 </div>
 
-                                                <div className="space-y-3 text-sm text-black">
+                                                <div className={`space-y-3 text-sm ${theme.text}`}>
                                                     <div className="flex justify-between items-center">
                                                         <span className="opacity-60">{t({ mn: "Банк:", en: "Bank:" })}</span>
                                                         <span className="font-bold">Khan Bank (Хаан Банк)</span>
