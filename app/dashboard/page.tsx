@@ -510,12 +510,18 @@ export default function DashboardPage() {
     const isMonk = profile?.role === 'monk';
 
     if (activeRoomToken && activeRoomName) {
-        return <LiveRitualRoom token={activeRoomToken} serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL!} roomName={activeRoomName} onLeave={async () => {
-            // End call logic: just close video, don't necessarily end booking or reload
-            // We might want to keep the chat open
-            setActiveRoomToken(null);
-            setActiveRoomName(null);
-        }} />;
+        return <LiveRitualRoom
+            token={activeRoomToken}
+            serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL!}
+            roomName={activeRoomName}
+            isMonk={isMonk}
+            onLeave={async () => {
+                // End call logic: just close video, don't necessarily end booking or reload
+                // We might want to keep the chat open
+                setActiveRoomToken(null);
+                setActiveRoomName(null);
+            }}
+        />;
     }
 
     return (

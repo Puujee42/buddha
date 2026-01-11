@@ -227,8 +227,11 @@ export default function RitualBookingPage() {
                 if (fetchedService?.monkId) {
                     const assigned = allMonks.find((m: Monk) => m._id === fetchedService.monkId);
                     if (assigned) setSelectedMonk(assigned);
-                } else if (allMonks.length > 0) {
-                    setSelectedMonk(allMonks[0]);
+                } else {
+                    // Filter monks who actually offer this service
+                    const available = allMonks.filter((m: Monk) => m.services?.some(s => s.id === fetchedService.id || s.id === fetchedService._id));
+                    if (available.length > 0) setSelectedMonk(available[0]);
+                    else if (allMonks.length > 0) setSelectedMonk(allMonks[0]); // Fallback
                 }
 
             } catch (e) { console.error(e); }
@@ -450,6 +453,37 @@ export default function RitualBookingPage() {
                                         </motion.div>
                                     ) : (
                                         <motion.div layout className="space-y-10">
+
+                                            {/* MONK SELECTION (STEP 0) */}
+                                            {monks.filter(m => m.services?.some(s => s.id === service.id || s.id === service._id)).length > 1 && (
+                                                <section className="mb-10">
+                                                    <h4 className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] opacity-60 mb-6 ${theme.text}`}>
+                                                        <User size={14} /> {t({ mn: "Багш сонгох", en: "Select Guide" })}
+                                                    </h4>
+                                                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide mask-fade">
+                                                        {monks.filter(m => m.services?.some(s => s.id === service.id || s.id === service._id)).map((m, idx) => (
+                                                            <motion.button
+                                                                key={m._id?.toString() || idx}
+                                                                onClick={() => { setSelectedMonk(m); setSelectedDateIndex(null); setSelectedTime(null); }}
+                                                                whileHover={{ y: -5 }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                                className={`relative flex-shrink-0 w-48 p-4 rounded-2xl border transition-all text-left group overflow-hidden ${selectedMonk?._id === m._id ? theme.slotActive : theme.glassPanel}`}
+                                                            >
+                                                                <div className="flex items-center gap-3 mb-3 relative z-10">
+                                                                    <img src={m.image} alt={m.name?.[lang]} className="w-10 h-10 rounded-full object-cover border-2 border-white/20" />
+                                                                    <div>
+                                                                        <p className="text-[10px] font-bold uppercase opacity-70">{m.title?.[lang]}</p>
+                                                                        <p className="font-serif font-bold leading-tight line-clamp-1">{m.name?.[lang]}</p>
+                                                                    </div>
+                                                                </div>
+                                                                {selectedMonk?._id === m._id && (
+                                                                    <motion.div layoutId="activeMonkRing" className="absolute inset-0 border-2 border-white/50 rounded-2xl z-20" />
+                                                                )}
+                                                            </motion.button>
+                                                        ))}
+                                                    </div>
+                                                </section>
+                                            )}
 
                                             {/* DATE SELECTION */}
                                             <section>
