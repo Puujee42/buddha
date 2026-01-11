@@ -46,17 +46,17 @@ export default function Hero() {
 
   return (
     <section className="relative h-screen w-full overflow-hidden flex items-center bg-[#FCF9F2]">
-      
+
       {/* --- BACKGROUND IMAGE/VIDEO --- */}
       <div className="absolute inset-0 z-0">
-        <video 
-          autoPlay 
-          loop 
+        <video
+          autoPlay
+          loop
           muted
           playsInline
           className="w-full h-full object-cover brightness-90 md:brightness-100"
         >
-        <source src="/video.mp4" type="video/mp4" />
+          <source src="/video.mp4" type="video/mp4" />
         </video>
         {/* Cinematic Gradient Overlay to ensure text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent md:from-black/40" />
@@ -64,17 +64,17 @@ export default function Hero() {
       </div>
 
       {/* --- TOP NAVIGATION BAR (Integrated into Hero) --- */}
-    
+
 
       {/* --- MAIN CONTENT --- */}
-      <motion.div 
+      <motion.div
         style={{ y: yContent, opacity: opacityFade }}
         className="relative z-10 container mx-auto px-6 md:px-12 lg:px-20 pt-20"
       >
         <div className="max-w-4xl space-y-6">
-          
+
           {/* Main Title with Highlight */}
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -84,7 +84,7 @@ export default function Hero() {
           </motion.h1>
 
           {/* Subtitle */}
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -94,7 +94,7 @@ export default function Hero() {
           </motion.p>
 
           {/* CTA Button */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -118,12 +118,11 @@ export default function Hero() {
         </div>
       </motion.div>
 
-      {/* --- PRAYER FLAG ACCENT (Optional Overlay) --- */}
-      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
-      
+
+
       {/* Decorative veiling for the vey bottom to match Veo style */}
       <div className="absolute bottom-10 right-10 z-20 hidden md:block">
-        <motion.div 
+        <motion.div
           animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 4, repeat: Infinity }}
           className="flex items-center gap-3 text-white/40 font-bold uppercase tracking-[0.4em] text-[10px]"
