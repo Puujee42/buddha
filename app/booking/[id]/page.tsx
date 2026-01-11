@@ -75,7 +75,7 @@ const ServiceTicket = ({ service, monkName, theme, lang }: any) => (
                 </div>
 
                 {/* Service Name */}
-                <h1 className={`text-3xl md:text-4xl font-serif font-black tracking-tight mb-2 ${theme.text}`}>
+                <h1 className={`text-2xl md:text-4xl font-serif font-black tracking-tight mb-2 ${theme.text}`}>
                     {service.name?.[lang]}
                 </h1>
 
@@ -299,7 +299,7 @@ export default function RitualBookingPage() {
             <OverlayNavbar />
             <CosmicBackground isNight={isNight} />
 
-            <main className="relative z-10 container mx-auto px-6 pt-32 pb-24">
+            <main className="relative z-10 container mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-24">
 
                 {/* Animated Back Link */}
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
@@ -313,7 +313,7 @@ export default function RitualBookingPage() {
                     variants={containerVar}
                     initial="hidden"
                     animate="show"
-                    className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start"
+                    className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 lg:gap-20 items-start"
                 >
 
                     {/* --- LEFT: MONK PROFILE (STICKY & ANIMATED) --- */}
@@ -322,7 +322,7 @@ export default function RitualBookingPage() {
                         {/* Floating Monk Image */}
                         <motion.div
                             whileHover={{ scale: 1.02 }}
-                            className="group relative aspect-[3/4] rounded-[40px] overflow-hidden shadow-2xl cursor-none"
+                            className="group relative aspect-[4/3] md:aspect-[3/4] rounded-[32px] md:rounded-[40px] overflow-hidden shadow-2xl cursor-none"
                         >
                             <div className={`absolute inset-0 bg-gradient-to-t ${isNight ? "from-[#020617]" : "from-[#451a03]"} via-transparent to-transparent opacity-80 z-10 transition-opacity group-hover:opacity-60`} />
 
