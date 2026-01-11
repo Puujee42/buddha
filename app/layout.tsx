@@ -20,6 +20,16 @@ const lato = Lato({
   display: 'swap',
 })
 
+export const metadata = {
+  title: 'Gevabal - Spiritual Guidance',
+  description: 'Book spiritual consultations with experienced monks',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
+}
+
 export default function RootLayout({
   children,
 }: {

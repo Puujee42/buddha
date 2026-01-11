@@ -308,12 +308,11 @@ export default function DashboardPage() {
         const bookingDateTime = new Date(`${booking.date}T${booking.time}`);
         const now = new Date();
 
-        // 2. Open Window: 30 minutes before
-        const openTime = new Date(bookingDateTime.getTime() - 30 * 60 * 1000); // -30 mins
+        // 2. Open Window: 10 minutes before booking time
+        const openTime = new Date(bookingDateTime.getTime() - 10 * 60 * 1000); // -10 mins
 
-        // 3. Close Window: Assuming 1 hour duration + padding if not specified
-        // Ideally we fetch duration, but let's assume 2 hours max window for safety
-        const closeTime = new Date(bookingDateTime.getTime() + 2 * 60 * 60 * 1000);
+        // 3. Close Window: 30 minutes after booking time (total chat duration: 40 minutes)
+        const closeTime = new Date(bookingDateTime.getTime() + 30 * 60 * 1000); // +30 mins
 
         if (now >= openTime && now <= closeTime) {
             return { isOpen: true, message: TEXT.roomOpen };
