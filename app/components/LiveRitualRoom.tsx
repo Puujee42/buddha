@@ -98,35 +98,18 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
         audio={true}
         token={token}
         serverUrl={serverUrl}
-        // Use the default LiveKit theme, or remove 'data-lk-theme' for custom CSS
         data-lk-theme="default"
         style={{ height: '100vh' }}
         onDisconnected={onLeave}
+        connect={true}
       >
-        <MyVideoConference />
+        {/* Use default VideoConference for reliable two-way video */}
+        <VideoConference />
         <RoomAudioRenderer />
-        <ControlBar variation="minimal" />
       </LiveKitRoom>
 
       {/* Digital Book Overlay */}
       <BookViewer isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
     </div>
-  );
-}
-
-function MyVideoConference() {
-  // Custom layout logic to make it look nicer
-  const tracks = useTracks(
-    [
-      { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.ScreenShare, withPlaceholder: false },
-    ],
-    { onlySubscribed: false },
-  );
-
-  return (
-    <GridLayout tracks={tracks} style={{ height: 'calc(100vh - 80px)' }}>
-      <ParticipantTile />
-    </GridLayout>
   );
 }

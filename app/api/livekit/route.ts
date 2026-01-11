@@ -22,8 +22,14 @@ export async function GET(req: NextRequest) {
     identity: username,
   });
 
-  // Grant permissions to join the room
-  at.addGrant({ roomJoin: true, room: room });
+  // Grant full permissions for two-way video/audio communication
+  at.addGrant({
+    roomJoin: true,
+    room: room,
+    canPublish: true,      // Allow publishing video/audio
+    canSubscribe: true,    // Allow viewing other participants
+    canPublishData: true   // Allow chat/data messages
+  });
 
   return NextResponse.json({ token: await at.toJwt() });
 }

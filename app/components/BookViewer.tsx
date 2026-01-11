@@ -53,7 +53,7 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
     return (
         <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onClick={onClose} />
+            <div className="absolute inset-0 bg-black pointer-events-auto" onClick={onClose} />
 
             {/* Modal */}
             <motion.div
@@ -118,8 +118,8 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
                                                             key={i}
                                                             onClick={() => setSelectedItem(item)}
                                                             className={`w-full text-left pl-9 pr-4 py-2 text-sm border-l-2 transition-all flex items-start gap-2 ${selectedItem?.name === item.name
-                                                                    ? "border-amber-500 bg-amber-500/10 text-amber-100"
-                                                                    : "border-transparent text-stone-400 hover:text-stone-300 hover:bg-stone-800"
+                                                                ? "border-amber-500 bg-amber-500/10 text-amber-100"
+                                                                : "border-transparent text-stone-400 hover:text-stone-300 hover:bg-stone-800"
                                                                 }`}
                                                         >
                                                             <div className="mt-1 min-w-[4px] min-h-[4px] rounded-full bg-current opacity-50" />
@@ -136,35 +136,35 @@ export default function BookViewer({ isOpen, onClose }: BookViewerProps) {
                     </div>
 
                     {/* Right Panel: Details */}
-                    <div className="w-2/3 flex flex-col bg-[#111111]">
+                    <div className="w-2/3 flex flex-col bg-white">
                         {selectedItem ? (
                             <div className="p-8 h-full overflow-y-auto">
-                                <div className="mb-6 pb-6 border-b border-stone-800">
-                                    <h1 className="text-3xl font-serif font-bold text-amber-500 mb-2">{selectedItem.name}</h1>
-                                    <span className="inline-block px-3 py-1 rounded-full bg-stone-800 text-stone-400 text-xs font-bold uppercase tracking-widest border border-stone-700">
+                                <div className="mb-6 pb-6 border-b border-stone-300">
+                                    <h1 className="text-3xl font-serif font-bold text-amber-600 mb-2">{selectedItem.name}</h1>
+                                    <span className="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-widest border border-amber-200">
                                         Ritual Details
                                     </span>
                                 </div>
 
-                                <div className="prose prose-invert prose-lg max-w-none text-stone-300 leading-relaxed">
-                                    <p className="whitespace-pre-wrap">{selectedItem.desc || "No description available."}</p>
+                                <div className="prose prose-lg max-w-none text-stone-900 leading-relaxed">
+                                    <p className="whitespace-pre-wrap text-black">{selectedItem.desc || "No description available."}</p>
                                 </div>
 
-                                <div className="mt-12 p-6 bg-stone-900/50 rounded-2xl border border-stone-800 border-dashed">
-                                    <div className="flex items-center gap-3 text-stone-500 mb-2">
+                                <div className="mt-12 p-6 bg-amber-50 rounded-2xl border border-amber-200">
+                                    <div className="flex items-center gap-3 text-amber-700 mb-2">
                                         <FileText size={18} />
                                         <span className="text-xs font-bold uppercase tracking-wider">Instructions</span>
                                     </div>
-                                    <p className="text-sm text-stone-500 italic">
+                                    <p className="text-sm text-stone-700">
                                         Perform this ritual with a clear mind and focused intention. Ensure all necessary preparations are completed before beginning.
                                     </p>
                                 </div>
                             </div>
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-stone-600 p-8 text-center opacity-50">
-                                <BookOpen size={64} className="mb-4 text-stone-700" />
-                                <h3 className="text-xl font-bold mb-2">Select a Ritual</h3>
-                                <p className="max-w-xs">Browse the categories on the left or use the search bar to find a specific ritual.</p>
+                            <div className="h-full flex flex-col items-center justify-center text-stone-400 p-8 text-center">
+                                <BookOpen size={64} className="mb-4 text-stone-300" />
+                                <h3 className="text-xl font-bold mb-2 text-stone-600">Select a Ritual</h3>
+                                <p className="max-w-xs text-stone-500">Browse the categories on the left or use the search bar to find a specific ritual.</p>
                             </div>
                         )}
                     </div>
