@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -146,7 +146,9 @@ const InfoItem = ({ icon, title, text, theme }: any) => {
 
 export default function RitualBookingPage() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const id = Array.isArray(params.id) ? params.id[0] : params.id;
+    const lockedMonkId = searchParams.get("monkId"); // Read monk ID from query params
     const { t, language: lang } = useLanguage();
     const { resolvedTheme } = useTheme();
     const { user, isSignedIn } = useUser();
@@ -222,23 +224,33 @@ export default function RitualBookingPage() {
 
                 const mRes = await fetch('/api/monks');
                 const allMonks = await mRes.json();
-                setMonks(allMonks);
 
-                if (fetchedService?.monkId) {
-                    const assigned = allMonks.find((m: Monk) => m._id === fetchedService.monkId);
-                    if (assigned) setSelectedMonk(assigned);
+                // If monkId is locked via query params, only use that monk
+                if (lockedMonkId) {
+                    const lockedMonk = allMonks.find((m: Monk) => m._id === lockedMonkId);
+                    if (lockedMonk) {
+                        setMonks([lockedMonk]); // Only show this one monk
+                        setSelectedMonk(lockedMonk);
+                    }
                 } else {
-                    // Filter monks who actually offer this service
-                    const available = allMonks.filter((m: Monk) => m.services?.some(s => s.id === fetchedService.id || s.id === fetchedService._id));
-                    if (available.length > 0) setSelectedMonk(available[0]);
-                    else if (allMonks.length > 0) setSelectedMonk(allMonks[0]); // Fallback
+                    setMonks(allMonks);
+
+                    if (fetchedService?.monkId) {
+                        const assigned = allMonks.find((m: Monk) => m._id === fetchedService.monkId);
+                        if (assigned) setSelectedMonk(assigned);
+                    } else {
+                        // Filter monks who actually offer this service
+                        const available = allMonks.filter((m: Monk) => m.services?.some(s => s.id === fetchedService.id || s.id === fetchedService._id));
+                        if (available.length > 0) setSelectedMonk(available[0]);
+                        else if (allMonks.length > 0) setSelectedMonk(allMonks[0]); // Fallback
+                    }
                 }
 
             } catch (e) { console.error(e); }
             finally { setLoading(false); }
         }
         loadData();
-    }, [id, user]);
+    }, [id, user, lockedMonkId]);
 
     const dates = useMemo(() => {
         const arr = [];
@@ -258,7 +270,7 @@ export default function RitualBookingPage() {
     const times = useMemo(() => [
         "10:00", "10:30", "11:00", "11:30",
         "14:00", "14:30", "15:00", "15:30",
-        "16:00", "16:30", "17:00", "17:30", "18:00"
+        "16:00", "16:30", "17:00", "17:30", "18:00", "23:00"
     ], []);
 
     useEffect(() => {
