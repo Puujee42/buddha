@@ -141,8 +141,13 @@ export default function SignUpPage() {
 
     } catch (err: any) {
       console.error("Login Error:", err);
-      // Handle Clerk errors vs generic errors
-      const msg = err.errors ? err.errors[0].longMessage : err.message;
+      let msg = err.errors ? err.errors[0].longMessage : err.message;
+
+      // Handle "strategy is not valid" (User has no password, only social)
+      if (msg.includes("verification strategy is not valid")) {
+        msg = "This account uses Social Login (Google/Apple). Please use the button below.";
+      }
+
       setError(msg);
     } finally {
       setLoading(false);
@@ -306,6 +311,16 @@ export default function SignUpPage() {
                   </div>
                 </motion.button>
               </form>
+
+              {/* Social Login Fallback */}
+              <div className="mt-4">
+                <SignInButton mode="modal">
+                  <button type="button" className="w-full py-3 rounded-xl bg-white border border-stone-200 text-stone-600 font-bold text-xs uppercase tracking-wider hover:bg-stone-50 transition-colors flex items-center justify-center gap-2">
+                    <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4 opacity-70" />
+                    Sign in with Google / Other
+                  </button>
+                </SignInButton>
+              </div>
 
               {/* 2. Secondary Register Button */}
               <div className="relative py-4">

@@ -209,14 +209,40 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
         </div>
     );
 
+    // Responsive check
+    const [isMobile, setIsMobile] = useState(false);
+    React.useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     if (isSidebar) {
+        // MOBILE OVERLAY MODE (Absolute, Full Width)
+        if (isMobile) {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="absolute inset-0 z-50 bg-stone-950/95 backdrop-blur-sm"
+                >
+                    <div className="w-full h-full flex flex-col">
+                        {content}
+                    </div>
+                </motion.div>
+            );
+        }
+
+        // DESKTOP SIDEBAR MODE (Relative, Fixed Width)
         return (
             <motion.div
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: "350px", opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-                className="h-full shrink-0 overflow-hidden"
+                className="h-full shrink-0 overflow-hidden border-l border-stone-800 shadow-2xl relative z-40"
             >
                 <div className="w-[350px] h-full">
                     {content}
