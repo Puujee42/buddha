@@ -7,14 +7,14 @@ export interface User {
   firstName?: string;
   lastName?: string;
   avatar?: string;
-  
+
   // Spiritual Stats
   karma: number;
   meditationDays: number;
   totalMerits: number;
   earnings?: number; // Total earnings for monks
   role: "seeker" | "monk" | "admin";
-  
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,8 +41,9 @@ export interface Monk {
     mn: string;
     en: string;
   };
-  
+
   // New Fields
+  isSpecial?: boolean; // Admin-controlled special status
   yearsOfExperience: number;
   education: {
     mn: string;
@@ -62,11 +63,11 @@ export interface Monk {
     duration: string; // e.g., "30 min", "1 hour"
     status?: 'pending' | 'active' | 'rejected';
   }[];
-  schedule?: { 
-    day: string; 
-    start: string; 
-    end: string; 
-    active: boolean 
+  schedule?: {
+    day: string;
+    start: string;
+    end: string;
+    active: boolean
   }[];
   blockedSlots?: {
     id: string;
@@ -94,10 +95,10 @@ export interface Comment {
   avatar: string;
   text: string;
   karma: number; // Likes/Upvotes
-  element: "gold" | "saffron" | "ochre" | "light"|"earth"|"wind"|"water"|"fire"|"air"|"dark"; // Visual theme
+  element: "gold" | "saffron" | "ochre" | "light" | "earth" | "wind" | "water" | "fire" | "air" | "dark"; // Visual theme
   createdAt: Date;
 }
-export interface Service{
+export interface Service {
   _id?: ObjectId | string;
   id: string;
   name: {

@@ -18,7 +18,7 @@ export async function POST(request: Request, props: Props) {
 
     const user = await currentUser();
     if (!user) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const { db } = await connectToDatabase();
@@ -32,35 +32,43 @@ export async function POST(request: Request, props: Props) {
     // 2. Authorization Check (Only Monk or Admin)
     const isAdmin = user.publicMetadata.role === "admin";
     let isMonk = false;
-    
+
     if (booking.monkId) {
-        // Fetch monk profile to check if it matches current user
-        const monkProfile = await db.collection("users").findOne({ _id: new ObjectId(booking.monkId) });
-        if (monkProfile && monkProfile.clerkId === user.id) {
-            isMonk = true;
-        }
+      // Fetch monk profile to check if it matches current user
+      const monkProfile = await db.collection("users").findOne({ _id: new ObjectId(booking.monkId) });
+      if (monkProfile && monkProfile.clerkId === user.id) {
+        isMonk = true;
+      }
     }
 
     if (!isMonk && !isAdmin) {
-        return NextResponse.json({ message: "Forbidden: Only the Monk or Admin can complete this booking." }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden: Only the Monk or Admin can complete this booking." }, { status: 403 });
     }
 
     // 3. Check if already processed
     if (booking.status === 'completed') {
-        return NextResponse.json({ message: "Booking already completed" });
+      return NextResponse.json({ message: "Booking already completed" });
     }
 
     // 4. Update Monk's Earnings (Add 50,000 as requested)
     const monkId = booking.monkId;
     if (monkId) {
-        // monkId can be string or ObjectId in booking, ensure we match correctly
-        // In types.ts: monkId: ObjectId | string
-        const monkQuery = ObjectId.isValid(monkId) ? { _id: new ObjectId(monkId) } : { _id: monkId };
-        
+      // monkId can be string or ObjectId in booking, ensure we match correctly
+      // In types.ts: monkId: ObjectId | string
+      const monkQuery = ObjectId.isValid(monkId) ? { _id: new ObjectId(monkId) } : { _id: monkId };
+
+      // Fetch monk to check status for earnings
+      const monk = await db.collection("users").findOne(monkQuery);
+
+      if (monk) {
+        const isSpecial = monk.isSpecial === true;
+        const earningsAmount = isSpecial ? 80000 : 40000;
+
         await db.collection("users").updateOne(
-            monkQuery,
-            { $inc: { earnings: 50000 } }
+          monkQuery,
+          { $inc: { earnings: earningsAmount } }
         );
+      }
     }
 
     // 5. Delete Chat Messages (Cleanup)
@@ -68,8 +76,8 @@ export async function POST(request: Request, props: Props) {
 
     // 6. Mark Booking as Completed
     await db.collection("bookings").updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { status: 'completed', updatedAt: new Date() } }
+      { _id: new ObjectId(id) },
+      { $set: { status: 'completed', updatedAt: new Date() } }
     );
 
     return NextResponse.json({ success: true, message: "Booking completed, payment added, and chat history cleaned." });

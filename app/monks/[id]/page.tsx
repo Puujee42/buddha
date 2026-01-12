@@ -73,6 +73,7 @@ const ServiceTicket = ({ service, theme, t, lang }: any) => (
                 <div className="text-right shrink-0">
                     <p className="text-[10px] uppercase tracking-widest opacity-50 mb-1">{t({ mn: "Үнэ", en: "Offering" })}</p>
                     <div className={`text-4xl font-serif font-medium ${theme.accentText}`}>
+                        {/* PRICE OVERRIDE DISPLAY - Logic handled in parent or derived here */}
                         {Number(service.price).toLocaleString()}₮
                     </div>
                 </div>
@@ -183,7 +184,13 @@ export default function MonkBookingPage() {
                         uniqueServicesMap.set(key, s);
                     }
                 });
-                const uniqueServices = Array.from(uniqueServicesMap.values());
+                // OVERRIDE PRICES based on Admin-controlled Monk Status
+                const isSpecial = mData.isSpecial === true;
+
+                const uniqueServices = Array.from(uniqueServicesMap.values()).map((s: any) => ({
+                    ...s,
+                    price: isSpecial ? 80000 : 50000
+                }));
 
                 setAvailableServices(uniqueServices);
 
@@ -359,14 +366,14 @@ export default function MonkBookingPage() {
                                                         <div className="space-y-3 text-sm text-black">
                                                             <div className="flex justify-between items-center">
                                                                 <span className="opacity-60">{t({ mn: "Банк:", en: "Bank:" })}</span>
-                                                                <span className="font-bold">Khan Bank (Хаан Банк)</span>
+                                                                <span className="font-bold">{t({ mn: "Төрийн Банк", en: "State Bank" })}</span>
                                                             </div>
                                                             <div className="flex justify-between items-center">
                                                                 <span className="opacity-60">{t({ mn: "Данс:", en: "Account:" })}</span>
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className="font-mono font-bold">5023456789</span>
+                                                                    <span className="font-mono font-bold">888889896666</span>
                                                                     <button
-                                                                        onClick={() => navigator.clipboard.writeText("5023456789")}
+                                                                        onClick={() => navigator.clipboard.writeText("888889896666")}
                                                                         className={`p-1.5 rounded-md hover:bg-black/10 transition-colors text-amber-600`}
                                                                         title={t({ mn: "Хуулах", en: "Copy" })}
                                                                     >

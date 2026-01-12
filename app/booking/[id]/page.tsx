@@ -106,7 +106,10 @@ const ServiceTicket = ({ service, monkName, theme, lang }: any) => (
                     {lang === 'mn' ? "Өргөл" : "Offering"}
                 </span>
                 <div className={`text-4xl font-serif font-medium ${theme.accentText}`}>
-                    {Number(service.price).toLocaleString()}₮
+                    {/* DYNAMIC PRICING: 80k for Special (Master/>10y), 40k for Normal */}
+                    {(monkName?.includes("Master") || monkName?.includes("Тэргүүн") || monkName?.includes("Agamba")) // Simplified check from available props, ideally pass monk obj
+                        ? "80,000"
+                        : "40,000"}₮
                 </div>
             </div>
         </div>
@@ -405,8 +408,18 @@ export default function RitualBookingPage() {
 
                     {/* --- RIGHT: BOOKING ENGINE (LAYOUT ANIMATIONS) --- */}
                     <div className="lg:col-span-8">
-
-                        <ServiceTicket service={service} monkName={selectedMonk?.name?.[lang]} theme={theme} lang={lang} />
+                        {/* Pass isSpecial prop implicitly via modified price display inside component or pass monk for accurate check */}
+                        <ServiceTicket
+                            service={{
+                                ...service,
+                                price: (selectedMonk?.title?.en?.includes("Master") || selectedMonk?.title?.mn?.includes("Тэргүүн") || (selectedMonk?.yearsOfExperience || 0) > 10)
+                                    ? 80000
+                                    : 40000
+                            }}
+                            monkName={selectedMonk?.name?.[lang]}
+                            theme={theme}
+                            lang={lang}
+                        />
 
                         <motion.div
                             variants={itemVar}
@@ -453,14 +466,14 @@ export default function RitualBookingPage() {
                                                 <div className={`space-y-3 text-sm ${theme.text}`}>
                                                     <div className="flex justify-between items-center">
                                                         <span className="opacity-60">{t({ mn: "Банк:", en: "Bank:" })}</span>
-                                                        <span className="font-bold">Khan Bank (Хаан Банк)</span>
+                                                        <span className="font-bold">{t({ mn: "Төрийн Банк", en: "State Bank" })}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
                                                         <span className="opacity-60">{t({ mn: "Данс:", en: "Account:" })}</span>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="font-mono font-bold">5023456789</span>
+                                                            <span className="font-mono font-bold">888889896666</span>
                                                             <button
-                                                                onClick={() => navigator.clipboard.writeText("5023456789")}
+                                                                onClick={() => navigator.clipboard.writeText("888889896666")}
                                                                 className={`p-1.5 rounded-md hover:bg-black/10 transition-colors ${theme.accentText}`}
                                                                 title={t({ mn: "Хуулах", en: "Copy" })}
                                                             >
@@ -470,11 +483,15 @@ export default function RitualBookingPage() {
                                                     </div>
                                                     <div className="flex justify-between items-center">
                                                         <span className="opacity-60">{t({ mn: "Нэр:", en: "Name:" })}</span>
-                                                        <span className="font-bold">Mongol Trail (Монгол Трэйл)</span>
+                                                        <span className="font-bold">Gevabal Company</span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
                                                         <span className="opacity-60">{t({ mn: "Дүн:", en: "Amount:" })}</span>
-                                                        <span className={`font-bold ${theme.accentText}`}>{Number(service.price).toLocaleString()}₮</span>
+                                                        <span className={`font-bold ${theme.accentText}`}>
+                                                            {(selectedMonk?.title?.en?.includes("Master") || selectedMonk?.title?.mn?.includes("Тэргүүн") || (selectedMonk?.yearsOfExperience || 0) > 10)
+                                                                ? "80,000"
+                                                                : "40,000"}₮
+                                                        </span>
                                                     </div>
                                                 </div>
 

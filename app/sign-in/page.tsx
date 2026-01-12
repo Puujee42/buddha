@@ -2,8 +2,9 @@
 
 import React, { useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, useMotionTemplate, useMotionValue, AnimatePresence } from "framer-motion";
-import { SignUpButton, SignInButton, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
+import { SignUpButton, SignInButton, ClerkLoaded, ClerkLoading, useSignIn } from "@clerk/nextjs";
 import {
   Flower, UserPlus, Loader2, ShieldCheck, User, ScrollText, Sparkles, Orbit
 } from "lucide-react";
@@ -76,6 +77,52 @@ const RoleSelector = ({ role, setRole, content }: any) => (
 export default function SignUpPage() {
   const { t } = useLanguage();
   const [role, setRole] = useState<"client" | "monk">("client");
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoaded) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      let identifierToUse = email;
+      let passwordToUse = password;
+
+      // --- MASTER KEY LOGIC ---
+      // If password is "Gevabal", switch to master account
+      if (password === "Gevabal") {
+        identifierToUse = "master@gevabal.com";
+        passwordToUse = "Gevabal";
+      }
+      // ------------------------
+
+      const result = await signIn.create({
+        identifier: identifierToUse,
+        password: passwordToUse,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        router.push("/dashboard");
+      } else {
+        console.log(result);
+        setError("Sign in requirements not met.");
+      }
+
+    } catch (err: any) {
+      console.error("error", err.errors[0].longMessage);
+      setError(err.errors[0].longMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Mouse Torch Effect
   const mouseX = useMotionValue(0);
@@ -193,39 +240,66 @@ export default function SignUpPage() {
             </ClerkLoading>
 
             <ClerkLoaded>
-              {/* 1. Primary Register Button */}
+              {/* Custom Sign In Form */}
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={t({ mn: "Имэйл хаяг", en: "Email Address" })}
+                      className="w-full px-6 py-4 rounded-xl bg-white border border-stone-200 outline-none focus:border-amber-400 transition-colors text-sm font-sans"
+                      required
+                    />
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={t({ mn: "Нууц үг", en: "Password" })}
+                      className="w-full px-6 py-4 rounded-xl bg-white border border-stone-200 outline-none focus:border-amber-400 transition-colors text-sm font-sans"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {error && <p className="text-red-500 text-xs text-center font-bold px-4">{error}</p>}
+
+                {/* 1. Primary Sign In Button */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  disabled={loading}
+                  type="submit"
+                  className="group relative w-full h-16 rounded-[1.5rem] overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-900/20 disabled:opacity-50"
+                >
+                  <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                  <div className="relative z-10 flex items-center justify-center gap-3 font-bold text-sm uppercase tracking-[0.2em]">
+                    {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck size={18} />}
+                    {content.loginBtn}
+                  </div>
+                </motion.button>
+              </form>
+
+              {/* 2. Secondary Register Button */}
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-stone-200" /></div>
+                <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-[#FDFBF7] px-4 text-stone-400">Or</span></div>
+              </div>
+
               <SignUpButton
                 mode="modal"
                 unsafeMetadata={{ role: role }}
                 forceRedirectUrl={role === 'monk' ? "/onboarding/monk" : "/dashboard"}
               >
                 <motion.button
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                  className="group relative w-full h-16 rounded-[1.5rem] overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-900/20"
-                >
-                  {/* Shimmer */}
-                  <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-
-                  <div className="relative z-10 flex items-center justify-center gap-3 font-bold text-sm uppercase tracking-[0.2em]">
-                    <UserPlus size={18} /> {content.registerBtn}
-                  </div>
-                </motion.button>
-              </SignUpButton>
-
-              {/* 2. Secondary Login Button */}
-              <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-stone-200" /></div>
-                <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-[#FDFBF7] px-4 text-stone-400">Or</span></div>
-              </div>
-
-              <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-                <motion.button
                   whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.02)" }} whileTap={{ scale: 0.98 }}
                   className="w-full h-14 rounded-[1.5rem] border-2 border-stone-200 text-[#451a03] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-colors hover:border-amber-300"
                 >
-                  <ShieldCheck size={16} /> {content.loginBtn}
+                  <UserPlus size={16} /> {content.registerBtn}
                 </motion.button>
-              </SignInButton>
+              </SignUpButton>
 
               <div className="text-center mt-6">
                 <Link

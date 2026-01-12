@@ -4,17 +4,12 @@ import React from "react";
 import {
   LiveKitRoom,
   VideoConference,
-  GridLayout,
-  ParticipantTile,
   RoomAudioRenderer,
-  ControlBar,
-  useTracks,
-  TrackReferenceOrPlaceholder,
 } from "@livekit/components-react";
 import "@livekit/components-styles";
-import { Track } from "livekit-client";
 import BookViewer from "./BookViewer";
-import { X, Loader2, BookOpen } from "lucide-react";
+import { X, BookOpen } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 interface Props {
   token: string;
@@ -79,8 +74,8 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
         <div className="flex items-center gap-2 md:gap-3 pointer-events-auto">
           {isMonk && (
             <button
-              onClick={() => setIsBookOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-black px-2 md:px-4 py-1.5 md:py-2 rounded-full font-bold text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-2 transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap"
+              onClick={() => setIsBookOpen(prev => !prev)}
+              className={`${isBookOpen ? 'bg-amber-600 text-white' : 'bg-amber-500 text-black'} hover:bg-amber-600 px-2 md:px-4 py-1.5 md:py-2 rounded-full font-bold text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-2 transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap`}
             >
               <BookOpen size={14} className="md:w-4 md:h-4" /> Nom
             </button>
@@ -95,23 +90,36 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
         </div>
       </div>
 
-      <LiveKitRoom
-        video={true}
-        audio={true}
-        token={token}
-        serverUrl={serverUrl}
-        data-lk-theme="default"
-        style={{ height: '100vh' }}
-        onDisconnected={onLeave}
-        connect={true}
-      >
-        {/* Use default VideoConference for reliable two-way video */}
-        <VideoConference />
-        <RoomAudioRenderer />
-      </LiveKitRoom>
+      {/* Main Layout Area */}
+      <div className="flex-1 flex overflow-hidden relative">
+        <div className="flex-1 relative">
+          <LiveKitRoom
+            video={true}
+            audio={true}
+            token={token}
+            serverUrl={serverUrl}
+            data-lk-theme="default"
+            style={{ height: '100%' }}
+            onDisconnected={onLeave}
+            connect={true}
+          >
+            {/* Use default VideoConference for reliable two-way video */}
+            <VideoConference />
+            <RoomAudioRenderer />
+          </LiveKitRoom>
+        </div>
 
-      {/* Digital Book Overlay */}
-      <BookViewer isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
+        {/* Digital Book Sidebar / Overlay */}
+        <AnimatePresence>
+          {isBookOpen && (
+            <BookViewer
+              isOpen={isBookOpen}
+              onClose={() => setIsBookOpen(false)}
+              variant={isMonk ? "sidebar" : "modal"}
+            />
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
