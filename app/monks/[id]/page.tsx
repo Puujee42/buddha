@@ -191,7 +191,7 @@ export default function MonkBookingPage() {
                 // OVERRIDE PRICES based on Admin-controlled Monk Status
                 const uniqueServices = Array.from(uniqueServicesMap.values()).map((s: any) => ({
                     ...s,
-                    price: isSpecial ? 88800 : 50000
+                    price: isSpecial ? 88000 : 50000
                 }));
 
                 setAvailableServices(uniqueServices);
@@ -395,8 +395,8 @@ export default function MonkBookingPage() {
 
                                                         <div className={`text-[10px] opacity-50 mt-4 pt-4 border-t border-black/10`}>
                                                             {t({
-                                                                mn: "Гүйлгээний утга дээр нэр, утасны дугаараа бичнэ үү.",
-                                                                en: "Please include your name and phone number in the transaction description."
+                                                                mn: "Гүйлгээний утга дээр утасны дугаараа бичнэ үү.",
+                                                                en: "Please include your phone number in the transaction description."
                                                             })}
                                                         </div>
                                                     </motion.div>
