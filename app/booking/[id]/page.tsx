@@ -225,24 +225,44 @@ export default function RitualBookingPage() {
                 const mRes = await fetch('/api/monks');
                 const allMonks = await mRes.json();
 
+                // Sort monks: special monks first, then regular monks
+                const sortedMonks = allMonks.sort((a: Monk, b: Monk) => {
+                    const aSpecial = a.isSpecial === true;
+                    const bSpecial = b.isSpecial === true;
+                    if (aSpecial && !bSpecial) return -1;
+                    if (!aSpecial && bSpecial) return 1;
+                    return 0;
+                });
+
                 // If monkId is locked via query params, only use that monk
                 if (lockedMonkId) {
-                    const lockedMonk = allMonks.find((m: Monk) => m._id === lockedMonkId);
+                    const lockedMonk = sortedMonks.find((m: Monk) => m._id === lockedMonkId);
                     if (lockedMonk) {
                         setMonks([lockedMonk]); // Only show this one monk
                         setSelectedMonk(lockedMonk);
                     }
                 } else {
-                    setMonks(allMonks);
+                    setMonks(sortedMonks);
 
-                    if (fetchedService?.monkId) {
-                        const assigned = allMonks.find((m: Monk) => m._id === fetchedService.monkId);
+                    // Priority selection logic:
+                    // 1. Check if there's a special monk -> auto-select them
+                    // 2. If service has assigned monk -> select them
+                    // 3. Filter monks who offer this service -> select first
+                    // 4. Fallback to first monk
+
+                    const specialMonk = sortedMonks.find((m: Monk) => m.isSpecial === true);
+
+                    if (specialMonk) {
+                        // Special monks take priority
+                        setSelectedMonk(specialMonk);
+                    } else if (fetchedService?.monkId) {
+                        const assigned = sortedMonks.find((m: Monk) => m._id === fetchedService.monkId);
                         if (assigned) setSelectedMonk(assigned);
                     } else {
                         // Filter monks who actually offer this service
-                        const available = allMonks.filter((m: Monk) => m.services?.some(s => s.id === fetchedService.id || s.id === fetchedService._id));
+                        const available = sortedMonks.filter((m: Monk) => m.services?.some(s => s.id === fetchedService.id || s.id === fetchedService._id));
                         if (available.length > 0) setSelectedMonk(available[0]);
-                        else if (allMonks.length > 0) setSelectedMonk(allMonks[0]); // Fallback
+                        else if (sortedMonks.length > 0) setSelectedMonk(sortedMonks[0]); // Fallback
                     }
                 }
 
@@ -494,8 +514,8 @@ export default function RitualBookingPage() {
 
                                                 <div className={`text-[10px] opacity-50 mt-4 pt-4 border-t ${theme.borderColor}`}>
                                                     {t({
-                                                        mn: "Гүйлгээний утга дээр утасны дугаараа бичнэ үү.",
-                                                        en: "Please include your phone number in the transaction description."
+                                                        mn: "Гүйлгээний утга дээр нэр, утасны дугаараа бичнэ үү.",
+                                                        en: "Please include your name and phone number in the transaction description."
                                                     })}
                                                 </div>
                                             </motion.div>
@@ -527,7 +547,12 @@ export default function RitualBookingPage() {
                                                                 <div className="flex items-center gap-3 mb-3 relative z-10">
                                                                     <img src={m.image} alt={m.name?.[lang]} className="w-10 h-10 rounded-full object-cover border-2 border-white/20" />
                                                                     <div>
-                                                                        <p className="text-[10px] font-bold uppercase opacity-70">{m.title?.[lang]}</p>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <p className="text-[10px] font-bold uppercase opacity-70">{m.title?.[lang]}</p>
+                                                                            {m.isSpecial && (
+                                                                                <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 font-black uppercase">Special</span>
+                                                                            )}
+                                                                        </div>
                                                                         <p className="font-serif font-bold leading-tight line-clamp-1">{m.name?.[lang]}</p>
                                                                     </div>
                                                                 </div>

@@ -166,15 +166,19 @@ export default function MonkBookingPage() {
                 const sData = await sRes.json();
 
                 // Robust filtering: monkId match OR if the monk's document explicitly references it
-                const services = sData.filter((s: any) => {
-                    const isDirectMatch = s.monkId === monkId;
-                    const isReferenced = Array.isArray(mData.services) && mData.services.some((ms: any) => {
-                        // Check if it's an ID string or an object with an ID
-                        const msId = typeof ms === 'string' ? ms : (ms.id || ms._id);
-                        return msId === s._id;
+                // SPECIAL MONKS: Show ALL services from ALL monks
+                const isSpecial = mData.isSpecial === true;
+                const services = isSpecial
+                    ? sData // Show ALL services for special monks
+                    : sData.filter((s: any) => {
+                        const isDirectMatch = s.monkId === monkId;
+                        const isReferenced = Array.isArray(mData.services) && mData.services.some((ms: any) => {
+                            // Check if it's an ID string or an object with an ID
+                            const msId = typeof ms === 'string' ? ms : (ms.id || ms._id);
+                            return msId === s._id;
+                        });
+                        return isDirectMatch || isReferenced;
                     });
-                    return isDirectMatch || isReferenced;
-                });
 
                 // Unique filtering by name
                 const uniqueServicesMap = new Map();
@@ -185,10 +189,9 @@ export default function MonkBookingPage() {
                     }
                 });
                 // OVERRIDE PRICES based on Admin-controlled Monk Status
-                const isSpecial = mData.isSpecial === true;
                 const uniqueServices = Array.from(uniqueServicesMap.values()).map((s: any) => ({
                     ...s,
-                    price: isSpecial ? 88800 : 50000
+                    price: isSpecial ? 88000 : 50000
                 }));
 
                 setAvailableServices(uniqueServices);
@@ -392,8 +395,8 @@ export default function MonkBookingPage() {
 
                                                         <div className={`text-[10px] opacity-50 mt-4 pt-4 border-t border-black/10`}>
                                                             {t({
-                                                                mn: "Гүйлгээний утга дээр утасны дугаараа бичнэ үү.",
-                                                                en: "Please include your phone number in the transaction description."
+                                                                mn: "Гүйлгээний утга дээр нэр, утасны дугаараа бичнэ үү.",
+                                                                en: "Please include your name and phone number in the transaction description."
                                                             })}
                                                         </div>
                                                     </motion.div>
