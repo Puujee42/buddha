@@ -134,7 +134,7 @@ export default function DivineTarotShowcase() {
   return (
     <>
       <OverlayNavbar />
-      <section className={`relative min-h-screen pt-32 pb-40 overflow-hidden transition-colors duration-1000 ${isDark ? "bg-[#05051a]" : "bg-[#fdfbf7]"}`}>
+      <section className={`relative min-h-screen pt-24 pb-32 md:pt-32 md:pb-40 overflow-hidden transition-colors duration-1000 ${isDark ? "bg-[#05051a]" : "bg-[#fdfbf7]"}`}>
 
         {/* Ambient Backgrounds */}
         <div className="absolute inset-0 transition-opacity duration-1000">
@@ -149,7 +149,7 @@ export default function DivineTarotShowcase() {
         <div className="container mx-auto px-6 relative z-10">
 
           {/* Header */}
-          <header className="text-center mb-24 relative">
+          <header className="text-center mb-16 md:mb-24 relative">
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -163,11 +163,11 @@ export default function DivineTarotShowcase() {
               <Sparkles size={14} className={isDark ? "text-cyan-400" : "text-amber-500"} />
             </motion.div>
 
-            <h1 className={`text-6xl md:text-9xl font-serif font-medium tracking-tighter leading-[0.8] mb-8 ${isDark ? "text-white" : "text-[#2a1a12]"}`}>
+            <h1 className={`text-5xl md:text-9xl font-serif font-medium tracking-tighter leading-[0.9] md:leading-[0.8] mb-6 md:mb-8 ${isDark ? "text-white" : "text-[#2a1a12]"}`}>
               {t({ mn: "Үзмэрч", en: "Exhibitor" })}
             </h1>
 
-            <p className={`max-w-xl mx-auto text-sm md:text-base font-sans tracking-widest uppercase opacity-60 ${isDark ? "text-cyan-100" : "text-amber-900"}`}>
+            <p className={`max-w-xl mx-auto text-xs md:text-base font-sans tracking-widest uppercase opacity-60 ${isDark ? "text-cyan-100" : "text-amber-900"}`}>
               {t({ mn: "Хувь тавилангийн хөтөч", en: "Guidance through the threads of fate" })}
             </p>
 
@@ -222,7 +222,7 @@ export default function DivineTarotShowcase() {
               <Loader2 className={`animate-spin w-12 h-12 ${isDark ? "text-cyan-400" : "text-amber-600"}`} />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16 perspective-[2000px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 lg:gap-16 perspective-[2000px]">
               {filteredMonks.length > 0 ? (
                 filteredMonks.map((monk, idx) => (
                   <DivineCard key={idx} monk={monk} index={idx} isDark={isDark} lang={language === 'mn' ? 'mn' : 'en'} />
@@ -300,12 +300,12 @@ function DivineCard({ monk, index, isDark, lang }: { monk: Monk, index: number, 
         onMouseLeave={handleMouseLeave}
         onMouseEnter={() => setIsHovered(true)}
         style={{ perspective: 1500 }}
-        className="group w-full h-[600px] cursor-none z-10"
+        className="group w-full h-[450px] md:h-[600px] cursor-none z-10"
       >
         <motion.div
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
           className={`
-            relative w-full h-full rounded-[2.5rem] border transition-colors duration-500 overflow-hidden shadow-2xl
+            relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] border transition-colors duration-500 overflow-hidden shadow-2xl
             ${isDark
               ? "bg-[#0a0a20] border-cyan-500/30 shadow-[0_0_50px_-10px_rgba(8,145,178,0.3)]"
               : "bg-white border-amber-200 shadow-[0_20px_60px_-10px_rgba(245,158,11,0.2)]"

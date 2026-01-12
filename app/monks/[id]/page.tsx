@@ -280,7 +280,7 @@ export default function MonkBookingPage() {
             <OverlayNavbar />
             <CosmicBackground isNight={isNight} />
 
-            <main className="relative z-10 container mx-auto px-6 pt-32 pb-24">
+            <main className="relative z-10 container mx-auto px-6 pt-24 md:pt-32 pb-24">
 
                 <Link href="/monks" className="inline-flex items-center gap-2 mb-8 opacity-60 hover:opacity-100 transition-opacity">
                     <div className={`p-2 rounded-full border ${isNight ? 'border-white/20' : 'border-black/10'}`}><ArrowLeft size={16} /></div>
@@ -527,14 +527,14 @@ export default function MonkBookingPage() {
                                                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-50 pl-2">Name</label>
                                                                         <div className="relative">
                                                                             <User size={14} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40" />
-                                                                            <input value={userName} onChange={e => setUserName(e.target.value)} className={`w-full pl-10 pr-4 py-4 rounded-xl border outline-none font-serif text-sm transition-all ${theme.input}`} placeholder="Full Name" />
+                                                                            <input value={userName} onChange={e => setUserName(e.target.value)} className={`w-full pl-10 pr-4 py-4 rounded-xl border outline-none font-serif text-base transition-all ${theme.input}`} placeholder="Full Name" />
                                                                         </div>
                                                                     </div>
                                                                     <div className="space-y-1">
                                                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-50 pl-2">Email</label>
                                                                         <div className="relative">
                                                                             <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40" />
-                                                                            <input value={userEmail} onChange={e => setUserEmail(e.target.value)} className={`w-full pl-10 pr-4 py-4 rounded-xl border outline-none font-serif text-sm transition-all ${theme.input}`} placeholder="Email Address" />
+                                                                            <input value={userEmail} onChange={e => setUserEmail(e.target.value)} className={`w-full pl-10 pr-4 py-4 rounded-xl border outline-none font-serif text-base transition-all ${theme.input}`} placeholder="Email Address" />
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -543,7 +543,7 @@ export default function MonkBookingPage() {
                                                                     <label className="text-[10px] font-black uppercase tracking-widest opacity-50 pl-2">Intention</label>
                                                                     <div className="relative">
                                                                         <PenTool size={14} className="absolute left-4 top-4 opacity-40" />
-                                                                        <textarea value={userNote} onChange={e => setUserNote(e.target.value)} className={`w-full pl-10 pr-4 py-4 rounded-xl border outline-none font-serif text-sm h-24 resize-none transition-all ${theme.input}`} placeholder={t({ mn: "Таны асуулт эсвэл зорилго...", en: "Your question or focus for the session..." })} />
+                                                                        <textarea value={userNote} onChange={e => setUserNote(e.target.value)} className={`w-full pl-10 pr-4 py-4 rounded-xl border outline-none font-serif text-base h-24 resize-none transition-all ${theme.input}`} placeholder={t({ mn: "Таны асуулт эсвэл зорилго...", en: "Your question or focus for the session..." })} />
                                                                     </div>
                                                                 </div>
 

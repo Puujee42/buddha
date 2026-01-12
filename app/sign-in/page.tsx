@@ -235,10 +235,11 @@ export default function SignUpPage() {
       {/* --- RIGHT SIDE: INTERACTIVE FORM --- */}
       <div className="w-full lg:w-7/12 relative flex flex-col items-center justify-center p-6 sm:p-12 md:p-24">
 
-        {/* Magic Background Torch */}
-        <motion.div className="absolute inset-0 pointer-events-none" style={{ background: torchBg }} />
+        {/* Magic Background Torch (Hidden on Mobile for Clarity) */}
+        <motion.div className="hidden md:block absolute inset-0 pointer-events-none" style={{ background: torchBg }} />
 
-        <div className="absolute top-0 right-0 p-12 pointer-events-none opacity-5">
+        {/* Background Flower (Hidden on Mobile) */}
+        <div className="hidden md:block absolute top-0 right-0 p-12 pointer-events-none opacity-5">
           <Flower size={300} />
         </div>
 
@@ -249,15 +250,15 @@ export default function SignUpPage() {
           className="relative z-10 w-full max-w-lg"
         >
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 md:mb-12">
             <motion.div
               initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
-              className="inline-block p-4 rounded-2xl bg-white shadow-xl mb-6 text-amber-600 border border-amber-100"
+              className="inline-block p-3 md:p-4 rounded-2xl bg-white shadow-xl mb-4 md:mb-6 text-amber-600 border border-amber-100"
             >
-              <Sparkles size={32} />
+              <Sparkles size={28} className="md:w-8 md:h-8" />
             </motion.div>
-            <h2 className="text-4xl md:text-5xl font-bold text-[#2a1a12] mb-3 tracking-tight">{content.welcome}</h2>
-            <p className="text-[#5c4033] font-sans opacity-60 uppercase tracking-widest text-xs font-bold">{content.instruction}</p>
+            <h2 className="text-3xl md:text-5xl font-bold text-[#2a1a12] mb-2 md:mb-3 tracking-tight leading-tight">{content.welcome}</h2>
+            <p className="text-[#5c4033] font-sans opacity-60 uppercase tracking-widest text-[10px] md:text-xs font-bold">{content.instruction}</p>
           </div>
 
           {/* Role Selection */}
@@ -272,14 +273,14 @@ export default function SignUpPage() {
             <ClerkLoaded>
               {/* Custom Sign In Form */}
               <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-3 md:space-y-2">
                   <div className="relative">
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={t({ mn: "Имэйл хаяг", en: "Email Address" })}
-                      className="w-full px-6 py-4 rounded-xl bg-white border border-stone-200 outline-none focus:border-amber-400 transition-colors text-sm font-sans"
+                      className="w-full px-5 md:px-6 py-4 rounded-xl bg-white border border-stone-200 outline-none focus:border-amber-400 transition-colors text-base font-sans shadow-sm"
                       required
                     />
                   </div>
@@ -289,7 +290,7 @@ export default function SignUpPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={t({ mn: "Нууц үг", en: "Password" })}
-                      className="w-full px-6 py-4 rounded-xl bg-white border border-stone-200 outline-none focus:border-amber-400 transition-colors text-sm font-sans"
+                      className="w-full px-5 md:px-6 py-4 rounded-xl bg-white border border-stone-200 outline-none focus:border-amber-400 transition-colors text-base font-sans shadow-sm"
                       required
                     />
                   </div>

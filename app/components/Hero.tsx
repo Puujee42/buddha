@@ -69,7 +69,7 @@ export default function Hero() {
       {/* --- MAIN CONTENT --- */}
       <motion.div
         style={{ y: yContent, opacity: opacityFade }}
-        className="relative z-10 container mx-auto px-6 md:px-12 lg:px-20 pt-20"
+        className="relative z-10 container mx-auto px-6 md:px-12 lg:px-20 pt-28 md:pt-32"
       >
         <div className="max-w-4xl space-y-6">
 
@@ -78,7 +78,7 @@ export default function Hero() {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-black text-white leading-[1.1] tracking-tight"
+            className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-black text-white leading-[1.1] tracking-tight"
           >
             <span className="text-[#FFB84D]">{content.highlight}</span> {content.main}
           </motion.h1>
