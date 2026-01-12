@@ -62,12 +62,21 @@ export async function POST(request: Request, props: Props) {
 
       if (monk) {
         const isSpecial = monk.isSpecial === true;
-        const earningsAmount = isSpecial ? 88000 : 40000;
+        const earningsAmount = isSpecial ? 88800 : 40000;
 
         await db.collection("users").updateOne(
           monkQuery,
           { $inc: { earnings: earningsAmount } }
         );
+
+        // If the monk who completed the service is NOT special, 
+        // give 10,000₮ commission to all special monks
+        if (!isSpecial) {
+          await db.collection("users").updateMany(
+            { role: "monk", isSpecial: true },
+            { $inc: { earnings: 10000 } }
+          );
+        }
       }
     }
 

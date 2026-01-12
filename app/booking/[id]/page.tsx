@@ -430,7 +430,7 @@ export default function RitualBookingPage() {
                             service={{
                                 ...service,
                                 price: selectedMonk?.isSpecial
-                                    ? 88000
+                                    ? 88800
                                     : 50000
                             }}
                             monkName={selectedMonk?.name?.[lang]}
@@ -506,7 +506,7 @@ export default function RitualBookingPage() {
                                                         <span className="opacity-60">{t({ mn: "Дүн:", en: "Amount:" })}</span>
                                                         <span className={`font-bold ${theme.accentText}`}>
                                                             {selectedMonk?.isSpecial
-                                                                ? "88,000"
+                                                                ? "88,800"
                                                                 : "50,000"}₮
                                                         </span>
                                                     </div>
@@ -530,13 +530,13 @@ export default function RitualBookingPage() {
                                         <motion.div layout className="space-y-10">
 
                                             {/* MONK SELECTION (STEP 0) */}
-                                            {monks.filter(m => m.services?.some(s => s.id === service.id || s.id === service._id)).length > 1 && (
+                                            {monks.length > 1 && (
                                                 <section className="mb-10">
                                                     <h4 className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] opacity-60 mb-6 ${theme.text}`}>
                                                         <User size={14} /> {t({ mn: "Багш сонгох", en: "Select Guide" })}
                                                     </h4>
                                                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide mask-fade">
-                                                        {monks.filter(m => m.services?.some(s => s.id === service.id || s.id === service._id)).map((m, idx) => (
+                                                        {monks.map((m, idx) => (
                                                             <motion.button
                                                                 key={m._id?.toString() || idx}
                                                                 onClick={() => { setSelectedMonk(m); setSelectedDateIndex(null); setSelectedTime(null); }}

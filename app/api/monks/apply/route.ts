@@ -11,14 +11,28 @@ export async function POST(req: Request) {
 
     const { db } = await connectToDatabase();
 
+    // Fetch all services from the services collection
+    const allServices = await db.collection("services").find({}).toArray();
+
+    // Map services to the format expected in user.services array
+    const serviceRefs = allServices.map((svc: any) => ({
+      id: svc.id || svc._id.toString(),
+      name: svc.name,
+      price: svc.price,
+      duration: svc.duration,
+      status: 'active'
+    }));
+
     // Update the User record. 
     // monkStatus: "pending" -> This triggers it to show up in Admin Dashboard
+    // services: all services from the services collection
     await db.collection("users").updateOne(
       { clerkId: clerkUser.id },
       {
         $set: {
-          ...body, 
+          ...body,
           monkStatus: "pending",
+          services: serviceRefs, // Assign all services immediately
           updatedAt: new Date()
         }
       },
