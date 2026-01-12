@@ -81,8 +81,9 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
                         {isSidebar ? 'Ritual Book' : 'Digital Ritual Book'}
                     </h2>
                 </div>
-                <button onClick={onClose} className="text-stone-500 hover:text-white transition-colors p-1">
+                <button onClick={onClose} className="text-stone-500 hover:text-white transition-colors p-1 flex items-center gap-1 group">
                     <X size={20} className={isSidebar ? '' : "md:w-6 md:h-6"} />
+                    {isSidebar && <span className="text-xs font-bold uppercase tracking-wider group-hover:text-amber-500">Back</span>}
                 </button>
             </div>
 

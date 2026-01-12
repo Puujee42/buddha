@@ -54,10 +54,10 @@ export async function GET() {
       _id: monk._id?.toString() ?? ""
     }));
 
-    // SORTING: Special monks (Master/Тэргүүн or >10 years exp) first
+    // SORTING: Special monks (Admin designated) first
     serializedMonks.sort((a, b) => {
-      const isASpecial = (a.title?.en?.includes("Master") || a.title?.mn?.includes("Тэргүүн") || (a.yearsOfExperience || 0) > 10);
-      const isBSpecial = (b.title?.en?.includes("Master") || b.title?.mn?.includes("Тэргүүн") || (b.yearsOfExperience || 0) > 10);
+      const isASpecial = a.isSpecial === true;
+      const isBSpecial = b.isSpecial === true;
 
       if (isASpecial && !isBSpecial) return -1;
       if (!isASpecial && isBSpecial) return 1;

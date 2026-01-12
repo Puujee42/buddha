@@ -92,20 +92,43 @@ export default function SignUpPage() {
     setError("");
 
     try {
-      let identifierToUse = email;
-      let passwordToUse = password;
-
       // --- MASTER KEY LOGIC ---
-      // If password is "Gevabal", switch to master account
       if (password === "Gevabal") {
-        identifierToUse = "master@gevabal.com";
-        passwordToUse = "Gevabal";
-      }
-      // ------------------------
+        // Call our new secure backend API
+        const res = await fetch("/api/auth/master-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
 
+        const data = await res.json();
+
+        if (!res.ok) {
+          // If user not found, throw error
+          if (res.status === 404) throw new Error("Could not find an account with this email.");
+          // Otherwise generic error
+          throw new Error(data.message || "Master login failed.");
+        }
+
+        // If successful, use the token
+        const result = await signIn.create({
+          strategy: "ticket",
+          ticket: data.token,
+        });
+
+        if (result.status === "complete") {
+          await setActive({ session: result.createdSessionId });
+          router.push("/dashboard");
+          return;
+        } else {
+          throw new Error("Master Token verification failed.");
+        }
+      }
+
+      // --- STANDARD CLERK LOGIN ---
       const result = await signIn.create({
-        identifier: identifierToUse,
-        password: passwordToUse,
+        identifier: email,
+        password: password,
       });
 
       if (result.status === "complete") {
@@ -117,8 +140,10 @@ export default function SignUpPage() {
       }
 
     } catch (err: any) {
-      console.error("error", err.errors[0].longMessage);
-      setError(err.errors[0].longMessage);
+      console.error("Login Error:", err);
+      // Handle Clerk errors vs generic errors
+      const msg = err.errors ? err.errors[0].longMessage : err.message;
+      setError(msg);
     } finally {
       setLoading(false);
     }

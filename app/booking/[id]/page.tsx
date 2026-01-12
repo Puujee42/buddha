@@ -106,10 +106,7 @@ const ServiceTicket = ({ service, monkName, theme, lang }: any) => (
                     {lang === 'mn' ? "Өргөл" : "Offering"}
                 </span>
                 <div className={`text-4xl font-serif font-medium ${theme.accentText}`}>
-                    {/* DYNAMIC PRICING: 80k for Special (Master/>10y), 40k for Normal */}
-                    {(monkName?.includes("Master") || monkName?.includes("Тэргүүн") || monkName?.includes("Agamba")) // Simplified check from available props, ideally pass monk obj
-                        ? "80,000"
-                        : "40,000"}₮
+                    {service.price?.toLocaleString()}₮
                 </div>
             </div>
         </div>
@@ -412,9 +409,9 @@ export default function RitualBookingPage() {
                         <ServiceTicket
                             service={{
                                 ...service,
-                                price: (selectedMonk?.title?.en?.includes("Master") || selectedMonk?.title?.mn?.includes("Тэргүүн") || (selectedMonk?.yearsOfExperience || 0) > 10)
-                                    ? 80000
-                                    : 40000
+                                price: selectedMonk?.isSpecial
+                                    ? 88000
+                                    : 50000
                             }}
                             monkName={selectedMonk?.name?.[lang]}
                             theme={theme}
@@ -488,9 +485,9 @@ export default function RitualBookingPage() {
                                                     <div className="flex justify-between items-center">
                                                         <span className="opacity-60">{t({ mn: "Дүн:", en: "Amount:" })}</span>
                                                         <span className={`font-bold ${theme.accentText}`}>
-                                                            {(selectedMonk?.title?.en?.includes("Master") || selectedMonk?.title?.mn?.includes("Тэргүүн") || (selectedMonk?.yearsOfExperience || 0) > 10)
-                                                                ? "80,000"
-                                                                : "40,000"}₮
+                                                            {selectedMonk?.isSpecial
+                                                                ? "88,000"
+                                                                : "50,000"}₮
                                                         </span>
                                                     </div>
                                                 </div>
