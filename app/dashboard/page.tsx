@@ -310,25 +310,30 @@ export default function DashboardPage() {
 
     // --- HELPER: CHECK RITUAL AVAILABILITY ---
     const checkRitualAvailability = (booking: Booking) => {
-        // 1. If call is active, it's ALWAYS open
+        // 1. If call is active, it's ALWAYS open (override time check)
         if (booking.callStatus === 'active') {
             return { isOpen: true, message: TEXT.roomOpen };
         }
 
-        // 2. Parse Date/Time
-        const bookingDateTime = new Date(`${booking.date}T${booking.time}`);
+        // 2. Parse Date/Time (Ensure HH:mm format for reliable cross-browser parsing)
+        let timeStr = booking.time || "00:00";
+        if (timeStr.includes(':')) {
+            let [h, m] = timeStr.split(':').map(part => part.trim().padStart(2, '0'));
+            timeStr = `${h}:${m}`;
+        }
+
+        const bookingDateTime = new Date(`${booking.date}T${timeStr}`);
         const now = new Date();
 
-        // 3. Open Window: 24 hours before booking time
-        const openTime = new Date(bookingDateTime.getTime() - 24 * 60 * 60 * 1000);
+        // 3. Open Window: 48 hours before booking time (allow ample time for setup/messaging)
+        const openTime = new Date(bookingDateTime.getTime() - 48 * 60 * 60 * 1000);
 
-        // 4. Close Window: 4 hours after booking time (allowing for long sessions/checks)
-        const closeTime = new Date(bookingDateTime.getTime() + 4 * 60 * 60 * 1000);
+        // 4. Close Window: EXACTLY 30 minutes after booking time (STRICT CUTOFF)
+        const closeTime = new Date(bookingDateTime.getTime() + 30 * 60 * 1000);
 
         if (now >= openTime && now <= closeTime) {
             return { isOpen: true, message: TEXT.roomOpen };
         } else if (now < openTime) {
-            // Calculate time left
             const diffMs = openTime.getTime() - now.getTime();
             const diffHrs = Math.floor(diffMs / 3600000);
             const diffMins = Math.floor((diffMs % 3600000) / 60000);

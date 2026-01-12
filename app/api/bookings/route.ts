@@ -37,9 +37,68 @@ export async function GET(request: Request) {
 
     const bookings = await db.collection("bookings")
       .find(query)
-      // Sort by Date ascending (so upcoming meetings are top), then Time
       .sort({ date: 1, time: 1 })
       .toArray();
+
+    // --- LAZY CLEANUP LOGIC ---
+    // Auto-complete bookings that are more than 30 minutes past their start time
+    const nowTimestamp = new Date();
+    const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
+
+    for (const b of confirmedBookings) {
+      let timeStr = b.time || "00:00";
+      if (timeStr.includes(':')) {
+        let [h, m] = timeStr.split(':').map((part: string) => part.trim().padStart(2, '0'));
+        timeStr = `${h}:${m}`;
+      }
+      const scheduledTime = new Date(`${b.date}T${timeStr}`);
+      const expiryTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000); // 30 mins limit
+
+      if (nowTimestamp > expiryTime) {
+        console.log(`Auto-completing expired booking: ${b._id}`);
+        try {
+          // 1. Calculate Earnings
+          const monkId = b.monkId;
+          if (monkId) {
+            const monkQuery = ObjectId.isValid(monkId) ? { _id: new ObjectId(monkId) } : { _id: monkId };
+            const monk = await db.collection("users").findOne(monkQuery);
+
+            if (monk) {
+              const isSpecial = monk.isSpecial === true;
+              const earningsAmount = isSpecial ? 88800 : 40000;
+
+              await db.collection("users").updateOne(
+                monkQuery,
+                { $inc: { earnings: earningsAmount } }
+              );
+
+              // Special Commission
+              if (!isSpecial) {
+                await db.collection("users").updateMany(
+                  { role: "monk", isSpecial: true },
+                  { $inc: { earnings: 10000 } }
+                );
+              }
+            }
+          }
+
+          // 2. Delete Chat History
+          await db.collection("messages").deleteMany({ bookingId: b._id.toString() });
+
+          // 3. Update Booking Status
+          // Re-connect verify update
+          await db.collection("bookings").updateOne(
+            { _id: b._id },
+            { $set: { status: 'completed', updatedAt: new Date() } }
+          );
+
+          // Update local object so UI reflects it immediately
+          b.status = 'completed';
+        } catch (err) {
+          console.error(`Failed to auto-complete booking ${b._id}:`, err);
+        }
+      }
+    }
 
     // If requesting specific monk and date, just return the times array for easy checking
     if (monkId && searchParams.get("date")) {
