@@ -194,29 +194,6 @@ export default function OverlayNavbar() {
           {mobileNav.map((item) => {
             const isActive = pathname === item.href;
 
-            // Central Services Button
-            if (item.isMain) {
-              return (
-                <Link key={item.id} href={item.href} className="relative -top-10 flex flex-col items-center">
-                  <motion.div
-                    whileTap={{ scale: 0.85 }}
-                    className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl relative z-10
-                      ${isDark ? "bg-amber-500 text-[#1a0505]" : "bg-[#451a03] text-white"}`}
-                  >
-                    <item.icon size={30} strokeWidth={2.5} />
-                    <motion.div
-                      animate={{ scale: [1, 1.5], opacity: [0.4, 0] }}
-                      transition={{ duration: 2.5, repeat: Infinity }}
-                      className="absolute inset-0 rounded-full bg-amber-500"
-                    />
-                  </motion.div>
-                  <span className={`mt-2 text-[10px] font-black uppercase tracking-widest ${isActive ? "text-amber-500" : "opacity-40"}`}>
-                    {item.label[lang]}
-                  </span>
-                </Link>
-              );
-            }
-
             // Standard Icons (Dynamic Dashboard/Login logic)
             return (
               <Link key={item.id} href={item.href} className="flex-1 flex flex-col items-center justify-center py-2 relative group">
