@@ -14,6 +14,7 @@ export interface User {
   totalMerits: number;
   earnings?: number; // Total earnings for monks
   role: "seeker" | "monk" | "admin";
+  monkStatus?: "pending" | "approved" | "rejected"; // Approval status for monks
 
   createdAt: Date;
   updatedAt: Date;

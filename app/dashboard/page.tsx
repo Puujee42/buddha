@@ -30,6 +30,7 @@ interface BlockedSlot {
 interface UserProfile {
     _id: string;
     role: "client" | "monk";
+    monkStatus?: "pending" | "approved" | "rejected";
     name?: { mn: string; en: string };
     title?: { mn: string; en: string };
     services?: ServiceItem[];
@@ -542,6 +543,47 @@ export default function DashboardPage() {
                 setActiveRoomName(null);
             }}
         />;
+    }
+
+    // --- APPROVAL GATES (Monks Only) ---
+    if (isMonk && profile?.monkStatus === 'pending') {
+        return (
+            <div className="min-h-screen bg-[#FFFBEB] flex items-center justify-center p-6 font-serif text-[#451a03]">
+                <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] shadow-2xl border border-[#D97706]/20 text-center">
+                    <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Loader2 className="animate-spin" size={40} />
+                    </div>
+                    <h1 className="text-3xl font-bold mb-4 text-[#D97706]">Application Pending</h1>
+                    <p className="text-[#78350F]/70 mb-8 leading-relaxed">
+                        Namaste, <strong>{profile.name?.[langKey]}</strong>. <br /><br />
+                        Your application to join the Sangha is currently under review by the Nirvana Administration. You will receive an email once your profile is approved.
+                    </p>
+                    <a href="/" className="inline-block px-8 py-3 bg-[#D97706] text-white rounded-xl font-bold hover:bg-[#B45309] transition-colors">
+                        Return Home
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
+    if (isMonk && profile?.monkStatus === 'rejected') {
+        return (
+            <div className="min-h-screen bg-[#FFFBEB] flex items-center justify-center p-6 font-serif text-[#451a03]">
+                <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] shadow-2xl border border-red-200 text-center">
+                    <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Ban size={40} />
+                    </div>
+                    <h1 className="text-3xl font-bold mb-4 text-red-600">Application Update</h1>
+                    <p className="text-[#78350F]/70 mb-8 leading-relaxed">
+                        Namaste, <strong>{profile.name?.[langKey]}</strong>. <br /><br />
+                        Thank you for your interest. Unfortunately, we are unable to approve your application to join the Sangha at this time.
+                    </p>
+                    <a href="/" className="inline-block px-8 py-3 bg-stone-800 text-white rounded-xl font-bold hover:bg-black transition-colors">
+                        Return Home
+                    </a>
+                </div>
+            </div>
+        );
     }
 
     return (
