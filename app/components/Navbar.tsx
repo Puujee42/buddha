@@ -54,7 +54,7 @@ export default function OverlayNavbar() {
 
   const desktopNav = [
     { name: { mn: "Нүүр", en: "Home" }, href: "/" },
-    { name: { mn: "Үзмэрч", en: "Monks" }, href: "/monks" },
+    { name: { mn: "Үзмэрч", en: "Exhibitor" }, href: "/monks" },
     { name: { mn: "Үйлчилгээ", en: "Services" }, href: "/services" },
     { name: { mn: "Бидний тухай", en: "About Us" }, href: "/about" },
     { name: { mn: "Заавар", en: "Guide" }, href: "/guide" },

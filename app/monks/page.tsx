@@ -164,7 +164,7 @@ export default function DivineTarotShowcase() {
             </motion.div>
 
             <h1 className={`text-6xl md:text-9xl font-serif font-medium tracking-tighter leading-[0.8] mb-8 ${isDark ? "text-white" : "text-[#2a1a12]"}`}>
-              {t({ mn: "Багш нар", en: "The Oracles" })}
+              {t({ mn: "Үзмэрч", en: "Exhibitor" })}
             </h1>
             
             <p className={`max-w-xl mx-auto text-sm md:text-base font-sans tracking-widest uppercase opacity-60 ${isDark ? "text-cyan-100" : "text-amber-900"}`}>
