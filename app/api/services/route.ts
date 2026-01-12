@@ -6,7 +6,39 @@ import { ObjectId } from "mongodb";
 export async function GET() {
   try {
     const { db } = await connectToDatabase();
-    
+
+    // AUTOMATION: Check and populate empty service arrays for all monks
+    const allServicesInCollection = await db.collection("services").find({}).toArray();
+
+    if (allServicesInCollection.length > 0) {
+      // Map to service reference format
+      const serviceRefs = allServicesInCollection.map((svc: any) => ({
+        id: svc.id || svc._id.toString(),
+        name: svc.name,
+        price: svc.price,
+        duration: svc.duration,
+        status: 'active'
+      }));
+
+      // Find monks with empty/missing services and populate them
+      await db.collection("users").updateMany(
+        {
+          role: "monk",
+          $or: [
+            { services: { $exists: false } },
+            { services: { $size: 0 } },
+            { services: null }
+          ]
+        },
+        {
+          $set: {
+            services: serviceRefs,
+            updatedAt: new Date()
+          }
+        }
+      );
+    }
+
     // 1. Fetch "Official" Services from the 'services' collection
     const standardServices = await db.collection("services").find({}).toArray();
 
@@ -20,10 +52,10 @@ export async function GET() {
     // 3. Extract and Flatten Monk Services
     const monkServices = monks.flatMap((monk) => {
       if (!monk.services || !Array.isArray(monk.services)) return [];
-      
+
       return monk.services
         // FILTER: Only show active/approved services (or those without status which might be legacy)
-        .filter((svc: any) => svc.status === 'active' || !svc.status) 
+        .filter((svc: any) => svc.status === 'active' || !svc.status)
         .map((svc: any) => ({
           ...svc,
           _id: svc.id, // Ensure it has a top-level _id (using the UUID generated in the form)
@@ -31,7 +63,7 @@ export async function GET() {
           monkId: monk._id.toString(),
           providerName: monk.name, // Pass the monk's name object
           type: "Monk Service", // Fallback type
-          
+
           // Ensure price is a number
           price: Number(svc.price)
         }));
@@ -58,39 +90,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden: Only admins can create standard services" }, { status: 403 });
     }
 
-    const { 
-      name, 
-      title, 
-      type, 
-      price, 
-      duration, 
-      desc, 
-      subtitle, 
-      image, 
-      quote, 
-      id 
+    const {
+      name,
+      title,
+      type,
+      price,
+      duration,
+      desc,
+      subtitle,
+      image,
+      quote,
+      id
     } = await request.json();
-    
+
     if (!price || !type) {
-        return NextResponse.json({ error: "Missing required fields (price, type)" }, { status: 400 });
+      return NextResponse.json({ error: "Missing required fields (price, type)" }, { status: 400 });
     }
 
     const { db } = await connectToDatabase();
-    
+
     // Construct service object ensuring schema compliance
     const newService = {
-        id: id || new ObjectId().toString(),
-        name,
-        title,
-        type,
-        price: Number(price),
-        duration,
-        desc,
-        subtitle,
-        image,
-        quote,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+      id: id || new ObjectId().toString(),
+      name,
+      title,
+      type,
+      price: Number(price),
+      duration,
+      desc,
+      subtitle,
+      image,
+      quote,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     const result = await db.collection("services").insertOne(newService);
@@ -98,8 +130,8 @@ export async function POST(request: Request) {
     // Broadcast this new service to ALL monks
     await db.collection("users").updateMany(
       { role: "monk" },
-      { 
-        $push: { 
+      {
+        $push: {
           services: {
             id: newService.id,
             name: newService.name,
@@ -107,7 +139,7 @@ export async function POST(request: Request) {
             duration: newService.duration,
             status: 'active'
           }
-        } 
+        }
       } as any
     );
 
