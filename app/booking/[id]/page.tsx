@@ -97,7 +97,7 @@ const ServiceTicket = ({ service, monkName, theme, lang }: any) => (
                 </div>
 
                 <p className={`mt-4 text-sm max-w-lg leading-relaxed opacity-70 ${theme.text}`}>
-                    {service.description?.[lang] || (lang === 'mn' ? "Таны хувь заяаны зам мөрийг тольдох ариун үйл." : "A sacred session to align your destiny path.")}
+                    {service.description?.[lang] || (lang === 'mn' ? "Таны хувь заяаны зам мөрийг тольдох үйл." : "A session to align your destiny path.")}
                 </p>
             </div>
 

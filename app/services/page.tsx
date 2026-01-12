@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { 
-  motion, 
-  useSpring, 
-  useTransform, 
-  useMotionValue, 
-  useMotionTemplate, 
-  Variants 
+import {
+  motion,
+  useSpring,
+  useTransform,
+  useMotionValue,
+  useMotionTemplate,
+  Variants
 } from "framer-motion";
 import {
   Eye, Star, Flame, Zap, Compass, Loader2, ShieldCheck, Orbit, Sparkles, User, ArrowUpRight, Hourglass, Tag, Coins
@@ -39,16 +39,16 @@ const CosmicDust = ({ isDark }: { isDark: boolean }) => (
       <motion.div
         key={i}
         initial={{ y: "100%", opacity: 0 }}
-        animate={{ 
-          y: "-100%", 
+        animate={{
+          y: "-100%",
           opacity: [0, 0.5, 0],
           x: Math.random() * 50 - 25
         }}
-        transition={{ 
-          duration: Math.random() * 10 + 20, 
-          repeat: Infinity, 
-          ease: "linear", 
-          delay: Math.random() * 5 
+        transition={{
+          duration: Math.random() * 10 + 20,
+          repeat: Infinity,
+          ease: "linear",
+          delay: Math.random() * 5
         }}
         className={`absolute w-1 h-1 rounded-full blur-[1px] ${isDark ? 'bg-cyan-200' : 'bg-amber-400'}`}
         style={{ left: `${Math.random() * 100}%` }}
@@ -62,11 +62,11 @@ const ZodiacServiceFrame = ({ color, isDark }: { color: string; isDark: boolean 
     <svg className="w-full h-full" viewBox="0 0 400 600" fill="none" preserveAspectRatio="none">
       <defs>
         <linearGradient id={`frameGrad-${isDark ? 'd' : 'l'}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={color} stopOpacity="0.6" />
-            <stop offset="100%" stopColor={isDark ? "#C72075" : "#d97706"} stopOpacity="0.3" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.6" />
+          <stop offset="100%" stopColor={isDark ? "#C72075" : "#d97706"} stopOpacity="0.3" />
         </linearGradient>
       </defs>
-      
+
       <motion.path
         initial={{ pathLength: 0, opacity: 0 }}
         whileInView={{ pathLength: 1, opacity: 1 }}
@@ -75,7 +75,7 @@ const ZodiacServiceFrame = ({ color, isDark }: { color: string; isDark: boolean 
         d="M20 40 L20 20 L40 20 M360 20 L380 20 L380 40 M380 560 L380 580 L360 580 M40 580 L20 580 L20 560"
         stroke={`url(#frameGrad-${isDark ? 'd' : 'l'})`} strokeWidth="2" fill="none"
       />
-      
+
       {/* Informative Grid Lines */}
       <path d="M40 400 H360" stroke={color} strokeWidth="0.5" strokeOpacity="0.1" />
       <path d="M200 400 V540" stroke={color} strokeWidth="0.5" strokeOpacity="0.1" />
@@ -102,19 +102,19 @@ export default function CelestialServices() {
       try {
         const res = await fetch('/api/services');
         const data = await res.json();
-        
+
         // Use a Map to store unique services by name (prefer MN name as key, fallback to EN)
         const uniqueServicesMap = new Map();
-        
+
         if (Array.isArray(data)) {
-            data.forEach((item: any) => {
-                if (item.price) { // Ensure valid item
-                    const key = item.name?.mn || item.name?.en || item.title?.mn || item.title?.en;
-                    if (key && !uniqueServicesMap.has(key)) {
-                        uniqueServicesMap.set(key, item);
-                    }
-                }
-            });
+          data.forEach((item: any) => {
+            if (item.price) { // Ensure valid item
+              const key = item.name?.mn || item.name?.en || item.title?.mn || item.title?.en;
+              if (key && !uniqueServicesMap.has(key)) {
+                uniqueServicesMap.set(key, item);
+              }
+            }
+          });
         }
 
         setServices(Array.from(uniqueServicesMap.values()));
@@ -141,7 +141,7 @@ export default function CelestialServices() {
     <>
       <OverlayNavbar />
       <main className={`relative min-h-[100dvh] transition-colors duration-1000 overflow-hidden ${isDark ? "bg-[#05051a]" : "bg-[#FDFBF7]"}`}>
-        
+
         {/* --- ATMOSPHERE --- */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-[#0f172a] via-[#05051a] to-[#020617]' : 'from-[#fffbeb] via-[#fff7ed] to-[#fdfbf7]'}`} />
@@ -158,16 +158,13 @@ export default function CelestialServices() {
             className="flex flex-col items-center gap-6"
           >
             <div className={`inline-flex items-center gap-3 px-6 py-2 rounded-full border border-current/10 backdrop-blur-md ${isDark ? "text-cyan-400" : "text-amber-700"}`}>
-               <Orbit size={16} className="animate-spin-slow" />
-               <span className="text-[10px] font-black tracking-[0.3em] uppercase">{t({mn: "Одот тамга", en: "Celestial Seals"})}</span>
+              <Orbit size={16} className="animate-spin-slow" />
+              <span className="text-[10px] font-black tracking-[0.3em] uppercase">{t({ mn: "Одот тамга", en: "Celestial Seals" })}</span>
             </div>
-            
+
             <h1 className={`text-6xl md:text-9xl font-serif leading-[0.85] tracking-tighter ${isDark ? "text-white" : "text-[#2a1a12]"}`}>
-              <TextReveal delay={0.1}>
-                {t({mn: "Ариун", en: "Sacred"})}
-              </TextReveal>
               <TextReveal delay={0.2} className={`italic font-light ${isDark ? "text-[#C72075]" : "text-amber-600"}`}>
-                {t({mn: "Зан Үйл", en: "Rituals"})}
+                {t({ mn: "Зан Үйл", en: "Rituals" })}
               </TextReveal>
             </h1>
           </motion.div>
@@ -180,15 +177,15 @@ export default function CelestialServices() {
               <Loader2 className={`animate-spin w-12 h-12 ${isDark ? 'text-cyan-500' : 'text-amber-500'}`} />
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 perspective-[2000px]"
             >
-                {services.map((service, idx) => (
-                  <HolographicCard key={idx} service={service} index={idx} isDark={isDark} lang={language === 'mn' ? 'mn' : 'en'} />
-                ))}
+              {services.map((service, idx) => (
+                <HolographicCard key={idx} service={service} index={idx} isDark={isDark} lang={language === 'mn' ? 'mn' : 'en'} />
+              ))}
             </motion.div>
           )}
         </div>
@@ -201,7 +198,7 @@ export default function CelestialServices() {
 // 3. HOLOGRAPHIC CARD (Informative & Animated)
 // ==========================================
 
-function HolographicCard({ service, index, isDark, lang }: { service: any, index: number, isDark: boolean, lang: 'mn'|'en' }) {
+function HolographicCard({ service, index, isDark, lang }: { service: any, index: number, isDark: boolean, lang: 'mn' | 'en' }) {
   const [isMobile, setIsMobile] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -241,7 +238,7 @@ function HolographicCard({ service, index, isDark, lang }: { service: any, index
   const theme = isDark ? {
     bg: "bg-[#0a0a20]/90",
     border: "border-cyan-500/20",
-    accent: "#50F2CE", 
+    accent: "#50F2CE",
     text: "text-white",
     subText: "text-cyan-300",
     desc: "text-cyan-100/60",
@@ -268,7 +265,7 @@ function HolographicCard({ service, index, isDark, lang }: { service: any, index
 
   const cardVariants: Variants = {
     hidden: { opacity: 0, y: 50, scale: 0.95 },
-    visible: { 
+    visible: {
       opacity: 1, y: 0, scale: 1,
       transition: { type: "spring", stiffness: 100, damping: 20 }
     }
@@ -293,99 +290,99 @@ function HolographicCard({ service, index, isDark, lang }: { service: any, index
         >
           {/* Layer 1: Frame */}
           <ZodiacServiceFrame color={theme.accent} isDark={isDark} />
-          
+
           {/* Layer 2: Glare */}
-          <motion.div 
+          <motion.div
             className="absolute inset-0 z-10 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
             style={{ background: glareBg }}
           />
 
           {/* Layer 3: Shimmer */}
           <div className="absolute inset-0 z-[15] overflow-hidden rounded-[3rem] pointer-events-none">
-             <div className="absolute top-0 -inset-full h-full w-1/2 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-10 group-hover:animate-shine" />
+            <div className="absolute top-0 -inset-full h-full w-1/2 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-10 group-hover:animate-shine" />
           </div>
 
           {/* Layer 4: Content (Lifted) */}
           <div className="absolute inset-0 z-20 flex flex-col p-8 md:p-10 transform-style-3d pointer-events-none">
-            
+
             {/* --- TOP: TYPE BADGE & ICON --- */}
             <motion.div style={{ translateZ: 40 }} className="flex justify-between items-start mb-10">
-                <div className={`
+              <div className={`
                     flex items-center gap-2 px-4 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest
                     ${isDark ? 'border-cyan-500/30 text-cyan-300 bg-cyan-950/30' : 'border-amber-600/20 text-amber-800 bg-amber-50'}
                 `}>
-                    <Tag size={12} /> {typeLabel}
-                </div>
-                
-                <div className={`
+                <Tag size={12} /> {typeLabel}
+              </div>
+
+              <div className={`
                     p-4 rounded-2xl border transition-all duration-700 group-hover:rotate-12
                     ${isDark ? 'bg-[#1e1b4b]/50 border-cyan-500/30' : 'bg-white border-amber-200'}
                 `}>
-                    <Icon size={24} color={theme.accent} strokeWidth={1.5} />
-                </div>
+                <Icon size={24} color={theme.accent} strokeWidth={1.5} />
+              </div>
             </motion.div>
 
             {/* --- MIDDLE: INFO REVEAL --- */}
             <motion.div style={{ translateZ: 50 }} className="flex-1 flex flex-col justify-start text-center">
-               <TextReveal delay={0.1}>
-                   <h3 className={`text-3xl md:text-4xl font-serif font-black leading-none tracking-tight mb-4 ${theme.text}`}>
-                     {displayTitle}
-                   </h3>
-               </TextReveal>
-               
-               <div className="flex justify-center mb-6">
-                   <motion.div 
-                     initial={{ width: 0 }} 
-                     whileInView={{ width: 40 }} 
-                     className={`h-[2px] opacity-30 ${isDark ? 'bg-cyan-400' : 'bg-amber-900'}`} 
-                   />
-               </div>
-               
-               <TextReveal delay={0.2}>
-                   <p className={`text-xs md:text-sm leading-relaxed font-medium line-clamp-3 ${theme.desc}`}>
-                     {description}
-                   </p>
-               </TextReveal>
+              <TextReveal delay={0.1}>
+                <h3 className={`text-3xl md:text-4xl font-serif font-black leading-none tracking-tight mb-4 ${theme.text}`}>
+                  {displayTitle}
+                </h3>
+              </TextReveal>
+
+              <div className="flex justify-center mb-6">
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: 40 }}
+                  className={`h-[2px] opacity-30 ${isDark ? 'bg-cyan-400' : 'bg-amber-900'}`}
+                />
+              </div>
+
+              <TextReveal delay={0.2}>
+                <p className={`text-xs md:text-sm leading-relaxed font-medium line-clamp-3 ${theme.desc}`}>
+                  {description}
+                </p>
+              </TextReveal>
             </motion.div>
 
             {/* --- BOTTOM: DATA GRID --- */}
             <motion.div style={{ translateZ: 30 }} className="w-full mt-auto">
-               <div className="grid grid-cols-2 gap-4 mb-6">
-                   {/* DURATION */}
-                   <div className={`p-4 rounded-2xl border flex flex-col items-center justify-center ${theme.cardItem}`}>
-                       <span className={`text-[9px] font-black uppercase tracking-widest opacity-50 mb-1 ${theme.text}`}>
-                           {lang==='mn'?'Хугацаа':'Time'}
-                       </span>
-                       <div className={`flex items-center gap-1.5 font-bold ${theme.subText}`}>
-                           <Hourglass size={14} /> <span>{service.duration}</span>
-                       </div>
-                   </div>
-                   
-                   {/* TEACHER */}
-                   <div className={`p-4 rounded-2xl border flex flex-col items-center justify-center ${theme.cardItem}`}>
-                       <span className={`text-[9px] font-black uppercase tracking-widest opacity-50 mb-1 ${theme.text}`}>
-                           {lang==='mn'?'Багш':'Guide'}
-                       </span>
-                       <div className={`flex items-center gap-1.5 font-bold ${theme.subText}`}>
-                           <User size={14} /> <span>{providerName}</span>
-                       </div>
-                   </div>
-               </div>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {/* DURATION */}
+                <div className={`p-4 rounded-2xl border flex flex-col items-center justify-center ${theme.cardItem}`}>
+                  <span className={`text-[9px] font-black uppercase tracking-widest opacity-50 mb-1 ${theme.text}`}>
+                    {lang === 'mn' ? 'Хугацаа' : 'Time'}
+                  </span>
+                  <div className={`flex items-center gap-1.5 font-bold ${theme.subText}`}>
+                    <Hourglass size={14} /> <span>{service.duration}</span>
+                  </div>
+                </div>
 
-               <div className="flex items-center justify-between gap-4">
-                   <div className="text-left pl-2">
-                       <span className={`text-[9px] font-black uppercase tracking-widest opacity-50 block ${theme.text}`}>{lang==='mn'?'Өргөл':'Price'}</span>
-                       <span className={`text-2xl font-serif font-medium ${theme.text}`}>{Number(service.price).toLocaleString()}₮</span>
-                   </div>
+                {/* TEACHER */}
+                <div className={`p-4 rounded-2xl border flex flex-col items-center justify-center ${theme.cardItem}`}>
+                  <span className={`text-[9px] font-black uppercase tracking-widest opacity-50 mb-1 ${theme.text}`}>
+                    {lang === 'mn' ? 'Багш' : 'Guide'}
+                  </span>
+                  <div className={`flex items-center gap-1.5 font-bold ${theme.subText}`}>
+                    <User size={14} /> <span>{providerName}</span>
+                  </div>
+                </div>
+              </div>
 
-                   <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`px-8 py-4 rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-[0.2em] shadow-lg transition-all ${theme.btn}`}
-                   >
-                      {lang === 'mn' ? 'Захиалах' : 'Book'} <ArrowUpRight size={16} />
-                   </motion.button>
-               </div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="text-left pl-2">
+                  <span className={`text-[9px] font-black uppercase tracking-widest opacity-50 block ${theme.text}`}>{lang === 'mn' ? 'Өргөл' : 'Price'}</span>
+                  <span className={`text-2xl font-serif font-medium ${theme.text}`}>{Number(service.price).toLocaleString()}₮</span>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-8 py-4 rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-[0.2em] shadow-lg transition-all ${theme.btn}`}
+                >
+                  {lang === 'mn' ? 'Захиалах' : 'Book'} <ArrowUpRight size={16} />
+                </motion.button>
+              </div>
             </motion.div>
 
           </div>
