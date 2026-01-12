@@ -225,44 +225,24 @@ export default function RitualBookingPage() {
                 const mRes = await fetch('/api/monks');
                 const allMonks = await mRes.json();
 
-                // Sort monks: special monks first, then regular monks
-                const sortedMonks = allMonks.sort((a: Monk, b: Monk) => {
-                    const aSpecial = a.isSpecial === true;
-                    const bSpecial = b.isSpecial === true;
-                    if (aSpecial && !bSpecial) return -1;
-                    if (!aSpecial && bSpecial) return 1;
-                    return 0;
-                });
-
                 // If monkId is locked via query params, only use that monk
                 if (lockedMonkId) {
-                    const lockedMonk = sortedMonks.find((m: Monk) => m._id === lockedMonkId);
+                    const lockedMonk = allMonks.find((m: Monk) => m._id === lockedMonkId);
                     if (lockedMonk) {
                         setMonks([lockedMonk]); // Only show this one monk
                         setSelectedMonk(lockedMonk);
                     }
                 } else {
-                    setMonks(sortedMonks);
+                    setMonks(allMonks);
 
-                    // Priority selection logic:
-                    // 1. Check if there's a special monk -> auto-select them
-                    // 2. If service has assigned monk -> select them
-                    // 3. Filter monks who offer this service -> select first
-                    // 4. Fallback to first monk
-
-                    const specialMonk = sortedMonks.find((m: Monk) => m.isSpecial === true);
-
-                    if (specialMonk) {
-                        // Special monks take priority
-                        setSelectedMonk(specialMonk);
-                    } else if (fetchedService?.monkId) {
-                        const assigned = sortedMonks.find((m: Monk) => m._id === fetchedService.monkId);
+                    if (fetchedService?.monkId) {
+                        const assigned = allMonks.find((m: Monk) => m._id === fetchedService.monkId);
                         if (assigned) setSelectedMonk(assigned);
                     } else {
                         // Filter monks who actually offer this service
-                        const available = sortedMonks.filter((m: Monk) => m.services?.some(s => s.id === fetchedService.id || s.id === fetchedService._id));
+                        const available = allMonks.filter((m: Monk) => m.services?.some(s => s.id === fetchedService.id || s.id === fetchedService._id));
                         if (available.length > 0) setSelectedMonk(available[0]);
-                        else if (sortedMonks.length > 0) setSelectedMonk(sortedMonks[0]); // Fallback
+                        else if (allMonks.length > 0) setSelectedMonk(allMonks[0]); // Fallback
                     }
                 }
 
@@ -289,7 +269,7 @@ export default function RitualBookingPage() {
 
     const times = useMemo(() => [
         "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-        "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00"
+        "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00","1:30"
     ], []);
 
     useEffect(() => {
@@ -430,7 +410,7 @@ export default function RitualBookingPage() {
                             service={{
                                 ...service,
                                 price: selectedMonk?.isSpecial
-                                    ? 88800
+                                    ? 88000
                                     : 50000
                             }}
                             monkName={selectedMonk?.name?.[lang]}
@@ -506,7 +486,7 @@ export default function RitualBookingPage() {
                                                         <span className="opacity-60">{t({ mn: "Дүн:", en: "Amount:" })}</span>
                                                         <span className={`font-bold ${theme.accentText}`}>
                                                             {selectedMonk?.isSpecial
-                                                                ? "88,800"
+                                                                ? "88,000"
                                                                 : "50,000"}₮
                                                         </span>
                                                     </div>
@@ -514,8 +494,8 @@ export default function RitualBookingPage() {
 
                                                 <div className={`text-[10px] opacity-50 mt-4 pt-4 border-t ${theme.borderColor}`}>
                                                     {t({
-                                                        mn: "Гүйлгээний утга дээр нэр, утасны дугаараа бичнэ үү.",
-                                                        en: "Please include your name and phone number in the transaction description."
+                                                        mn: "Гүйлгээний утга дээр утасны дугаараа бичнэ үү.",
+                                                        en: "Please include your phone number in the transaction description."
                                                     })}
                                                 </div>
                                             </motion.div>
@@ -530,13 +510,13 @@ export default function RitualBookingPage() {
                                         <motion.div layout className="space-y-10">
 
                                             {/* MONK SELECTION (STEP 0) */}
-                                            {monks.length > 1 && (
+                                            {monks.filter(m => m.services?.some(s => s.id === service.id || s.id === service._id)).length > 1 && (
                                                 <section className="mb-10">
                                                     <h4 className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] opacity-60 mb-6 ${theme.text}`}>
                                                         <User size={14} /> {t({ mn: "Багш сонгох", en: "Select Guide" })}
                                                     </h4>
                                                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide mask-fade">
-                                                        {monks.map((m, idx) => (
+                                                        {monks.filter(m => m.services?.some(s => s.id === service.id || s.id === service._id)).map((m, idx) => (
                                                             <motion.button
                                                                 key={m._id?.toString() || idx}
                                                                 onClick={() => { setSelectedMonk(m); setSelectedDateIndex(null); setSelectedTime(null); }}
@@ -547,12 +527,7 @@ export default function RitualBookingPage() {
                                                                 <div className="flex items-center gap-3 mb-3 relative z-10">
                                                                     <img src={m.image} alt={m.name?.[lang]} className="w-10 h-10 rounded-full object-cover border-2 border-white/20" />
                                                                     <div>
-                                                                        <div className="flex items-center gap-1">
-                                                                            <p className="text-[10px] font-bold uppercase opacity-70">{m.title?.[lang]}</p>
-                                                                            {m.isSpecial && (
-                                                                                <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 font-black uppercase">Special</span>
-                                                                            )}
-                                                                        </div>
+                                                                        <p className="text-[10px] font-bold uppercase opacity-70">{m.title?.[lang]}</p>
                                                                         <p className="font-serif font-bold leading-tight line-clamp-1">{m.name?.[lang]}</p>
                                                                     </div>
                                                                 </div>
