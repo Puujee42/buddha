@@ -16,7 +16,7 @@ import OverlayNavbar from "../components/Navbar";
 
 const Nebulas = () => (
   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-    <motion.div 
+    <motion.div
       animate={{ scale: [1, 1.2, 1], rotate: 360 }}
       transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
       className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(251,191,36,0.1)_0%,_transparent_50%)]"
@@ -36,11 +36,10 @@ const RoleSelector = ({ role, setRole, content }: any) => (
           onClick={() => setRole(r)}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className={`relative flex flex-col items-center justify-center py-6 rounded-[2rem] border overflow-hidden transition-all duration-300 ${
-            isActive 
-              ? "border-amber-500 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.4)]" 
-              : "border-transparent bg-white/40 hover:bg-white/60"
-          }`}
+          className={`relative flex flex-col items-center justify-center py-6 rounded-[2rem] border overflow-hidden transition-all duration-300 ${isActive
+            ? "border-amber-500 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.4)]"
+            : "border-transparent bg-white/40 hover:bg-white/60"
+            }`}
         >
           {/* Active Liquid Background */}
           <AnimatePresence>
@@ -54,13 +53,13 @@ const RoleSelector = ({ role, setRole, content }: any) => (
 
           <div className={`relative z-10 flex flex-col items-center gap-3 ${isActive ? "text-amber-800" : "text-stone-500"}`}>
             {r === "client" ? (
-                <div className={`p-3 rounded-full ${isActive ? 'bg-amber-500 text-white' : 'bg-stone-200'}`}>
-                    <User size={20} />
-                </div>
+              <div className={`p-3 rounded-full ${isActive ? 'bg-amber-500 text-white' : 'bg-stone-200'}`}>
+                <User size={20} />
+              </div>
             ) : (
-                <div className={`p-3 rounded-full ${isActive ? 'bg-amber-500 text-white' : 'bg-stone-200'}`}>
-                    <ScrollText size={20} />
-                </div>
+              <div className={`p-3 rounded-full ${isActive ? 'bg-amber-500 text-white' : 'bg-stone-200'}`}>
+                <ScrollText size={20} />
+              </div>
             )}
             <span className="text-xs font-black uppercase tracking-widest">{content[`role${r.charAt(0).toUpperCase() + r.slice(1)}`]}</span>
           </div>
@@ -77,7 +76,7 @@ const RoleSelector = ({ role, setRole, content }: any) => (
 export default function SignUpPage() {
   const { t } = useLanguage();
   const [role, setRole] = useState<"client" | "monk">("client");
-  
+
   // Mouse Torch Effect
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -102,11 +101,12 @@ export default function SignUpPage() {
     roleMonk: t({ mn: "Багш (Лам)", en: "Guide" }),
     registerBtn: role === "monk" ? t({ mn: "Багшаар бүртгүүлэх", en: "Register as Monk" }) : t({ mn: "Сангхад нэгдэх", en: "Join the Sangha" }),
     loginBtn: t({ mn: "Нэвтрэх", en: "Enter Sanctuary" }),
+    forgotPassword: t({ mn: "Нууц үгээ мартсан уу?", en: "Forgot Password?" }),
     footer: t({ mn: "Эв нэгдэл • Нигүүлсэл • Мэргэн ухаан", en: "Unity • Compassion • Wisdom" }),
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen w-full flex bg-[#FDFBF7] font-serif overflow-hidden selection:bg-amber-200"
       onMouseMove={handleMouseMove}
     >
@@ -115,57 +115,57 @@ export default function SignUpPage() {
       {/* --- LEFT SIDE: CINEMATIC VISUAL --- */}
       <div className="hidden lg:flex w-5/12 relative overflow-hidden bg-[#2a1a12] items-center justify-center">
         {/* Animated Layers */}
-        <motion.div 
-           initial={{ scale: 1.2 }} animate={{ scale: 1 }} transition={{ duration: 20, ease: "easeOut" }}
-           className="absolute inset-0 z-0"
+        <motion.div
+          initial={{ scale: 1.2 }} animate={{ scale: 1 }} transition={{ duration: 20, ease: "easeOut" }}
+          className="absolute inset-0 z-0"
         >
-          <img 
-            src="https://images.unsplash.com/photo-1600609842388-3e4b7b250571?q=80&w=2574&auto=format&fit=crop" 
-            alt="Temple" 
+          <img
+            src="https://images.unsplash.com/photo-1600609842388-3e4b7b250571?q=80&w=2574&auto=format&fit=crop"
+            alt="Temple"
             className="w-full h-full object-cover opacity-40 mix-blend-overlay grayscale"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#2a1a12] via-[#451a03]/60 to-transparent" />
         </motion.div>
-        
+
         <Nebulas />
 
         {/* Content */}
         <div className="relative z-10 px-12 text-center">
-           <motion.div
-             initial={{ opacity: 0, y: 30 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 1, delay: 0.2 }}
-           >
-             <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-amber-200/20 backdrop-blur-md mb-8 text-amber-100/60">
-                <Orbit className="animate-spin-slow" size={14} />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">{content.leftSubtitle}</span>
-             </div>
-             
-             <h1 
-               className="text-6xl font-black text-amber-50 mb-8 leading-[0.9] tracking-tighter drop-shadow-2xl"
-               dangerouslySetInnerHTML={{ __html: content.leftTitle }}
-             />
-             
-             <div className="w-12 h-1 bg-amber-500/50 mx-auto mb-8 rounded-full" />
-             
-             <p className="text-amber-100/70 text-lg font-sans font-light leading-relaxed max-w-sm mx-auto italic">
-               {content.quote}
-             </p>
-           </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+          >
+            <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-amber-200/20 backdrop-blur-md mb-8 text-amber-100/60">
+              <Orbit className="animate-spin-slow" size={14} />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em]">{content.leftSubtitle}</span>
+            </div>
+
+            <h1
+              className="text-6xl font-black text-amber-50 mb-8 leading-[0.9] tracking-tighter drop-shadow-2xl"
+              dangerouslySetInnerHTML={{ __html: content.leftTitle }}
+            />
+
+            <div className="w-12 h-1 bg-amber-500/50 mx-auto mb-8 rounded-full" />
+
+            <p className="text-amber-100/70 text-lg font-sans font-light leading-relaxed max-w-sm mx-auto italic">
+              {content.quote}
+            </p>
+          </motion.div>
         </div>
       </div>
 
       {/* --- RIGHT SIDE: INTERACTIVE FORM --- */}
       <div className="w-full lg:w-7/12 relative flex flex-col items-center justify-center p-6 sm:p-12 md:p-24">
-        
+
         {/* Magic Background Torch */}
         <motion.div className="absolute inset-0 pointer-events-none" style={{ background: torchBg }} />
-        
+
         <div className="absolute top-0 right-0 p-12 pointer-events-none opacity-5">
-            <Flower size={300} />
+          <Flower size={300} />
         </div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: "circOut" }}
@@ -173,14 +173,14 @@ export default function SignUpPage() {
         >
           {/* Header */}
           <div className="text-center mb-12">
-             <motion.div 
-               initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
-               className="inline-block p-4 rounded-2xl bg-white shadow-xl mb-6 text-amber-600 border border-amber-100"
-             >
-                <Sparkles size={32} />
-             </motion.div>
-             <h2 className="text-4xl md:text-5xl font-bold text-[#2a1a12] mb-3 tracking-tight">{content.welcome}</h2>
-             <p className="text-[#5c4033] font-sans opacity-60 uppercase tracking-widest text-xs font-bold">{content.instruction}</p>
+            <motion.div
+              initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
+              className="inline-block p-4 rounded-2xl bg-white shadow-xl mb-6 text-amber-600 border border-amber-100"
+            >
+              <Sparkles size={32} />
+            </motion.div>
+            <h2 className="text-4xl md:text-5xl font-bold text-[#2a1a12] mb-3 tracking-tight">{content.welcome}</h2>
+            <p className="text-[#5c4033] font-sans opacity-60 uppercase tracking-widest text-xs font-bold">{content.instruction}</p>
           </div>
 
           {/* Role Selection */}
@@ -189,48 +189,57 @@ export default function SignUpPage() {
           {/* Auth Actions */}
           <div className="space-y-4">
             <ClerkLoading>
-                <div className="flex justify-center py-4"><Loader2 className="animate-spin text-amber-600" /></div>
+              <div className="flex justify-center py-4"><Loader2 className="animate-spin text-amber-600" /></div>
             </ClerkLoading>
 
             <ClerkLoaded>
-                {/* 1. Primary Register Button */}
-                <SignUpButton 
-                    mode="modal"
-                    unsafeMetadata={{ role: role }}
-                    forceRedirectUrl={role === 'monk' ? "/onboarding/monk" : "/dashboard"}
+              {/* 1. Primary Register Button */}
+              <SignUpButton
+                mode="modal"
+                unsafeMetadata={{ role: role }}
+                forceRedirectUrl={role === 'monk' ? "/onboarding/monk" : "/dashboard"}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  className="group relative w-full h-16 rounded-[1.5rem] overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-900/20"
                 >
-                    <motion.button 
-                        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                        className="group relative w-full h-16 rounded-[1.5rem] overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-900/20"
-                    >
-                        {/* Shimmer */}
-                        <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                        
-                        <div className="relative z-10 flex items-center justify-center gap-3 font-bold text-sm uppercase tracking-[0.2em]">
-                            <UserPlus size={18} /> {content.registerBtn}
-                        </div>
-                    </motion.button>
-                </SignUpButton>
+                  {/* Shimmer */}
+                  <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-                {/* 2. Secondary Login Button */}
-                <div className="relative py-4">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-stone-200" /></div>
-                    <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-[#FDFBF7] px-4 text-stone-400">Or</span></div>
-                </div>
+                  <div className="relative z-10 flex items-center justify-center gap-3 font-bold text-sm uppercase tracking-[0.2em]">
+                    <UserPlus size={18} /> {content.registerBtn}
+                  </div>
+                </motion.button>
+              </SignUpButton>
 
-                <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-                    <motion.button 
-                        whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.02)" }} whileTap={{ scale: 0.98 }}
-                        className="w-full h-14 rounded-[1.5rem] border-2 border-stone-200 text-[#451a03] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-colors hover:border-amber-300"
-                    >
-                        <ShieldCheck size={16} /> {content.loginBtn}
-                    </motion.button>
-                </SignInButton>
+              {/* 2. Secondary Login Button */}
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-stone-200" /></div>
+                <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-[#FDFBF7] px-4 text-stone-400">Or</span></div>
+              </div>
+
+              <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+                <motion.button
+                  whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.02)" }} whileTap={{ scale: 0.98 }}
+                  className="w-full h-14 rounded-[1.5rem] border-2 border-stone-200 text-[#451a03] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-colors hover:border-amber-300"
+                >
+                  <ShieldCheck size={16} /> {content.loginBtn}
+                </motion.button>
+              </SignInButton>
+
+              <div className="text-center mt-6">
+                <Link
+                  href="/forgot-password"
+                  className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600/60 hover:text-amber-600 hover:underline transition-colors"
+                >
+                  {content.forgotPassword}
+                </Link>
+              </div>
             </ClerkLoaded>
           </div>
 
           <div className="mt-12 text-center opacity-40">
-             <p className="text-[10px] font-black uppercase tracking-[0.3em]">{content.footer}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em]">{content.footer}</p>
           </div>
 
         </motion.div>

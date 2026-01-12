@@ -42,6 +42,7 @@ export default function LoginPage() {
     or: t({ mn: "- ЭСВЭЛ -", en: "- OR -" }),
     agreeText: t({ mn: "Нэвтэрснээр та ", en: "By entering, you agree to follow the " }),
     eightfoldPath: t({ mn: "Найман зөв зам-ын дагуу байхыг зөвшөөрч байна.", en: "Eightfold Path of Conduct" }),
+    forgotPassword: t({ mn: "Нууц үгээ мартсан уу?", en: "Forgot Password?" }),
   };
 
   return (
@@ -157,10 +158,17 @@ export default function LoginPage() {
                 </motion.button>
               </SignInButton>
 
-              <div className="text-center">
-                <span className="text-xs font-sans text-[#D97706]/60 font-bold uppercase tracking-widest block mb-1">
-                  {content.or}
-                </span>
+              <div className="text-center space-y-4">
+                <Link
+                  href="/forgot-password"
+                  className="text-[10px] font-sans text-[#D97706]/60 hover:text-[#D97706] hover:underline font-bold uppercase tracking-[0.2em] transition-colors"
+                >
+                  {content.forgotPassword}
+                </Link>
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#D97706]/10" /></div>
+                  <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest"><span className="bg-white/50 backdrop-blur-sm px-4 text-[#D97706]/40">{content.or}</span></div>
+                </div>
               </div>
 
               {/* 2. SIGN UP (Outline Button) */}

@@ -15,7 +15,8 @@ import {
   Moon,
   LogIn,
   UserCircle,
-  BookOpen
+  BookOpen,
+  Flower
 } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -62,7 +63,7 @@ export default function OverlayNavbar() {
   const mobileNav = [
     { id: "home", icon: Home, href: "/", label: { mn: "Нүүр", en: "Home" } },
     { id: "monks", icon: Users, href: "/monks", label: { mn: "Үзмэрч", en: "Monks" } },
-    { id: "services", icon: Sparkles, href: "/services", label: { mn: "Засал", en: "Ritual" }, isMain: true },
+    { id: "services", icon: Flower, href: "/services", label: { mn: "Засал", en: "Ritual" }, isMain: true },
     { id: "dashboard", icon: LayoutGrid, href: "/dashboard", label: { mn: "Самбар", en: "Panel" } },
     { id: "guide", icon: BookOpen, href: "/guide", label: { mn: "Заавар", en: "Guide" } },
     { id: "about", icon: Compass, href: "/about", label: { mn: "Тухай", en: "About" } },
