@@ -191,7 +191,7 @@ export default function MonkBookingPage() {
                 // OVERRIDE PRICES based on Admin-controlled Monk Status
                 const uniqueServices = Array.from(uniqueServicesMap.values()).map((s: any) => ({
                     ...s,
-                    price: isSpecial ? 88000 : 50000
+                    price: isSpecial ? 88800 : 50000
                 }));
 
                 setAvailableServices(uniqueServices);

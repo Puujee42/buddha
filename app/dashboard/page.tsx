@@ -310,15 +310,20 @@ export default function DashboardPage() {
 
     // --- HELPER: CHECK RITUAL AVAILABILITY ---
     const checkRitualAvailability = (booking: Booking) => {
-        // 1. Parse Date/Time
+        // 1. If call is active, it's ALWAYS open
+        if (booking.callStatus === 'active') {
+            return { isOpen: true, message: TEXT.roomOpen };
+        }
+
+        // 2. Parse Date/Time
         const bookingDateTime = new Date(`${booking.date}T${booking.time}`);
         const now = new Date();
 
-        // 2. Open Window: 10 minutes before booking time
-        const openTime = new Date(bookingDateTime.getTime() - 10 * 60 * 1000); // -10 mins
+        // 3. Open Window: 24 hours before booking time
+        const openTime = new Date(bookingDateTime.getTime() - 24 * 60 * 60 * 1000);
 
-        // 3. Close Window: 30 minutes after booking time (total chat duration: 40 minutes)
-        const closeTime = new Date(bookingDateTime.getTime() + 30 * 60 * 1000); // +30 mins
+        // 4. Close Window: 4 hours after booking time (allowing for long sessions/checks)
+        const closeTime = new Date(bookingDateTime.getTime() + 4 * 60 * 60 * 1000);
 
         if (now >= openTime && now <= closeTime) {
             return { isOpen: true, message: TEXT.roomOpen };
@@ -810,7 +815,7 @@ export default function DashboardPage() {
                                                         ) : (
                                                             <div className="flex flex-col items-end">
                                                                 <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-stone-100 text-stone-400 border border-stone-200">
-                                                                    {TEXT.join} ({availability.message})
+                                                                    {availability.message}
                                                                 </span>
                                                             </div>
                                                         )}

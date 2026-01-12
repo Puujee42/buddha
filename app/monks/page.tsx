@@ -354,7 +354,7 @@ function DivineCard({ monk, index, isDark, lang }: { monk: Monk, index: number, 
                   {lang === 'mn' ? 'Үнэ' : 'Starting'}
                 </span>
                 <div className={`flex items-center gap-1 text-lg font-serif font-black ${isDark ? "text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]" : "text-amber-700"}`}>
-                  {monk.isSpecial ? "88,000₮" : "50,000₮"}
+                  {monk.isSpecial ? "88,800₮" : "50,000₮"}
                 </div>
               </div>
             </motion.div>
