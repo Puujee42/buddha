@@ -49,12 +49,13 @@ export default function Hero() {
 
       {/* --- BACKGROUND IMAGE/VIDEO --- */}
       <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-linear-to-b from-[#fdfbf7] to-[#fcecd4] md:hidden" />
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover brightness-90 md:brightness-100"
+          className="hidden md:block w-full h-full object-cover brightness-90 md:brightness-100"
         >
           <source src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133484/video_kakyvu.mp4" type="video/mp4" />
         </video>

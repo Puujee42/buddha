@@ -39,7 +39,7 @@ interface ThemeConfig {
 
 // --- 2. GALAXY BACKGROUNDS ---
 const HeavenlyBackground: React.FC = () => (
-  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
     <div className="absolute inset-0 bg-linear-to-b from-[#FFFBEB] via-[#fffbf0] to-[#fff7ed]" />
     <motion.div 
       animate={{ rotate: 360 }}
@@ -51,7 +51,7 @@ const HeavenlyBackground: React.FC = () => (
 );
 
 const CosmicBackground: React.FC = () => (
-  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
     {/* Deep Space Base */}
     <div className="absolute inset-0 bg-linear-to-b from-[#05051a] via-[#2E1B49] to-[#0C164F]" />
     
