@@ -789,15 +789,17 @@ export default function DashboardPage() {
                                 {bookings.length > 0 ? bookings.map((b) => {
                                     const availability = checkRitualAvailability(b);
                                     return (
-                                        <div key={b._id} className="p-5 rounded-2xl border border-stone-100 flex justify-between items-center bg-stone-50/50">
-                                            <div>
-                                                <h4 className="font-bold text-[#451a03]">{b.clientName}</h4>
-                                                <p className="text-xs text-stone-500">{b.date} • {b.time}</p>
-                                                <p className="text-[10px] text-[#D97706] font-bold mt-1">
-                                                    {typeof b.serviceName === 'string' ? b.serviceName : b.serviceName?.[langKey]}
+                                        <div key={b._id} className="p-4 md:p-5 rounded-2xl border border-stone-100 flex flex-col md:flex-row md:justify-between md:items-center bg-stone-50/50 gap-4 transition-all hover:border-[#D97706]/20">
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-[#451a03] text-sm md:text-base">{b.clientName}</h4>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-[10px] md:text-xs text-stone-500 bg-white px-2 py-0.5 rounded-full border border-stone-100">{b.date} • {b.time}</span>
+                                                </div>
+                                                <p className="text-[10px] md:text-xs text-[#D97706] font-bold mt-2 flex items-center gap-1">
+                                                    <ScrollText size={10} /> {typeof b.serviceName === 'string' ? b.serviceName : b.serviceName?.[langKey]}
                                                 </p>
                                             </div>
-                                            <div className="flex flex-col items-end gap-2">
+                                            <div className="flex items-center md:items-end gap-2 shrink-0">
                                                 {b.status === 'confirmed' ? (
                                                     <>
                                                         {b.callStatus === 'active' ? (
@@ -806,31 +808,32 @@ export default function DashboardPage() {
                                                                     setActiveBookingForRoom(b);
                                                                     joinVideoCall(b); // Auto-join call if active
                                                                 }}
-                                                                className="px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-black uppercase flex items-center gap-2 shadow-lg shadow-green-500/20 hover:bg-green-700 animate-bounce"
+                                                                className="w-full md:w-auto px-4 py-2.5 bg-green-600 text-white rounded-xl text-[10px] md:text-xs font-black uppercase flex items-center justify-center gap-2 shadow-lg shadow-green-500/10 hover:bg-green-700 transition-transform active:scale-95"
                                                             >
+                                                                <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                                                                 <Video size={14} /> Join Video Call
                                                             </button>
                                                         ) : availability.isOpen ? (
                                                             <button
                                                                 onClick={() => setActiveBookingForRoom(b)}
-                                                                className="px-4 py-2 bg-[#D97706] text-white rounded-lg text-xs font-black uppercase flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-[#B45309]"
+                                                                className="w-full md:w-auto px-4 py-2.5 bg-[#D97706] text-white rounded-xl text-[10px] md:text-xs font-black uppercase flex items-center justify-center gap-2 shadow-lg shadow-amber-500/10 hover:bg-[#B45309] transition-transform active:scale-95"
                                                             >
                                                                 <MessageCircle size={14} /> {TEXT.enterRoom}
                                                             </button>
                                                         ) : (
-                                                            <div className="flex flex-col items-end">
-                                                                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-stone-100 text-stone-400 border border-stone-200">
+                                                            <div className="w-full md:w-auto flex items-center justify-end">
+                                                                <span className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase bg-stone-100 text-stone-400 border border-stone-200">
                                                                     {availability.message}
                                                                 </span>
                                                             </div>
                                                         )}
                                                     </>
                                                 ) : b.status === 'completed' ? (
-                                                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-green-100 text-green-600 border border-green-200 flex items-center gap-1">
+                                                    <span className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase bg-green-50 text-green-600 border border-green-200 flex items-center gap-1">
                                                         <CheckCircle size={12} /> Completed
                                                     </span>
                                                 ) : (
-                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${b.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-stone-100 text-stone-500 border-stone-200'}`}>
+                                                    <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase border ${b.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-stone-100 text-stone-500 border-stone-200'}`}>
                                                         {b.status === 'pending' ? TEXT.pending : b.status}
                                                     </span>
                                                 )}

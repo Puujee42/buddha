@@ -226,9 +226,9 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    className="absolute inset-0 z-50 bg-stone-950/95 backdrop-blur-sm"
+                    className="absolute inset-0 z-50 bg-stone-950/95 backdrop-blur-sm will-change-transform"
                 >
-                    <div className="w-full h-full flex flex-col">
+                    <div className="w-full h-full flex flex-col overflow-hidden">
                         {content}
                     </div>
                 </motion.div>
@@ -242,9 +242,9 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
                 animate={{ width: "350px", opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-                className="h-full shrink-0 overflow-hidden border-l border-stone-800 shadow-2xl relative z-40"
+                className="h-full shrink-0 overflow-hidden border-l border-stone-800 shadow-2xl relative z-40 will-change-[width,opacity]"
             >
-                <div className="w-[350px] h-full">
+                <div className="w-[350px] h-full overflow-hidden">
                     {content}
                 </div>
             </motion.div>

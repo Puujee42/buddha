@@ -77,13 +77,15 @@ export default function ChatWindow({
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
         top: scrollRef.current.scrollHeight,
-        behavior: "smooth",
+        behavior: messages.length <= 1 ? "auto" : "smooth",
       });
     }
   }, [messages]);
 
   const sendMessage = async () => {
     if (!inputText.trim()) return;
+    const text = inputText;
+    setInputText(""); // Instant clear for faster feel
     setSending(true);
     try {
       const res = await fetch("/api/chat", {
@@ -93,17 +95,19 @@ export default function ChatWindow({
           bookingId,
           senderId: currentUserId,
           senderName: currentUserName,
-          text: inputText,
+          text,
         }),
       });
 
       if (res.ok) {
         const newMessage = await res.json();
         setMessages((prev) => [...prev, newMessage]);
-        setInputText("");
+      } else {
+        setInputText(text); // Restore if failed
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      setInputText(text);
     } finally {
       setSending(false);
     }
@@ -132,8 +136,9 @@ export default function ChatWindow({
 
       {/* Messages Area */}
       <div
-        className="flex-1 overflow-y-auto p-4 space-y-6 bg-stone-50 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent"
+        className="flex-1 overflow-y-auto p-4 space-y-6 bg-stone-50 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent will-change-transform touch-pan-y"
         ref={scrollRef}
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-stone-400">
