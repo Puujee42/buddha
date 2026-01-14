@@ -34,6 +34,8 @@ const OptimizedVideo: React.FC<OptimizedVideoProps> = ({
         setMounted(true);
     }, []);
 
+    const isCloudinary = src.includes("cloudinary.com");
+
     const getPublicId = (url: string) => {
         if (!url.includes("cloudinary.com")) return url;
         const parts = url.split("/upload/");
@@ -46,12 +48,30 @@ const OptimizedVideo: React.FC<OptimizedVideoProps> = ({
 
     if (!mounted) return <div className={className} style={{ width, height, backgroundColor: '#000' }} />;
 
+    if (!isCloudinary) {
+        return (
+            <video
+                src={src}
+                className={className}
+                autoPlay={autoPlay}
+                loop={loop}
+                muted={muted}
+                playsInline={playsInline}
+                poster={poster}
+                width={width}
+                height={height}
+                style={{ objectFit: 'cover' }}
+            />
+        );
+    }
+
     // Extract the cloud name from the URL if it's there, otherwise it will use the env default
-    const cloudName = src.includes("cloudinary.com") ? src.split("res.cloudinary.com/")[1]?.split("/")[0] : undefined;
+    const cloudName = src.split("res.cloudinary.com/")[1]?.split("/")[0];
 
     return (
         <CldVideoPlayer
-            id={id || `video-${publicId}`}
+            key={src} // Force re-render on src change
+            id={id || `video-${publicId.replace(/[^a-zA-Z0-9-]/g, '-')}`}
             width={width}
             height={height}
             src={publicId}
@@ -71,7 +91,9 @@ const OptimizedVideo: React.FC<OptimizedVideoProps> = ({
                 width: width,
                 height: height,
                 crop: 'fill',
-                gravity: 'center'
+                gravity: 'center',
+                quality: 'auto',
+                fetch_format: 'auto'
             }}
         />
     );
