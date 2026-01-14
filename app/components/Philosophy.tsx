@@ -15,7 +15,11 @@ import {
 } from "framer-motion";
 import CountUp from "react-countup";
 import { TypeAnimation } from "react-type-animation";
-import { Flower, Users, Globe, Sparkles, Star, Quote, Heart, Sun, Feather, ArrowUpRight } from "lucide-react";
+import {
+  ArrowRight, Sparkles, Star, Target, Zap, Flower, Play, ExternalLink,
+  Users, Globe, Heart, Quote, Sun, Feather, ArrowUpRight
+} from "lucide-react";
+import OptimizedVideo from "./OptimizedVideo";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
 
@@ -23,8 +27,8 @@ import { useTheme } from "next-themes";
 // 1. MICRO-COMPONENTS (High-Level Effects)
 // ==========================================
 
-/** 
- * SpotlightCard: Creates a glowing gradient that follows the mouse 
+/**
+ * SpotlightCard: Creates a glowing gradient that follows the mouse
  */
 const SpotlightCard = ({ children, className = "", theme }: { children: React.ReactNode; className?: string; theme: any }) => {
   const mouseX = useMotionValue(0);
@@ -38,7 +42,7 @@ const SpotlightCard = ({ children, className = "", theme }: { children: React.Re
 
   return (
     <div
-      className={`relative border overflow-hidden group ${className} ${theme.borderColor} ${theme.altarBg}`}
+      className={`relative border overflow-hidden group ${className} ${theme.borderColor} ${theme.altarBg} safari-gpu`}
       onMouseMove={handleMouseMove}
     >
       <motion.div
@@ -46,7 +50,7 @@ const SpotlightCard = ({ children, className = "", theme }: { children: React.Re
         style={{
           background: useMotionTemplate`
             radial-gradient(
-              650px circle at ${mouseX}px ${mouseY}px,
+              450px circle at ${mouseX}px ${mouseY}px,
               ${theme.spotlightColor},
               transparent 80%
             )
@@ -82,7 +86,7 @@ const MagneticButton = ({ children, className }: { children: React.ReactNode; cl
       onMouseLeave={reset}
       animate={{ x: position.x, y: position.y }}
       transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
-      className={className}
+      className={`${className} safari-gpu`}
     >
       {children}
     </motion.div>
@@ -100,7 +104,7 @@ const RevealText = ({ text, delay = 0, className = "" }: { text: string; delay?:
         whileInView={{ y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay }}
-        className="inline-block"
+        className="inline-block safari-gpu"
       >
         {text}
       </motion.span>
@@ -111,9 +115,12 @@ const RevealText = ({ text, delay = 0, className = "" }: { text: string; delay?:
 /**
  * ParallaxImage: Moves background slightly slower than scroll
  */
-const ParallaxBackground = ({ theme }: { theme: any }) => {
+const ParallaxBackground = React.memo(({ isDark }: { isDark: boolean }) => {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+
+  const orbColor1 = isDark ? "bg-amber-600" : "bg-amber-200";
+  const orbColor2 = isDark ? "bg-blue-900" : "bg-orange-100";
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -122,12 +129,12 @@ const ParallaxBackground = ({ theme }: { theme: any }) => {
 
       {/* Moving Gradient Orbs */}
       <motion.div style={{ y }} className="absolute inset-0">
-        <div className={`absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-20 ${theme.orbColor1}`} />
-        <div className={`absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 ${theme.orbColor2}`} />
+        <div className={`absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-20 ${orbColor1}`} />
+        <div className={`absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 ${orbColor2}`} />
       </motion.div>
     </div>
   );
-};
+});
 
 // ==========================================
 // 2. MAIN PAGE CONTENT
@@ -205,14 +212,14 @@ function ActualAboutContent() {
   const theme = isNight ? {
     mainBg: "bg-[#05051a]", textColor: "text-amber-50", accentText: "text-amber-500",
     mutedText: "text-amber-100/60", borderColor: "border-amber-500/20",
-    altarBg: "bg-[#0a0a25]/50 backdrop-blur-xl",
+    altarBg: "bg-[#0a0a25]/90 md:backdrop-blur-lg",
     spotlightColor: "rgba(245, 158, 11, 0.15)",
     btnPrimary: "bg-amber-600 text-[#05051a] shadow-[0_0_30px_-5px_rgba(217,119,6,0.4)]",
     orbColor1: "bg-amber-600", orbColor2: "bg-blue-900",
   } : {
     mainBg: "bg-[#FDFBF7]", textColor: "text-[#451a03]", accentText: "text-amber-600",
     mutedText: "text-[#78350F]/60", borderColor: "border-amber-900/10",
-    altarBg: "bg-white/60 backdrop-blur-xl",
+    altarBg: "bg-white/90 md:backdrop-blur-lg",
     spotlightColor: "rgba(217, 119, 6, 0.08)",
     btnPrimary: "bg-[#451a03] text-white shadow-[0_10px_30px_-5px_rgba(69,26,3,0.3)]",
     orbColor1: "bg-amber-200", orbColor2: "bg-orange-100",
@@ -222,7 +229,7 @@ function ActualAboutContent() {
     <div ref={containerRef} className={`relative w-full ${theme.mainBg} ${theme.textColor} transition-colors duration-1000 font-serif overflow-hidden`}>
 
       {/* 1. Global Effects */}
-      <ParallaxBackground theme={theme} />
+      <ParallaxBackground isDark={isNight} />
 
       {/* 2. Floating Frame */}
       <div className="fixed inset-0 pointer-events-none z-[50] p-4 md:p-8">
@@ -238,8 +245,8 @@ function ActualAboutContent() {
             <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.2, ease: "circOut" }}>
               <div className="flex items-center gap-4 mb-8">
                 <motion.div
-                  initial={{ width: 0 }} animate={{ width: 48 }} transition={{ delay: 0.5, duration: 0.8 }}
-                  className={`h-[2px] ${theme.accentText} bg-current`}
+                  initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.5, duration: 0.8 }}
+                  className={`h-[2px] w-12 origin-left ${theme.accentText} bg-current safari-gpu`}
                 />
                 <RevealText text={t.badge} delay={0.8} className="text-[11px] uppercase tracking-[0.4em] font-black" />
               </div>
@@ -252,7 +259,7 @@ function ActualAboutContent() {
 
               <motion.p
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-                className={`max-w-md text-base md:text-xl font-sans tracking-wide leading-relaxed mb-12 ${theme.mutedText}`}
+                className={`max-w-md text-base md:text-xl font-sans tracking-wide leading-relaxed mb-12 ${theme.mutedText} safari-gpu`}
               >
                 {t.subheadline}
               </motion.p>
@@ -271,7 +278,7 @@ function ActualAboutContent() {
 
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.5 }}
-                  className="flex items-center gap-4 pl-8 border-l border-current/20"
+                  className="flex items-center gap-4 pl-8 border-l border-current/20 safari-gpu"
                 >
                   <div className="flex -space-x-4">
                     {[1, 2, 3].map(i => (
@@ -296,13 +303,14 @@ function ActualAboutContent() {
                 initial={{ opacity: 0, rotateY: 15, rotateX: 5 }}
                 animate={{ opacity: 1, rotateY: 0, rotateX: 0 }}
                 transition={{ duration: 1.5, type: "spring" }}
-                className="relative z-10"
+                className="relative z-10 safari-gpu"
               >
                 <SpotlightCard theme={theme} className="rounded-[4rem]">
                   <div className="aspect-[4/5] relative">
-                    <video autoPlay loop muted playsInline className="w-full h-full object-cover  transition-all duration-1000 ease-out">
-                      <source src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133950/num2_ocygii.mp4" type="video/mp4" />
-                    </video>
+                    <OptimizedVideo
+                      src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133950/num2_ocygii.mp4"
+                      className="w-full h-full object-cover transition-all duration-1000 ease-out"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
 
                     <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end text-white">
@@ -314,8 +322,8 @@ function ActualAboutContent() {
                         <h4 className="text-2xl font-bold font-sans">Divine Wisdom</h4>
                       </div>
                       <motion.div
-                        whileHover={{ rotate: 180 }}
-                        className="w-14 h-14 rounded-full border border-white/30 flex items-center justify-center backdrop-blur-md cursor-pointer hover:bg-white hover:text-black transition-colors"
+                        whileHover={{ scale: 1.1 }}
+                        className="w-14 h-14 rounded-full border border-white/30 flex items-center justify-center bg-black/20 backdrop-blur-md cursor-pointer hover:bg-white hover:text-black transition-colors"
                       >
                         <Flower size={24} />
                       </motion.div>

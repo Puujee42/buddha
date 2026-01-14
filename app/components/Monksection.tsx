@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { 
-  motion, 
-  useTransform, 
-  useSpring, 
-  useMotionValue, 
-  AnimatePresence 
+import {
+  motion,
+  useTransform,
+  useSpring,
+  useMotionValue,
+  AnimatePresence
 } from "framer-motion";
 import { Sparkles, ShieldCheck } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
+import OptimizedVideo from "./OptimizedVideo";
 
 // --- 1. STYLES ---
 const sectionStyles = `
@@ -41,7 +42,7 @@ interface ThemeConfig {
 const HeavenlyBackground: React.FC = () => (
   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
     <div className="absolute inset-0 bg-linear-to-b from-[#FFFBEB] via-[#fffbf0] to-[#fff7ed]" />
-    <motion.div 
+    <motion.div
       animate={{ rotate: 360 }}
       transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
       className="absolute top-[-50%] left-1/2 -translate-x-1/2 w-[150vw] h-[150vw] opacity-30"
@@ -54,12 +55,12 @@ const CosmicBackground: React.FC = () => (
   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
     {/* Deep Space Base */}
     <div className="absolute inset-0 bg-linear-to-b from-[#05051a] via-[#2E1B49] to-[#0C164F]" />
-    
+
     {/* Magenta Nebula Cloud */}
-    <motion.div 
-      animate={{ 
+    <motion.div
+      animate={{
         scale: [1, 1.2, 1],
-        opacity: [0.1, 0.2, 0.1] 
+        opacity: [0.1, 0.2, 0.1]
       }}
       transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
       className="absolute top-[-10%] left-[-10%] w-[100vw] h-[100vw] rounded-full blur-[120px]"
@@ -67,12 +68,12 @@ const CosmicBackground: React.FC = () => (
     />
 
     {/* Stars & Pulsing Dust */}
-    {[...Array(40)].map((_, i) => (
+    {[...Array(20)].map((_, i) => (
       <motion.div
         key={i}
-        animate={{ 
+        animate={{
           opacity: [0.2, 1, 0.2],
-          scale: [0.5, 1.2, 0.5] 
+          scale: [0.5, 1.2, 0.5]
         }}
         transition={{ duration: 3 + (i % 5), repeat: Infinity, delay: i * 0.1 }}
         className={`absolute rounded-full shadow-[0_0_8px_white] ${i % 3 === 0 ? "w-[2px] h-[2px] bg-cyan-300" : "w-[1px] h-[1px] bg-white"}`}
@@ -107,40 +108,40 @@ export default function MajesticTarotSection() {
       try {
         const res = await fetch('/api/monks');
         const data: Monk[] = await res.json();
-        
+
         let processedMonks: MonkData[] = [];
 
         try {
-            // Attempt to use Rust Wasm for high-performance sorting/scoring
-            // @ts-ignore - Module might not be installed yet
-            const wasm = await import("rust-modules");
-            const result = JSON.parse(wasm.process_monks(JSON.stringify(data)));
-            
-            console.log("Using Rust Wasm for Monk Processing 🦀");
+          // Attempt to use Rust Wasm for high-performance sorting/scoring
+          // @ts-ignore - Module might not be installed yet
+          const wasm = await import("rust-modules");
+          const result = JSON.parse(wasm.process_monks(JSON.stringify(data)));
 
-            // Map the Rust result back to UI format
-            processedMonks = result.map((m: any) => ({
-                id: m.id,
-                arcana: m.arcana,
-                name: m.name,
-                title: m.title,
-                video: m.video
-            }));
+          console.log("Using Rust Wasm for Monk Processing 🦀");
+
+          // Map the Rust result back to UI format
+          processedMonks = result.map((m: any) => ({
+            id: m.id,
+            arcana: m.arcana,
+            name: m.name,
+            title: m.title,
+            video: m.video
+          }));
 
         } catch (wasmError) {
-             // JS Fallback logic if Wasm fails or isn't installed
-            // LIMIT TO 3 MONKS FOR PERFORMANCE
-            const limitedData = data.slice(0, 3);
+          // JS Fallback logic if Wasm fails or isn't installed
+          // LIMIT TO 3 MONKS FOR PERFORMANCE
+          const limitedData = data.slice(0, 3);
 
-            processedMonks = limitedData.map((m, i) => ({
-              id: m._id?.toString() || `temp-${i}`,
-              arcana: RUNES[i % RUNES.length],
-              name: m.name,
-              title: m.title,
-              video: m.video || "/num1.mp4"
-            }));
+          processedMonks = limitedData.map((m, i) => ({
+            id: m._id?.toString() || `temp-${i}`,
+            arcana: RUNES[i % RUNES.length],
+            name: m.name,
+            title: m.title,
+            video: m.video || "/num1.mp4"
+          }));
         }
-        
+
         setMonks(processedMonks);
       } catch (e) {
         console.error("Failed to fetch monks for section", e);
@@ -158,7 +159,7 @@ export default function MajesticTarotSection() {
     textColor: "text-cyan-50",
     accentColor: "text-cyan-400",
     borderColor: "border-cyan-400/30",
-    cardBg: "bg-[#0C164F]/80",
+    cardBg: "bg-[#0C164F]/90 md:backdrop-blur-lg",
     glowColor: "rgba(199, 32, 117, 0.4)", // Magenta Glow
     mandalaColor: "text-cyan-500",
     titleGradient: "from-cyan-300 via-[#C72075] to-purple-600"
@@ -166,7 +167,7 @@ export default function MajesticTarotSection() {
     textColor: "text-[#451a03]",
     accentColor: "text-amber-600",
     borderColor: "border-amber-200",
-    cardBg: "bg-[#fffbeb]/90",
+    cardBg: "bg-[#fffbeb]/90 md:backdrop-blur-lg",
     glowColor: "rgba(251,191,36,0.25)",
     mandalaColor: "text-amber-500",
     titleGradient: "from-amber-200 via-amber-500 to-amber-700"
@@ -175,9 +176,9 @@ export default function MajesticTarotSection() {
   return (
     <section className="relative w-full py-40 overflow-hidden font-ethereal transition-colors duration-1000">
       <style>{sectionStyles}</style>
-      
+
       {isNight ? <CosmicBackground /> : <HeavenlyBackground />}
-      
+
       {/* Background Rotating Mandala */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
         <motion.div
@@ -193,14 +194,14 @@ export default function MajesticTarotSection() {
 
       <div className="relative z-10 container mx-auto px-6">
         <header className="flex flex-col items-center text-center mb-32 space-y-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0 }} 
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
             whileInView={{ opacity: 1, scale: 1 }}
             className={`w-16 h-16 rounded-full border flex items-center justify-center mb-4 backdrop-blur-md ${theme.borderColor} ${theme.cardBg}`}
           >
             <ShieldCheck className={theme.accentColor} size={32} strokeWidth={1} />
           </motion.div>
-          
+
           <h2 className={`text-6xl md:text-8xl font-celestial font-light tracking-tighter ${theme.textColor}`}>
             {t({ mn: "Мэргэ", en: "Tarot card" })}{" "}
             <span className={`italic text-transparent bg-clip-text bg-linear-to-b ${theme.titleGradient}`}>
@@ -211,16 +212,16 @@ export default function MajesticTarotSection() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-20 max-w-7xl mx-auto">
-           {monks.map((monk, index) => (
-              <MajesticCard 
-                key={monk.id} 
-                monk={monk} 
-                index={index} 
-                language={language === "mn" ? "mn" : "en"} 
-                theme={theme} 
-                isNight={isNight} 
-              />
-           ))}
+          {monks.map((monk, index) => (
+            <MajesticCard
+              key={monk.id}
+              monk={monk}
+              index={index}
+              language={language === "mn" ? "mn" : "en"}
+              theme={theme}
+              isNight={isNight}
+            />
+          ))}
         </div>
       </div>
     </section>
@@ -253,20 +254,21 @@ function MajesticCard({ monk, index, language, theme, isNight }: { monk: MonkDat
     >
       <motion.div
         style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-        className={`relative w-full h-full rounded-[30px] border transition-all duration-1000 overflow-hidden backdrop-blur-md shadow-2xl ${theme.cardBg} ${theme.borderColor}`}
+        className={`relative w-full h-full rounded-[30px] border transition-all duration-1000 overflow-hidden shadow-2xl ${theme.cardBg} ${theme.borderColor} safari-gpu`}
       >
         <div className="absolute inset-0 z-0">
-          <video autoPlay loop muted playsInline className={`w-full h-full object-cover transition-all duration-[2s] ${isHovered ? "contrast-[1.1] scale-110" : "contrast-100"}`}>
-            <source src={monk.video} type="video/mp4" />
-          </video>
+          <OptimizedVideo
+            src={monk.video}
+            className={`w-full h-full object-cover transition-all duration-[2s] ${isHovered ? "contrast-[1.1] scale-110" : "contrast-100"}`}
+          />
           <div className={`absolute inset-0 bg-linear-to-t from-black via-transparent to-black/40 transition-opacity duration-700 ${isHovered ? "opacity-40" : "opacity-80"}`} />
-          
+
           {/* Cosmic Glow Interaction */}
-          <motion.div 
-            style={{ 
-                background: `radial-gradient(circle at center, ${theme.glowColor} 0%, transparent 70%)`,
-                left: flashX,
-                top: flashY
+          <motion.div
+            style={{
+              background: `radial-gradient(circle at center, ${theme.glowColor} 0%, transparent 70%)`,
+              left: flashX,
+              top: flashY
             }}
             className="absolute w-150 h-150 z-10 pointer-events-none mix-blend-screen blur-xl"
           />
@@ -278,12 +280,12 @@ function MajesticCard({ monk, index, language, theme, isNight }: { monk: MonkDat
         <VikingCorner theme={theme} className="bottom-4 right-4 rotate-180" />
 
         <div className="absolute top-10 left-1/2 -translate-x-1/2 z-30">
-            <motion.div 
-              animate={isHovered ? { y: 5, scale: 1.1, color: "#C72075" } : { y: 0, scale: 1 }}
-              className={`font-celestial text-4xl font-black tracking-[0.2em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] ${theme.accentColor}`}
-            >
-              {monk.arcana}
-            </motion.div>
+          <motion.div
+            animate={isHovered ? { y: 5, scale: 1.1, color: "#C72075" } : { y: 0, scale: 1 }}
+            className={`font-celestial text-4xl font-black tracking-[0.2em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] ${theme.accentColor}`}
+          >
+            {monk.arcana}
+          </motion.div>
         </div>
 
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-end pb-20 px-10 pointer-events-none">
@@ -306,9 +308,9 @@ function MajesticCard({ monk, index, language, theme, isNight }: { monk: MonkDat
 
         {/* Custom Cosmic Cursor */}
         <motion.div style={{ x, y }} className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className={`w-16 h-16 border rounded-full flex items-center justify-center backdrop-blur-sm ${theme.borderColor}`}>
-                <div className={`w-2 h-2 rounded-full animate-ping ${isNight ? 'bg-cyan-400 shadow-[0_0_10px_#50F2CE]' : 'bg-amber-500'}`} />
-            </div>
+          <div className={`w-16 h-16 border rounded-full flex items-center justify-center backdrop-blur-sm ${theme.borderColor}`}>
+            <div className={`w-2 h-2 rounded-full animate-ping ${isNight ? 'bg-cyan-400 shadow-[0_0_10px_#50F2CE]' : 'bg-amber-500'}`} />
+          </div>
         </motion.div>
       </motion.div>
 

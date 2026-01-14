@@ -12,6 +12,7 @@ import {
 import { Search, Calendar, ArrowRight, Play } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
+import OptimizedVideo from "./OptimizedVideo";
 
 export default function Hero() {
   const { language, t } = useLanguage();
@@ -50,15 +51,10 @@ export default function Hero() {
       {/* --- BACKGROUND IMAGE/VIDEO --- */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-linear-to-b from-[#fdfbf7] to-[#fcecd4] md:hidden" />
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
+        <OptimizedVideo
+          src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133484/video_kakyvu.mp4"
           className="hidden md:block w-full h-full object-cover brightness-90 md:brightness-100"
-        >
-          <source src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133484/video_kakyvu.mp4" type="video/mp4" />
-        </video>
+        />
         {/* Cinematic Gradient Overlay to ensure text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent md:from-black/40" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent md:to-black/20 to-transparent" />
@@ -70,7 +66,7 @@ export default function Hero() {
       {/* --- MAIN CONTENT --- */}
       <motion.div
         style={{ y: yContent, opacity: opacityFade }}
-        className="relative z-10 container mx-auto px-6 md:px-12 lg:px-20 pt-28 md:pt-32"
+        className="relative z-10 container mx-auto px-6 md:px-12 lg:px-20 pt-28 md:pt-32 safari-gpu"
       >
         <div className="max-w-4xl space-y-6">
 
@@ -79,7 +75,7 @@ export default function Hero() {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-black text-white leading-[1.1] tracking-tight"
+            className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-black text-white leading-[1.1] tracking-tight safari-gpu"
           >
             <span className="text-[#FFB84D]">{content.highlight}</span> {content.main}
           </motion.h1>
@@ -89,7 +85,7 @@ export default function Hero() {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="max-w-2xl text-lg md:text-2xl text-white/90 font-medium leading-relaxed drop-shadow-md"
+            className="max-w-2xl text-lg md:text-2xl text-white/90 font-medium leading-relaxed drop-shadow-md safari-gpu"
           >
             {content.desc}
           </motion.p>
@@ -99,7 +95,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="pt-8"
+            className="pt-8 safari-gpu"
           >
             <Link href="/services">
               <motion.button

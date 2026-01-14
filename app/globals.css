@@ -30,3 +30,19 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   overflow-x: hidden;
 }
+
+.safari-gpu {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Safari Performance Optimizations */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+img {
+  image-rendering: -webkit-optimize-contrast;
+}

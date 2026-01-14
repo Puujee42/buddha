@@ -5,14 +5,13 @@ import MonkSection from "./components/Monksection";
 import PhilosophySection from "./components/Philosophy";
 import NirvanaComments from "./components/NirvanaComments";
 import GoldenNirvanaFooter from "./components/Footer";
-import SacredAboutPage from "./components/Philosophy";
 
 export default function Home() {
   return (
     <>
       <Navbar />
       <Hero />
-      <SacredAboutPage />
+      <PhilosophySection />
       <NirvanaComments />
     </>
   );

@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+const MotionImage = motion(Image);
 import {
     ArrowLeft, Calendar, Clock, CheckCircle2, Loader2,
     Sparkles, Star, User, ArrowRight, Hourglass, Shield, Info, ChevronDown
@@ -36,12 +38,12 @@ const CosmicBackground = ({ isNight }: { isNight: boolean }) => (
         <motion.div
             animate={{ rotate: 360, scale: [1, 1.2, 1], x: [0, 50, 0] }}
             transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-            className={`absolute top-[-30%] left-[-20%] w-[80vw] h-[80vw] rounded-full blur-[120px] opacity-20 ${isNight ? "bg-cyan-900" : "bg-amber-200"}`}
+            className={`absolute top-[-30%] left-[-20%] w-[80vw] h-[80vw] rounded-full blur-[120px] opacity-20 safari-gpu ${isNight ? "bg-cyan-900" : "bg-amber-200"}`}
         />
         <motion.div
             animate={{ rotate: -360, scale: [1, 1.3, 1], x: [0, -50, 0] }}
             transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
-            className={`absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 ${isNight ? "bg-fuchsia-900" : "bg-orange-100"}`}
+            className={`absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 safari-gpu ${isNight ? "bg-fuchsia-900" : "bg-orange-100"}`}
         />
         <div className="absolute inset-0 opacity-[0.04] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
     </div>
@@ -87,8 +89,8 @@ const ServiceTicket = ({ service, monkName, theme, lang }: any) => (
                             {monkName}
                         </span>
                         <motion.span
-                            initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ delay: 1, duration: 0.8 }}
-                            className="absolute -bottom-1 left-0 h-[1px] bg-gradient-to-r from-current to-transparent opacity-50"
+                            initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 1, duration: 0.8 }}
+                            className="absolute -bottom-1 left-0 w-full h-[1px] bg-gradient-to-r from-current to-transparent opacity-50 origin-left safari-gpu"
                         />
                     </div>
                     <div className={`p-1 rounded-full bg-yellow-500/10 text-yellow-600`}>
@@ -133,8 +135,8 @@ const InfoItem = ({ icon, title, text, theme }: any) => {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="overflow-hidden safari-gpu"
                     >
                         <p className={`pb-4 pl-12 text-sm leading-relaxed opacity-60 ${theme.text}`}>{text}</p>
                     </motion.div>
@@ -278,7 +280,7 @@ export default function RitualBookingPage() {
     }, [lang]);
 
     const times = useMemo(() => [
-        "9:00","9:30","10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
+        "9:00", "9:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
         "16:00", "16:30", "17:00", "17:30", "18:00"
     ], []);
 
@@ -377,9 +379,10 @@ export default function RitualBookingPage() {
                         >
                             <div className={`absolute inset-0 bg-gradient-to-t ${isNight ? "from-[#020617]" : "from-[#451a03]"} via-transparent to-transparent opacity-80 z-10 transition-opacity group-hover:opacity-60`} />
 
-                            <motion.img
+                            <MotionImage
                                 src={selectedMonk?.image || "/default-monk.jpg"}
                                 alt="Monk"
+                                fill
                                 className="w-full h-full object-cover"
                                 animate={{ scale: [1, 1.05, 1] }}
                                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
@@ -598,10 +601,10 @@ export default function RitualBookingPage() {
                                             <AnimatePresence>
                                                 {selectedDateIndex !== null && (
                                                     <motion.section
-                                                        initial={{ opacity: 0, height: 0 }}
-                                                        animate={{ opacity: 1, height: "auto" }}
-                                                        exit={{ opacity: 0, height: 0 }}
-                                                        className="space-y-6 overflow-hidden"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        exit={{ opacity: 0 }}
+                                                        className="space-y-6 overflow-hidden safari-gpu"
                                                     >
                                                         <h4 className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] opacity-60 ${theme.text}`}>
                                                             <Clock size={14} /> {t({ mn: "II. Цаг Сонгох", en: "II. Select Time" })}
@@ -649,9 +652,9 @@ export default function RitualBookingPage() {
                                             <AnimatePresence>
                                                 {selectedTime && (
                                                     <motion.section
-                                                        initial={{ opacity: 0, height: 0, y: 20 }}
-                                                        animate={{ opacity: 1, height: "auto", y: 0 }}
-                                                        className={`space-y-8 pt-8 border-t ${theme.borderColor}`}
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        className={`space-y-8 pt-8 border-t ${theme.borderColor} safari-gpu`}
                                                     >
                                                         <div className={`rounded-2xl border ${theme.borderColor} p-1`}>
                                                             <InfoItem

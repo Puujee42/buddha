@@ -136,9 +136,9 @@ export default function ChatWindow({
 
       {/* Messages Area */}
       <div
-        className="flex-1 overflow-y-auto p-4 space-y-6 bg-stone-50 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent will-change-transform touch-pan-y"
+        className="flex-1 overflow-y-auto p-4 space-y-6 bg-stone-50 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent touch-pan-y"
         ref={scrollRef}
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        style={{ WebkitOverflowScrolling: 'touch', transform: 'translate3d(0,0,0)' }}
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-stone-400">

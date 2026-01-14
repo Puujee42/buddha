@@ -37,7 +37,7 @@ const CosmicDust = ({ isDark }: { isDark: boolean }) => (
           ease: "linear",
           delay: Math.random() * 5
         }}
-        className={`absolute w-1 h-1 rounded-full ${isDark ? 'bg-cyan-200' : 'bg-amber-400'}`}
+        className={`absolute w-1 h-1 rounded-full safari-gpu ${isDark ? 'bg-cyan-200' : 'bg-amber-400'}`}
         style={{ left: `${Math.random() * 100}%` }}
       />
     ))}
@@ -305,7 +305,7 @@ function DivineCard({ monk, index, isDark, lang }: { monk: Monk, index: number, 
         <motion.div
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
           className={`
-            relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] border transition-colors duration-500 overflow-hidden shadow-2xl
+            relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] border transition-colors duration-500 overflow-hidden shadow-2xl safari-gpu
             ${isDark
               ? "bg-[#0a0a20] border-cyan-500/30 shadow-[0_0_50px_-10px_rgba(8,145,178,0.3)]"
               : "bg-white border-amber-200 shadow-[0_20px_60px_-10px_rgba(245,158,11,0.2)]"
@@ -410,7 +410,7 @@ function DivineCard({ monk, index, isDark, lang }: { monk: Monk, index: number, 
                 <motion.div
                   animate={{ x: ["-100%", "200%"] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+                  className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 safari-gpu"
                 />
 
                 <div className="text-left relative z-10">

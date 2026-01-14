@@ -7,6 +7,7 @@ import {
     motion,
     AnimatePresence,
 } from "framer-motion";
+import Image from "next/image";
 import {
     ArrowLeft, Calendar, Clock, CheckCircle2, Loader2, Sparkles,
     ArrowRight, Stars, User, Mail, PenTool, Info, Shield, Hourglass, CreditCard, ChevronDown, LayoutGrid
@@ -32,12 +33,12 @@ const CosmicBackground = ({ isNight }: { isNight: boolean }) => (
         <motion.div
             animate={{ rotate: 360, scale: [1, 1.1, 1] }}
             transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
-            className={`absolute top-[-40%] right-[-20%] w-[80vw] h-[80vw] rounded-full blur-[120px] opacity-20 ${isNight ? "bg-indigo-900" : "bg-amber-200"}`}
+            className={`absolute top-[-40%] right-[-20%] w-[80vw] h-[80vw] rounded-full blur-[120px] opacity-20 safari-gpu ${isNight ? "bg-indigo-900" : "bg-amber-200"}`}
         />
         <motion.div
             animate={{ rotate: -360, scale: [1, 1.2, 1] }}
             transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
-            className={`absolute bottom-[-20%] left-[-20%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 ${isNight ? "bg-fuchsia-900" : "bg-orange-100"}`}
+            className={`absolute bottom-[-20%] left-[-20%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 safari-gpu ${isNight ? "bg-fuchsia-900" : "bg-orange-100"}`}
         />
         <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
     </div>
@@ -100,8 +101,8 @@ const InfoItem = ({ icon, title, text, theme }: any) => {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="overflow-hidden safari-gpu"
                     >
                         <p className="pb-4 pl-12 text-sm leading-relaxed opacity-60">{text}</p>
                     </motion.div>
@@ -297,7 +298,7 @@ export default function MonkBookingPage() {
 
                         {/* 3D Monk Card */}
                         <div className="relative aspect-[3/4] rounded-[30px] overflow-hidden shadow-2xl border-2 border-white/20 group">
-                            <img src={monk!.image} alt={monk!.name[lang]} className="w-full h-full object-cover transform transition-transform duration-[1.5s] group-hover:scale-105" />
+                            <Image src={monk!.image} alt={monk!.name[lang]} fill className="w-full h-full object-cover transform transition-transform duration-[1.5s] group-hover:scale-105" />
                             <div className={`absolute inset-0 bg-gradient-to-t ${isNight ? "from-[#020617]" : "from-[#451a03]"} via-transparent to-transparent opacity-90`} />
                             <div className="absolute bottom-0 left-0 w-full p-8 text-center">
                                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/70 mb-2">{monk!.title[lang]}</p>
@@ -324,7 +325,7 @@ export default function MonkBookingPage() {
                     <div className="lg:col-span-8">
                         <motion.div
                             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                            className={`relative rounded-[40px] border backdrop-blur-3xl shadow-2xl overflow-hidden ${theme.glassPanel}`}
+                            className={`relative rounded-[40px] border backdrop-blur-3xl shadow-2xl overflow-hidden safari-gpu ${theme.glassPanel}`}
                         >
                             <div className="p-8 md:p-10 space-y-10">
 
@@ -505,9 +506,9 @@ export default function MonkBookingPage() {
                                                     <AnimatePresence>
                                                         {selectedTime && (
                                                             <motion.section
-                                                                initial={{ height: 0, opacity: 0 }}
-                                                                animate={{ height: "auto", opacity: 1 }}
-                                                                className="space-y-8 pt-8 border-t border-current/10"
+                                                                initial={{ opacity: 0 }}
+                                                                animate={{ opacity: 1 }}
+                                                                className="space-y-8 pt-8 border-t border-current/10 safari-gpu"
                                                             >
                                                                 {/* PROTOCOLS ACCORDION */}
                                                                 <div className="rounded-2xl border border-current/10 p-2">

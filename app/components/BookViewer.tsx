@@ -124,9 +124,10 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
                                     <AnimatePresence>
                                         {expandedCategories.includes(cat.category) && (
                                             <motion.div
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: "auto" }}
-                                                exit={{ opacity: 0, height: 0 }}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                style={{ transform: "translate3d(0,0,0)" }}
                                                 className="bg-stone-900 border-l-2 border-stone-800"
                                             >
                                                 {cat.items.map((item, i) => (
@@ -226,7 +227,8 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    className="absolute inset-0 z-50 bg-stone-950/95 backdrop-blur-sm will-change-transform"
+                    className="absolute inset-0 z-50 bg-stone-950/95 backdrop-blur-sm"
+                    style={{ transform: "translate3d(0,0,0)" }}
                 >
                     <div className="w-full h-full flex flex-col overflow-hidden">
                         {content}
@@ -238,11 +240,12 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
         // DESKTOP SIDEBAR MODE (Relative, Fixed Width)
         return (
             <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: "350px", opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-                className="h-full shrink-0 overflow-hidden border-l border-stone-800 shadow-2xl relative z-40 will-change-[width,opacity]"
+                className="h-full shrink-0 overflow-hidden border-l border-stone-800 shadow-2xl relative z-40"
+                style={{ width: isMobile ? "100%" : "350px", transform: "translate3d(0,0,0)" }}
             >
                 <div className="w-[350px] h-full overflow-hidden">
                     {content}
@@ -363,9 +366,10 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
                                             <AnimatePresence>
                                                 {expandedCategories.includes(cat.category) && (
                                                     <motion.div
-                                                        initial={{ opacity: 0, height: 0 }}
-                                                        animate={{ opacity: 1, height: "auto" }}
-                                                        exit={{ opacity: 0, height: 0 }}
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        exit={{ opacity: 0 }}
+                                                        style={{ transform: "translate3d(0,0,0)" }}
                                                         className="bg-stone-900 border-l-2 border-stone-800"
                                                     >
                                                         {cat.items.map((item, i) => (
