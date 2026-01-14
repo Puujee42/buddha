@@ -308,7 +308,7 @@ function ActualAboutContent() {
                 <SpotlightCard theme={theme} className="rounded-[4rem]">
                   <div className="aspect-[4/5] relative">
                     <OptimizedVideo
-                      src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133950/num2_ocygii.mp4"
+                      src="https://res.cloudinary.com/dxoxdiuwr/video/upload/f_auto,q_auto,w_1080/v1768133950/num2_ocygii.mp4"
                       className="w-full h-full object-cover transition-all duration-1000 ease-out"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />

@@ -59,6 +59,17 @@ const OptimizedVideo: React.FC<OptimizedVideoProps> = ({
         }
     }, [isInView]);
 
+    const getOptimizedCloudinaryUrl = (url: string) => {
+        if (url.includes("cloudinary.com") && url.includes("/upload/")) {
+            // Check if it already has transformations
+            if (url.includes("/upload/f_auto") || url.includes("/upload/q_auto")) {
+                return url;
+            }
+            return url.replace("/upload/", "/upload/f_auto,q_auto,w_1080/");
+        }
+        return url;
+    };
+
     return (
         <video
             ref={videoRef}
@@ -70,7 +81,7 @@ const OptimizedVideo: React.FC<OptimizedVideoProps> = ({
             preload="metadata"
             style={{ pointerEvents: "none" }}
         >
-            {isInView && <source src={src} type="video/mp4" />}
+            {isInView && <source src={getOptimizedCloudinaryUrl(src)} type="video/mp4" />}
         </video>
     );
 };
