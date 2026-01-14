@@ -33,12 +33,12 @@ const CosmicBackground = ({ isNight }: { isNight: boolean }) => (
         <motion.div
             animate={{ rotate: 360, scale: [1, 1.1, 1] }}
             transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
-            className={`absolute top-[-40%] right-[-20%] w-[80vw] h-[80vw] rounded-full blur-[120px] opacity-20 safari-gpu ${isNight ? "bg-indigo-900" : "bg-amber-200"}`}
+            className={`absolute top-[-40%] right-[-20%] w-[80vw] h-[80vw] rounded-full blur-[40px] opacity-20 ${isNight ? "bg-indigo-900" : "bg-amber-200"}`}
         />
         <motion.div
             animate={{ rotate: -360, scale: [1, 1.2, 1] }}
             transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
-            className={`absolute bottom-[-20%] left-[-20%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 safari-gpu ${isNight ? "bg-fuchsia-900" : "bg-orange-100"}`}
+            className={`absolute bottom-[-20%] left-[-20%] w-[60vw] h-[60vw] rounded-full blur-[50px] opacity-20 ${isNight ? "bg-fuchsia-900" : "bg-orange-100"}`}
         />
         <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
     </div>
@@ -47,7 +47,7 @@ const CosmicBackground = ({ isNight }: { isNight: boolean }) => (
 // --- COMPONENT: SERVICE TICKET (The Informative Hero) ---
 const ServiceTicket = ({ service, theme, t, lang }: any) => (
     <div className="relative group perspective-[1000px] mb-8">
-        <div className={`absolute inset-0 bg-gradient-to-r ${theme.accentGradient} opacity-20 blur-xl group-hover:opacity-30 transition-opacity`} />
+        <div className={`absolute inset-0 bg-gradient-to-r ${theme.accentGradient} opacity-20 blur-lg group-hover:opacity-30 transition-opacity`} />
         <div className={`relative p-6 rounded-[2rem] border overflow-hidden backdrop-blur-md transition-all duration-500 ${theme.ticketBg} ${theme.border}`}>
 
             {/* Ticket Perforations Decoration */}
@@ -102,7 +102,7 @@ const InfoItem = ({ icon, title, text, theme }: any) => {
                 {isOpen && (
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="overflow-hidden safari-gpu"
+                        className="overflow-hidden"
                     >
                         <p className="pb-4 pl-12 text-sm leading-relaxed opacity-60">{text}</p>
                     </motion.div>
@@ -325,7 +325,7 @@ export default function MonkBookingPage() {
                     <div className="lg:col-span-8">
                         <motion.div
                             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                            className={`relative rounded-[40px] border backdrop-blur-3xl shadow-2xl overflow-hidden safari-gpu ${theme.glassPanel}`}
+                            className={`relative rounded-[40px] border backdrop-blur-xl shadow-2xl overflow-hidden ${theme.glassPanel}`}
                         >
                             <div className="p-8 md:p-10 space-y-10">
 
@@ -508,7 +508,7 @@ export default function MonkBookingPage() {
                                                             <motion.section
                                                                 initial={{ opacity: 0 }}
                                                                 animate={{ opacity: 1 }}
-                                                                className="space-y-8 pt-8 border-t border-current/10 safari-gpu"
+                                                                className="space-y-8 pt-8 border-t border-current/10"
                                                             >
                                                                 {/* PROTOCOLS ACCORDION */}
                                                                 <div className="rounded-2xl border border-current/10 p-2">

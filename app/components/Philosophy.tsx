@@ -110,7 +110,7 @@ const RevealText = ({ text, delay = 0, className = "" }: { text: string; delay?:
         whileInView={{ y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay }}
-        className="inline-block safari-gpu"
+        className="inline-block"
       >
         {text}
       </motion.span>
@@ -135,8 +135,8 @@ const ParallaxBackground = React.memo(({ isDark }: { isDark: boolean }) => {
 
       {/* Moving Gradient Orbs */}
       <motion.div style={{ y }} className="absolute inset-0">
-        <div className={`absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[64px] opacity-20 ${orbColor1} will-change-transform`} />
-        <div className={`absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[80px] opacity-20 ${orbColor2} will-change-transform`} />
+        <div className={`absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[32px] opacity-20 ${orbColor1} will-change-transform`} />
+        <div className={`absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[40px] opacity-20 ${orbColor2} will-change-transform`} />
       </motion.div>
     </div>
   );
@@ -252,7 +252,7 @@ function ActualAboutContent() {
               <div className="flex items-center gap-4 mb-8">
                 <motion.div
                   initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.5, duration: 0.8 }}
-                  className={`h-[2px] w-12 origin-left ${theme.accentText} bg-current safari-gpu`}
+                  className={`h-[2px] w-12 origin-left ${theme.accentText} bg-current`}
                 />
                 <RevealText text={t.badge} delay={0.8} className="text-[11px] uppercase tracking-[0.4em] font-black" />
               </div>
@@ -265,7 +265,7 @@ function ActualAboutContent() {
 
               <motion.p
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-                className={`max-w-md text-base md:text-xl font-sans tracking-wide leading-relaxed mb-12 ${theme.mutedText} safari-gpu`}
+                className={`max-w-md text-base md:text-xl font-sans tracking-wide leading-relaxed mb-12 ${theme.mutedText}`}
               >
                 {t.subheadline}
               </motion.p>
@@ -284,7 +284,7 @@ function ActualAboutContent() {
 
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.5 }}
-                  className="flex items-center gap-4 pl-8 border-l border-current/20 safari-gpu"
+                  className="flex items-center gap-4 pl-8 border-l border-current/20"
                 >
                   <div className="flex -space-x-4">
                     {[1, 2, 3].map(i => (

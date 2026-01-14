@@ -40,7 +40,7 @@ export default function SplashScreen() {
                             }}
                             className="relative w-32 h-32 md:w-40 md:h-40 mb-8"
                         >
-                            <div className="absolute inset-x-0 inset-y-0 bg-orange-100 rounded-full blur-2xl opacity-40 animate-pulse" />
+                            <div className="absolute inset-x-0 inset-y-0 bg-orange-100/50 rounded-full scale-110" />
                             <div className="relative w-full h-full">
                                 <Image
                                     src="/logo.png"
