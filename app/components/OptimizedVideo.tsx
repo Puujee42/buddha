@@ -23,14 +23,18 @@ const OptimizedVideo: React.FC<OptimizedVideoProps> = ({
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isInView, setIsInView] = useState(false);
+    const [hasStartedLoading, setHasStartedLoading] = useState(false);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             ([entry]) => {
                 setIsInView(entry.isIntersecting);
+                if (entry.isIntersecting) {
+                    setHasStartedLoading(true);
+                }
             },
             {
-                rootMargin: "200px", // Preload when 200px near
+                rootMargin: "100px", // Preload when 100px near (reduced for performance)
                 threshold: 0.01,
             }
         );
@@ -61,27 +65,38 @@ const OptimizedVideo: React.FC<OptimizedVideoProps> = ({
 
     const getOptimizedCloudinaryUrl = (url: string) => {
         if (url.includes("cloudinary.com") && url.includes("/upload/")) {
-            // Check if it already has transformations
-            if (url.includes("/upload/f_auto") || url.includes("/upload/q_auto")) {
+            // Force mp4 and h264 for lowest CPU usage
+            if (url.includes("/upload/f_mp4,vc_h264")) {
                 return url;
             }
-            return url.replace("/upload/", "/upload/f_auto,q_auto,w_1080/");
+            // Replace any existing transformations or just the /upload/ part
+            const regex = /\/upload\/(?:[^\/]+\/)?/;
+            return url.replace(regex, "/upload/f_mp4,vc_h264,q_auto,w_1080/");
         }
         return url;
+    };
+
+    const getCloudinaryPoster = (url: string) => {
+        if (url.includes("cloudinary.com") && url.includes("/upload/")) {
+            const regex = /\/upload\/(?:[^\/]+\/)?/;
+            // Generate a poster from the first frame (so_0)
+            return url.replace(regex, "/upload/so_0,f_auto,q_auto,pg_1,w_1080/").replace(/\.[^/.]+$/, ".jpg");
+        }
+        return poster;
     };
 
     return (
         <video
             ref={videoRef}
             className={className}
-            poster={poster}
+            poster={getCloudinaryPoster(src)}
             muted={muted}
             loop={loop}
             playsInline={playsInline}
-            preload="metadata"
+            preload={hasStartedLoading ? "metadata" : "none"}
             style={{ pointerEvents: "none" }}
         >
-            {isInView && <source src={getOptimizedCloudinaryUrl(src)} type="video/mp4" />}
+            {hasStartedLoading && <source src={getOptimizedCloudinaryUrl(src)} type="video/mp4" />}
         </video>
     );
 };

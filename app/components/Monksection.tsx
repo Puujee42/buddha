@@ -63,8 +63,8 @@ const CosmicBackground: React.FC = () => (
         opacity: [0.1, 0.2, 0.1]
       }}
       transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-      className="absolute top-[-10%] left-[-10%] w-[100vw] h-[100vw] rounded-full blur-[120px]"
-      style={{ background: "radial-gradient(circle, #C72075 0%, transparent 70%)" }}
+      className="absolute top-[-10%] left-[-10%] w-[100vw] h-[100vw] rounded-full blur-[64px]"
+      style={{ background: "radial-gradient(circle, #C72075 0%, transparent 70%)", willChange: "transform, opacity" }}
     />
 
     {/* Stars & Pulsing Dust */}
@@ -75,8 +75,8 @@ const CosmicBackground: React.FC = () => (
           opacity: [0.2, 1, 0.2],
           scale: [0.5, 1.2, 0.5]
         }}
-        transition={{ duration: 3 + (i % 5), repeat: Infinity, delay: i * 0.1 }}
-        className={`absolute rounded-full shadow-[0_0_8px_white] ${i % 3 === 0 ? "w-[2px] h-[2px] bg-cyan-300" : "w-[1px] h-[1px] bg-white"}`}
+        transition={{ duration: 4 + (i % 3), repeat: Infinity, delay: i * 0.2 }}
+        className={`absolute rounded-full ${i % 3 === 0 ? "w-[2px] h-[2px] bg-cyan-300" : "w-[1px] h-[1px] bg-white"} opacity-40`}
         style={{ top: `${(i * 19) % 100}%`, left: `${(i * 13) % 100}%` }}
       />
     ))}

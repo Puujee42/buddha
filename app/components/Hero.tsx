@@ -52,7 +52,7 @@ export default function Hero() {
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-linear-to-b from-[#fdfbf7] to-[#fcecd4] md:hidden" />
         <OptimizedVideo
-          src="https://res.cloudinary.com/dxoxdiuwr/video/upload/f_auto,q_auto,w_1080/v1768133484/video_kakyvu.mp4"
+          src="https://res.cloudinary.com/dxoxdiuwr/video/upload/f_mp4,vc_h264,q_auto,w_1080/v1768133484/video_kakyvu.mp4"
           className="hidden md:block w-full h-full object-cover brightness-90 md:brightness-100"
         />
         {/* Cinematic Gradient Overlay to ensure text readability */}

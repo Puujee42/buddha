@@ -67,25 +67,31 @@ const SpotlightCard = ({ children, className = "", theme }: { children: React.Re
  */
 const MagneticButton = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 150, damping: 15, mass: 0.1 });
+  const springY = useSpring(y, { stiffness: 150, damping: 15, mass: 0.1 });
 
   const handleMouse = (e: React.MouseEvent) => {
     const { clientX, clientY } = e;
     const { height, width, left, top } = ref.current!.getBoundingClientRect();
     const middleX = clientX - (left + width / 2);
     const middleY = clientY - (top + height / 2);
-    setPosition({ x: middleX * 0.2, y: middleY * 0.2 });
+    x.set(middleX * 0.2);
+    y.set(middleY * 0.2);
   };
 
-  const reset = () => setPosition({ x: 0, y: 0 });
+  const reset = () => {
+    x.set(0);
+    y.set(0);
+  };
 
   return (
     <motion.div
       ref={ref}
       onMouseMove={handleMouse}
       onMouseLeave={reset}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+      style={{ x: springX, y: springY }}
       className={`${className} safari-gpu`}
     >
       {children}
@@ -129,8 +135,8 @@ const ParallaxBackground = React.memo(({ isDark }: { isDark: boolean }) => {
 
       {/* Moving Gradient Orbs */}
       <motion.div style={{ y }} className="absolute inset-0">
-        <div className={`absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-20 ${orbColor1}`} />
-        <div className={`absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-20 ${orbColor2}`} />
+        <div className={`absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[64px] opacity-20 ${orbColor1} will-change-transform`} />
+        <div className={`absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[80px] opacity-20 ${orbColor2} will-change-transform`} />
       </motion.div>
     </div>
   );
@@ -308,7 +314,7 @@ function ActualAboutContent() {
                 <SpotlightCard theme={theme} className="rounded-[4rem]">
                   <div className="aspect-[4/5] relative">
                     <OptimizedVideo
-                      src="https://res.cloudinary.com/dxoxdiuwr/video/upload/f_auto,q_auto,w_1080/v1768133950/num2_ocygii.mp4"
+                      src="https://res.cloudinary.com/dxoxdiuwr/video/upload/f_mp4,vc_h264,q_auto,w_1080/v1768133950/num2_ocygii.mp4"
                       className="w-full h-full object-cover transition-all duration-1000 ease-out"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />

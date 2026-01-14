@@ -6,6 +6,7 @@ import { LanguageProvider } from './contexts/LanguageContext'
 import { ThemeProvider } from 'next-themes'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import SplashScreen from './components/SplashScreen'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -41,6 +42,7 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
           <body className={`${playfair.variable} ${lato.variable} font-sans`}>
             <ThemeProvider attribute="class" forcedTheme="light" defaultTheme="light" enableSystem={false}>
+              <SplashScreen />
               {children}
               <Footer />
             </ThemeProvider>

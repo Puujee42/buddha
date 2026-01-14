@@ -97,7 +97,7 @@ export default function GoldenNirvanaFooter() {
                   <circle cx="50" cy="50" r="48" stroke="currentColor" strokeWidth="0.05" fill="none" />
                   <circle cx="50" cy="50" r="35" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1 2" fill="none" />
                   {[...Array(12)].map((_, i) => (
-                     <line key={i} x1="50" y1="50" x2={50 + 48 * Math.cos(i * Math.PI / 6)} y2={50 + 48 * Math.sin(i * Math.PI / 6)} stroke="currentColor" strokeWidth="0.05" />
+                     <line key={i} x1="50" y1="50" x2={(50 + 48 * Math.cos(i * Math.PI / 6)).toFixed(4)} y2={(50 + 48 * Math.sin(i * Math.PI / 6)).toFixed(4)} stroke="currentColor" strokeWidth="0.05" />
                   ))}
                </svg>
             </div>
@@ -139,8 +139,8 @@ export default function GoldenNirvanaFooter() {
                            type="email"
                            placeholder={content.emailPlaceholder}
                            className={`w-full pl-14 pr-8 py-5 rounded-2xl outline-none transition-all duration-500 font-medium ${isDark
-                                 ? "bg-black/40 border-cyan-800 text-white placeholder-cyan-400/30 focus:border-cyan-400"
-                                 : "bg-white border-[#FDE68A] text-[#451a03] placeholder-[#B45309]/40 focus:border-[#F59E0B]"
+                              ? "bg-black/40 border-cyan-800 text-white placeholder-cyan-400/30 focus:border-cyan-400"
+                              : "bg-white border-[#FDE68A] text-[#451a03] placeholder-[#B45309]/40 focus:border-[#F59E0B]"
                               } border`}
                         />
                      </div>
