@@ -91,7 +91,7 @@ export default function OverlayNavbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-4 group">
             <div className="relative w-11 h-11 overflow-hidden rounded-full border-2 border-amber-500/20 shadow-inner">
-              <Image src="/logo.png" alt="Logo" fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+              <Image src="/logo.png" alt="Logo" fill sizes="44px" className="object-cover group-hover:scale-110 transition-transform duration-500" />
             </div>
             <span className="font-serif font-black text-2xl tracking-tighter">{CONTENT.logo[lang]}</span>
           </Link>
@@ -147,7 +147,7 @@ export default function OverlayNavbar() {
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 px-5 py-4 flex justify-between items-center pointer-events-none">
         <Link href="/" className="pointer-events-auto">
           <div className="p-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/30 shadow-2xl">
-            <Image src="/logo.png" alt="Logo" width={38} height={38} className="rounded-full" />
+            <Image src="/logo.png" alt="Logo" width={38} height={38} sizes="38px" className="rounded-full" />
           </div>
         </Link>
 

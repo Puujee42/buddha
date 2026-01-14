@@ -259,6 +259,8 @@ function MajesticCard({ monk, index, language, theme, isNight }: { monk: MonkDat
         <div className="absolute inset-0 z-0">
           <OptimizedVideo
             src={monk.video}
+            width={400}
+            height={700}
             className={`w-full h-full object-cover transition-all duration-[2s] ${isHovered ? "contrast-[1.1] scale-110" : "contrast-100"}`}
           />
           <div className={`absolute inset-0 bg-linear-to-t from-black via-transparent to-black/40 transition-opacity duration-700 ${isHovered ? "opacity-40" : "opacity-80"}`} />

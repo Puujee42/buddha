@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { CldVideoPlayer } from "next-cloudinary";
 
 interface OptimizedVideoProps {
     src: string;
@@ -10,6 +11,9 @@ interface OptimizedVideoProps {
     loop?: boolean;
     muted?: boolean;
     playsInline?: boolean;
+    width?: number;
+    height?: number;
+    id?: string;
 }
 
 const OptimizedVideo: React.FC<OptimizedVideoProps> = ({
@@ -20,84 +24,56 @@ const OptimizedVideo: React.FC<OptimizedVideoProps> = ({
     loop = true,
     muted = true,
     playsInline = true,
+    width = 1080,
+    height = 607,
+    id,
 }) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const [isInView, setIsInView] = useState(false);
-    const [hasStartedLoading, setHasStartedLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                setIsInView(entry.isIntersecting);
-                if (entry.isIntersecting) {
-                    setHasStartedLoading(true);
-                }
-            },
-            {
-                rootMargin: "100px", // Preload when 100px near (reduced for performance)
-                threshold: 0.01,
-            }
-        );
-
-        if (videoRef.current) {
-            observer.observe(videoRef.current);
-        }
-
-        return () => {
-            if (videoRef.current) {
-                observer.unobserve(videoRef.current);
-            }
-        };
+        setMounted(true);
     }, []);
 
-    useEffect(() => {
-        if (!videoRef.current) return;
-
-        if (isInView) {
-            videoRef.current.play().catch((err) => {
-                // Handle autoplay policy issues
-                console.warn("Video play failed:", err);
-            });
-        } else {
-            videoRef.current.pause();
-        }
-    }, [isInView]);
-
-    const getOptimizedCloudinaryUrl = (url: string) => {
-        if (url.includes("cloudinary.com") && url.includes("/upload/")) {
-            // Force mp4 and h264 for lowest CPU usage
-            if (url.includes("/upload/f_mp4,vc_h264")) {
-                return url;
-            }
-            // Replace any existing transformations or just the /upload/ part
-            const regex = /\/upload\/(?:[^\/]+\/)?/;
-            return url.replace(regex, "/upload/f_mp4,vc_h264,q_auto,w_1080/");
-        }
-        return url;
+    const getPublicId = (url: string) => {
+        if (!url.includes("cloudinary.com")) return url;
+        const parts = url.split("/upload/");
+        if (parts.length < 2) return url;
+        // Extract public ID by removing version (vXXXX/) and extension
+        return parts[1].replace(/^v\d+\//, "").replace(/\.[^/.]+$/, "");
     };
 
-    const getCloudinaryPoster = (url: string) => {
-        if (url.includes("cloudinary.com") && url.includes("/upload/")) {
-            const regex = /\/upload\/(?:[^\/]+\/)?/;
-            // Generate a poster from the first frame (so_0)
-            return url.replace(regex, "/upload/so_0,f_auto,q_auto,pg_1,w_1080/").replace(/\.[^/.]+$/, ".jpg");
-        }
-        return poster;
-    };
+    const publicId = getPublicId(src);
+
+    if (!mounted) return <div className={className} style={{ width, height, backgroundColor: '#000' }} />;
+
+    // Extract the cloud name from the URL if it's there, otherwise it will use the env default
+    const cloudName = src.includes("cloudinary.com") ? src.split("res.cloudinary.com/")[1]?.split("/")[0] : undefined;
 
     return (
-        <video
-            ref={videoRef}
-            className={className}
-            poster={getCloudinaryPoster(src)}
-            muted={muted}
+        <CldVideoPlayer
+            id={id || `video-${publicId}`}
+            width={width}
+            height={height}
+            src={publicId}
+            sourceTypes={['mp4']}
+            autoplay={autoPlay}
             loop={loop}
-            playsInline={playsInline}
-            preload={hasStartedLoading ? "metadata" : "none"}
-            style={{ pointerEvents: "none" }}
-        >
-            {hasStartedLoading && <source src={getOptimizedCloudinaryUrl(src)} type="video/mp4" />}
-        </video>
+            muted={muted}
+            playsinline={playsInline}
+            controls={!autoPlay}
+            className={className}
+            config={{
+                cloud: {
+                    cloudName: cloudName || "dxoxdiuwr"
+                }
+            }}
+            transformation={{
+                width: width,
+                height: height,
+                crop: 'fill',
+                gravity: 'center'
+            }}
+        />
     );
 };
 

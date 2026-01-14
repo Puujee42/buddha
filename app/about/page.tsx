@@ -18,6 +18,7 @@ import {
 import OverlayNavbar from "../components/Navbar";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "next-themes";
+import OptimizedVideo from "../components/OptimizedVideo";
 
 // ==========================================
 // 1. AESTHETIC UTILS
@@ -149,9 +150,12 @@ export default function AboutPage() {
             <section className="relative h-screen w-full overflow-hidden flex items-center justify-center">
               {/* Background Video Parallax */}
               <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0 z-0">
-                <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-60">
-                  <source src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133950/num2_ocygii.mp4" type="video/mp4" />
-                </video>
+                <OptimizedVideo
+                  src="https://res.cloudinary.com/dxoxdiuwr/video/upload/v1768133950/num2_ocygii.mp4"
+                  width={1920}
+                  height={1080}
+                  className="w-full h-full object-cover opacity-60"
+                />
               </motion.div>
 
               {/* Gradient Overlays (Matches original theme colors) */}
