@@ -156,9 +156,9 @@ export default function SignUpPage() {
         router.push("/dashboard");
       } else if (result.status === "needs_first_factor") {
         // Check if phone_code is available
-        const phoneFactor = result.supportedFirstFactors.find(
+        const phoneFactor = result.supportedFirstFactors?.find(
           (factor: any) => factor.strategy === "phone_code"
-        );
+        ) as any;
 
         if (phoneFactor) {
           // Send OTP
