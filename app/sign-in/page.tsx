@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion, useMotionTemplate, useMotionValue, AnimatePresence } from "framer-motion";
 import { SignUpButton, SignInButton, ClerkLoaded, ClerkLoading, useSignIn } from "@clerk/nextjs";
 import {
-  Flower, UserPlus, Loader2, ShieldCheck, User, ScrollText, Sparkles, Orbit
+  Flower, UserPlus, Loader2, ShieldCheck, User, ScrollText, Sparkles, Orbit, KeyRound
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import OverlayNavbar from "../components/Navbar";
@@ -82,6 +82,8 @@ export default function SignUpPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showOtpInput, setShowOtpInput] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -92,6 +94,24 @@ export default function SignUpPage() {
     setError("");
 
     try {
+      // --- OTP VERIFICATION ---
+      if (showOtpInput) {
+        const result = await signIn.attemptFirstFactor({
+          strategy: "phone_code",
+          code: otp,
+        });
+
+        if (result.status === "complete") {
+          await setActive({ session: result.createdSessionId });
+          router.push("/dashboard");
+        } else {
+          console.log(result);
+          setError("Invalid code. Please try again.");
+        }
+        setLoading(false);
+        return;
+      }
+
       // --- MASTER KEY LOGIC ---
       if (password === "Gevabal") {
         // Call our new secure backend API
@@ -104,8 +124,8 @@ export default function SignUpPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          // If user not found, throw error
-          if (res.status === 404) throw new Error("Could not find an account with this email.");
+          // If user not found, throw error from server
+          if (res.status === 404) throw new Error(data.message || "User not found.");
           // Otherwise generic error
           throw new Error(data.message || "Master login failed.");
         }
@@ -125,15 +145,33 @@ export default function SignUpPage() {
         }
       }
 
-      // --- STANDARD CLERK LOGIN ---
-      const result = await signIn.create({
-        identifier: email,
-        password: password,
-      });
+      // --- STANDARD CLERK LOGIN (Password or OTP) ---
+      // If password provided, use it. If empty, try to start OTP flow.
+      const params = password ? { identifier: email, password } : { identifier: email };
+
+      const result = await signIn.create(params);
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         router.push("/dashboard");
+      } else if (result.status === "needs_first_factor") {
+        // Check if phone_code is available
+        const phoneFactor = result.supportedFirstFactors.find(
+          (factor: any) => factor.strategy === "phone_code"
+        );
+
+        if (phoneFactor) {
+          // Send OTP
+          await signIn.prepareFirstFactor({
+            strategy: "phone_code",
+            phoneNumberId: phoneFactor.phoneNumberId,
+          });
+          setShowOtpInput(true);
+          setError(""); // Clear any previous errors
+        } else {
+          // If no phone code support, but password failed or wasn't provided correctly
+          setError("Login failed. Please check credentials.");
+        }
       } else {
         console.log(result);
         setError("Sign in requirements not met.");
@@ -144,8 +182,12 @@ export default function SignUpPage() {
       let msg = err.errors ? err.errors[0].longMessage : err.message;
 
       // Handle "strategy is not valid" (User has no password, only social)
-      if (msg.includes("verification strategy is not valid")) {
-        msg = "This account uses Social Login (Google/Apple). Please use the button below.";
+      if (msg.includes("verification strategy is not valid") || msg.includes("password")) {
+        // If password failed, maybe suggest using OTP if input looks like phone?
+        // Or if they didn't provide password, we already tried.
+        if (!password) {
+          msg = "Please enter password or use a phone number with SMS.";
+        }
       }
 
       setError(msg);
@@ -177,7 +219,7 @@ export default function SignUpPage() {
     roleClient: t({ mn: "Эрэлчин", en: "Seeker" }),
     roleMonk: t({ mn: "Багш (Лам)", en: "Guide" }),
     registerBtn: role === "monk" ? t({ mn: "Багшаар бүртгүүлэх", en: "Register as Monk" }) : t({ mn: "Сангхад нэгдэх", en: "Join the Sangha" }),
-    loginBtn: t({ mn: "Нэвтрэх", en: "Enter Sanctuary" }),
+    loginBtn: showOtpInput ? t({ mn: "Код илгээх", en: "Verify Code" }) : t({ mn: "Нэвтрэх", en: "Enter Sanctuary" }),
     forgotPassword: t({ mn: "Нууц үгээ мартсан уу?", en: "Forgot Password?" }),
     footer: t({ mn: "Эв нэгдэл • Нигүүлсэл • Мэргэн ухаан", en: "Unity • Compassion • Wisdom" }),
   };
@@ -276,24 +318,40 @@ export default function SignUpPage() {
                 <div className="space-y-3 md:space-y-2">
                   <div className="relative">
                     <input
-                      type="email"
+                      type="text"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder={t({ mn: "Имэйл хаяг", en: "Email Address" })}
+                      placeholder={t({ mn: "Имэйл эсвэл Утас", en: "Email or Phone" })}
                       className="w-full px-5 md:px-6 py-4 rounded-xl bg-white border border-stone-200 outline-none focus:border-amber-400 transition-colors text-base font-sans shadow-sm"
                       required
+                      disabled={showOtpInput}
                     />
                   </div>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t({ mn: "Нууц үг", en: "Password" })}
-                      className="w-full px-5 md:px-6 py-4 rounded-xl bg-white border border-stone-200 outline-none focus:border-amber-400 transition-colors text-base font-sans shadow-sm"
-                      required
-                    />
-                  </div>
+
+                  {showOtpInput ? (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative">
+                      <KeyRound className="absolute top-1/2 -translate-y-1/2 left-5 text-stone-400" size={18} />
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        placeholder={t({ mn: "Баталгаажуулах код", en: "Verification Code" })}
+                        className="w-full px-12 py-4 rounded-xl bg-white border border-amber-200 outline-none focus:border-amber-400 transition-colors text-base font-sans shadow-sm"
+                        required
+                        autoFocus
+                      />
+                    </motion.div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder={t({ mn: "Нууц үг (Сонголттой)", en: "Password (Optional for SMS)" })}
+                        className="w-full px-5 md:px-6 py-4 rounded-xl bg-white border border-stone-200 outline-none focus:border-amber-400 transition-colors text-base font-sans shadow-sm"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {error && <p className="text-red-500 text-xs text-center font-bold px-4">{error}</p>}
@@ -314,33 +372,38 @@ export default function SignUpPage() {
               </form>
 
               {/* Social Login Fallback */}
-              <div className="mt-4">
-                <SignInButton mode="modal">
-                  <button type="button" className="w-full py-3 rounded-xl bg-white border border-stone-200 text-stone-600 font-bold text-xs uppercase tracking-wider hover:bg-stone-50 transition-colors flex items-center justify-center gap-2">
-                    <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4 opacity-70" />
-                    Sign in with Google / Other
-                  </button>
-                </SignInButton>
-              </div>
+              {!showOtpInput && (
+                <div className="mt-4">
+                  <SignInButton mode="modal">
+                    <button type="button" className="w-full py-3 rounded-xl bg-white border border-stone-200 text-stone-600 font-bold text-xs uppercase tracking-wider hover:bg-stone-50 transition-colors flex items-center justify-center gap-2">
+                      <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4 opacity-70" />
+                      Sign in with Google / Other
+                    </button>
+                  </SignInButton>
+                </div>
+              )}
 
               {/* 2. Secondary Register Button */}
-              <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-stone-200" /></div>
-                <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-[#FDFBF7] px-4 text-stone-400">Or</span></div>
-              </div>
+              {!showOtpInput && (
+                <>
+                  <div className="relative py-4">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-stone-200" /></div>
+                    <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-[#FDFBF7] px-4 text-stone-400">Or</span></div>
+                  </div>
 
-              <SignUpButton
-                mode="modal"
-                unsafeMetadata={{ role: role }}
-                forceRedirectUrl={role === 'monk' ? "/onboarding/monk" : "/dashboard"}
-              >
-                <motion.button
-                  whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.02)" }} whileTap={{ scale: 0.98 }}
-                  className="w-full h-14 rounded-[1.5rem] border-2 border-stone-200 text-[#451a03] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-colors hover:border-amber-300"
-                >
-                  <UserPlus size={16} /> {content.registerBtn}
-                </motion.button>
-              </SignUpButton>
+                  <SignUpButton
+                    mode="modal"
+                    forceRedirectUrl={role === 'monk' ? "/onboarding/monk" : "/dashboard"}
+                  >
+                    <motion.button
+                      whileHover={{ scale: 1.02, backgroundColor: "rgba(0,0,0,0.02)" }} whileTap={{ scale: 0.98 }}
+                      className="w-full h-14 rounded-[1.5rem] border-2 border-stone-200 text-[#451a03] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-colors hover:border-amber-300"
+                    >
+                      <UserPlus size={16} /> {content.registerBtn}
+                    </motion.button>
+                  </SignUpButton>
+                </>
+              )}
 
               <div className="text-center mt-6">
                 <Link

@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 
@@ -38,6 +38,32 @@ export async function POST(req: Request) {
       },
       { upsert: true }
     );
+
+    // Sync to Clerk Metadata immediately
+    const client = await clerkClient();
+    await client.users.updateUser(clerkUser.id, {
+        publicMetadata: {
+            role: "monk", // Assuming applying makes them a monk role (or pending monk)
+            monkStatus: "pending"
+        },
+        unsafeMetadata: {
+            phone: body.phone,
+            name: body.name
+        }
+    });
+
+    // Add Phone Number as Login Identifier (Auto-Verified)
+    if (body.phone) {
+        try {
+            await client.phoneNumbers.createPhoneNumber({
+                userId: clerkUser.id,
+                phoneNumber: body.phone,
+                verified: true 
+            });
+        } catch (e) {
+            console.log("Note: Could not add phone number to Clerk (might already exist):", e);
+        }
+    }
 
     return NextResponse.json({ message: "Application received" });
 

@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
     const { t } = useLanguage();
     const { isLoaded, signIn, setActive } = useSignIn();
 
-    const [email, setEmail] = useState("");
+    const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [code, setCode] = useState("");
     const [step, setStep] = useState<"identify" | "verify" | "success">("identify");
@@ -29,9 +29,9 @@ export default function ForgotPasswordPage() {
 
     const content = {
         title: t({ mn: "Нууц үг сэргээх", en: "Reset Password" }),
-        subtitleIdentify: t({ mn: "Бүртгэлтэй имэйл хаягаа оруулна уу.", en: "Enter your registered email address." }),
-        subtitleVerify: t({ mn: "Имэйлээр ирсэн баталгаажуулах кодыг оруулна уу.", en: "Enter the verification code sent to your email." }),
-        emailLabel: t({ mn: "Имэйл хаяг", en: "Email Address" }),
+        subtitleIdentify: t({ mn: "Бүртгэлтэй имэйл эсвэл утасны дугаараа оруулна уу.", en: "Enter your registered email or phone number." }),
+        subtitleVerify: t({ mn: "Имэйл эсвэл утсаар ирсэн баталгаажуулах кодыг оруулна уу.", en: "Enter the verification code sent to your email or phone." }),
+        identifierLabel: t({ mn: "Имэйл эсвэл Утас", en: "Email or Phone" }),
         codeLabel: t({ mn: "Баталгаажуулах код", en: "Verification Code" }),
         newPasswordLabel: t({ mn: "Шинэ нууц үг", en: "New Password" }),
         sendBtn: t({ mn: "Код илгээх", en: "Send Code" }),
@@ -51,9 +51,10 @@ export default function ForgotPasswordPage() {
         setError("");
 
         try {
+            const isEmail = identifier.includes("@");
             await signIn.create({
-                strategy: "reset_password_email_code",
-                identifier: email,
+                strategy: isEmail ? "reset_password_email_code" : "reset_password_phone_code",
+                identifier: identifier,
             });
             setStep("verify");
         } catch (err: any) {
@@ -73,8 +74,9 @@ export default function ForgotPasswordPage() {
         setError("");
 
         try {
+            const isEmail = identifier.includes("@");
             const result = await signIn.attemptFirstFactor({
-                strategy: "reset_password_email_code",
+                strategy: isEmail ? "reset_password_email_code" : "reset_password_phone_code",
                 code,
                 password,
             });
@@ -130,17 +132,19 @@ export default function ForgotPasswordPage() {
                             >
                                 <div>
                                     <label className="block text-xs font-bold text-[#78350F]/60 uppercase tracking-widest mb-2 px-1">
-                                        {content.emailLabel}
+                                        {content.identifierLabel}
                                     </label>
                                     <div className="relative">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D97706]/40" size={18} />
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D97706]/40">
+                                            {identifier.includes("@") ? <Mail size={18} /> : <ShieldCheck size={18} />}
+                                        </div>
                                         <input
-                                            type="email"
+                                            type="text"
                                             required
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
+                                            value={identifier}
+                                            onChange={(e) => setIdentifier(e.target.value)}
                                             className="w-full bg-white/70 border border-[#D97706]/20 rounded-2xl py-4 pl-12 pr-4 text-[#451a03] focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent outline-none transition-all"
-                                            placeholder="monk@temple.com"
+                                            placeholder={t({ mn: "Имэйл эсвэл Утас", en: "Email or Phone" })}
                                         />
                                     </div>
                                 </div>

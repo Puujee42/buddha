@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { ObjectId } from "mongodb";
+import { clerkClient } from "@clerk/nextjs/server";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -29,30 +30,21 @@ export async function PATCH(request: Request, props: Props) {
     // Exclude immutable fields
     const { _id, clerkId, role, ...updateFields } = body;
 
-    // We use upsert=true so if the client doesn't exist in our DB yet, they get created.
-    // But we need to make sure we set the clerkId if we are inserting.
-    // The 'id' param is likely the clerkId if coming from the frontend for a new user.
-    
-    // However, updateOne with upsert might complain if we don't handle $setOnInsert for required fields if it's a new doc.
-    // For now, let's assume if it's an update, we just $set.
-    // If we want to support "Creating a client profile on first edit", we might need more logic.
-    
-    // Let's try simple update first.
-    const result = await db.collection("users").updateOne(
+    // We return the updated document to get the correct Clerk ID if we didn't have it
+    const result = await db.collection("users").findOneAndUpdate(
         query,
         { $set: updateFields },
-        { upsert: false } // Let's keep it false for safety, or check logic.
+        { upsert: false, returnDocument: 'after' } 
     );
 
-    if (result.matchedCount === 0) {
-        // If not found, and we want to allow creating a client profile (since dashboard handles "temp_client")
-        // We can try to insert.
-        // But we need to know it is indeed a client.
-        // Let's assume the frontend passes enough info or we just fail for now and rely on "sign-up" flow? 
-        // Wait, there is no explicit sign-up for clients, they just sign-in via Clerk.
-        // So we SHOULD probably upsert.
+    let updatedUser = result;
+
+    if (!updatedUser) {
+        // Handle Upsert Logic for new Client (if applicable)
+        // Note: findOneAndUpdate with upsert=false returns null if not found.
         
-        await db.collection("users").updateOne(
+        // If we want to support creation via PATCH for clients:
+        const upsertResult = await db.collection("users").findOneAndUpdate(
             { clerkId: id }, // Assume id is clerkId
             { 
                 $set: { 
@@ -62,8 +54,37 @@ export async function PATCH(request: Request, props: Props) {
                     clerkId: id 
                 } 
             },
-            { upsert: true }
+            { upsert: true, returnDocument: 'after' }
         );
+        updatedUser = upsertResult;
+    }
+
+    // 2. Sync to Clerk Metadata
+    if (updatedUser && updatedUser.clerkId) {
+        const client = await clerkClient();
+        await client.users.updateUser(updatedUser.clerkId, {
+            publicMetadata: {
+                role: updatedUser.role,
+                monkStatus: updatedUser.monkStatus, // Might be undefined for clients, which is fine
+            },
+            unsafeMetadata: {
+                phone: updatedUser.phone,
+                name: updatedUser.name
+            }
+        });
+
+        // 3. Add Phone Number as Login Identifier (Auto-Verified for MVP)
+        if (updatedUser.phone) {
+            try {
+                await client.phoneNumbers.createPhoneNumber({
+                    userId: updatedUser.clerkId,
+                    phoneNumber: updatedUser.phone,
+                    verified: true 
+                });
+            } catch (e) {
+                console.log("Note: Could not add phone number to Clerk (might already exist):", e);
+            }
+        }
     }
 
     return NextResponse.json({ message: "User profile updated", success: true });

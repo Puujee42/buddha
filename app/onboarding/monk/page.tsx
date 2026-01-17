@@ -26,6 +26,7 @@ export interface Monk {
     price: number;
     duration: string;
   }[];
+  phone?: string;
 }
 
 export default function MonkOnboarding() {
@@ -84,7 +85,8 @@ export default function MonkOnboarding() {
       btnHome: "Return to Home",
       
       alertImg: "Please upload a profile image.",
-      alertError: "Something went wrong submitting your application."
+      alertError: "Something went wrong submitting your application.",
+      labelPhone: "Phone Number"
     },
     mn: {
       headerTitle: "Ламын мэдээлэл бүртгэх",
@@ -130,7 +132,8 @@ export default function MonkOnboarding() {
       btnHome: "Нүүр хуудас руу буцах",
       
       alertImg: "Профайл зураг оруулна уу.",
-      alertError: "Хүсэлт илгээхэд алдаа гарлаа."
+      alertError: "Хүсэлт илгээхэд алдаа гарлаа.",
+      labelPhone: "Утасны дугаар"
     }
   }[langKey];
 
@@ -148,6 +151,7 @@ export default function MonkOnboarding() {
     education: { mn: "", en: "" },
     philosophy: { mn: "", en: "" },
     services: [],
+    phone: "",
   });
 
   // --- HELPERS ---
@@ -302,6 +306,7 @@ export default function MonkOnboarding() {
               <input placeholder={TEXT.labelNameEN} className="p-3 rounded-xl bg-white border border-[#D97706]/20 focus:outline-[#D97706]" value={formData.name.en} onChange={(e) => handleInputChange("name", "en", e.target.value)} required />
               <input placeholder={TEXT.labelTitleMN} className="p-3 rounded-xl bg-white border border-[#D97706]/20 focus:outline-[#D97706]" value={formData.title.mn} onChange={(e) => handleInputChange("title", "mn", e.target.value)} />
               <input placeholder={TEXT.labelTitleEN} className="p-3 rounded-xl bg-white border border-[#D97706]/20 focus:outline-[#D97706]" value={formData.title.en} onChange={(e) => handleInputChange("title", "en", e.target.value)} />
+              <input placeholder={TEXT.labelPhone} className="col-span-1 md:col-span-2 p-3 rounded-xl bg-white border border-[#D97706]/20 focus:outline-[#D97706]" value={formData.phone || ""} onChange={(e) => handleInputChange("phone", null, e.target.value)} />
             </div>
           </section>
 

@@ -46,6 +46,7 @@ interface UserProfile {
     philosophy?: { mn: string; en: string };
     yearsOfExperience?: number;
     video?: string;
+    phone?: string;
 }
 
 interface Booking {
@@ -118,6 +119,7 @@ export default function DashboardPage() {
             labelExp: "Years of Experience",
             labelSpecialties: "Specialties (comma separated)",
             labelImage: "Profile Image",
+            labelPhone: "Phone Number",
             uploading: "Uploading...",
             enterRoom: "Enter Ritual Room",
             startsIn: "Starts in",
@@ -173,6 +175,7 @@ export default function DashboardPage() {
             labelExp: "Ажилласан жил",
             labelSpecialties: "Мэргэшсэн чиглэл (таслалаар тусгаарлах)",
             labelImage: "Профайл зураг",
+            labelPhone: "Утасны дугаар",
             uploading: "Хуулж байна...",
             enterRoom: "Өрөөнд орох",
             startsIn: "Эхлэхэд",
@@ -220,6 +223,13 @@ export default function DashboardPage() {
 
     // --- FETCH DATA ---
     useEffect(() => {
+        if (isLoaded && user) {
+            // Sync user to DB (ensures phone number is saved and user exists)
+            fetch('/api/sync-user', { method: 'POST' }).catch(err => console.error("User sync failed", err));
+        }
+    }, [isLoaded, user]);
+
+    useEffect(() => {
         async function fetchData() {
             if (!user) return;
             try {
@@ -258,6 +268,7 @@ export default function DashboardPage() {
                         _id: "temp_client",
                         role: "client",
                         name: { mn: user.fullName || "Хэрэглэгч", en: user.fullName || "User" },
+                        phone: (user.unsafeMetadata?.phone as string) || user.phoneNumbers?.[0]?.phoneNumber || "",
                     };
                     setProfile(tempClientProfile);
 
@@ -1094,6 +1105,10 @@ export default function DashboardPage() {
                                                     <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelNameEN}</label>
                                                     <input className="w-full p-3 border rounded-xl" value={editForm.name?.en || ""} onChange={e => setEditForm({ ...editForm, name: { ...editForm.name, en: e.target.value } })} />
                                                 </div>
+                                                <div className="col-span-1 md:col-span-2 space-y-1">
+                                                    <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelPhone}</label>
+                                                    <input className="w-full p-3 border rounded-xl" value={editForm.phone || ""} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
+                                                </div>
                                             </>
                                         ) : (
                                             // Client Name (Usually single field but we support MN/EN for consistency if needed, but lets stick to simple if client)
@@ -1109,6 +1124,10 @@ export default function DashboardPage() {
                                                             setEditForm({ ...editForm, name: { mn: val, en: val } });
                                                         }}
                                                     />
+                                                </div>
+                                                <div className="space-y-1 col-span-2">
+                                                    <label className="text-xs font-bold uppercase text-[#D97706]">{TEXT.labelPhone}</label>
+                                                    <input className="w-full p-3 border rounded-xl" value={editForm.phone || ""} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
                                                 </div>
                                             </>
                                         )}

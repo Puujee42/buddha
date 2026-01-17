@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { ObjectId } from "mongodb";
+import { clerkClient } from "@clerk/nextjs/server";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -72,13 +73,47 @@ export async function PATCH(request: Request, props: Props) {
     // For now, we allow updating the fields provided in the body
     const { _id, clerkId, role, ...updateFields } = body;
 
-    const result = await db.collection("users").updateOne(
+    // 1. Update Database
+    const result = await db.collection("users").findOneAndUpdate(
       { _id: new ObjectId(id), role: "monk" },
-      { $set: updateFields }
+      { $set: updateFields },
+      { returnDocument: 'after' }
     );
 
-    if (result.matchedCount === 0) {
+    if (!result) {
       return NextResponse.json({ message: "Monk profile not found" }, { status: 404 });
+    }
+
+    const updatedUser = result;
+
+    // 2. Sync to Clerk Metadata
+    // We update publicMetadata for critical roles/status and unsafeMetadata for profile info
+    if (updatedUser.clerkId) {
+        const client = await clerkClient();
+        await client.users.updateUser(updatedUser.clerkId, {
+            publicMetadata: {
+                role: updatedUser.role,
+                monkStatus: updatedUser.monkStatus,
+            },
+            unsafeMetadata: {
+                phone: updatedUser.phone,
+                title: updatedUser.title,
+                name: updatedUser.name
+            }
+        });
+
+        // 3. Add Phone Number as Login Identifier (Auto-Verified)
+        if (updatedUser.phone) {
+            try {
+                await client.phoneNumbers.createPhoneNumber({
+                    userId: updatedUser.clerkId,
+                    phoneNumber: updatedUser.phone,
+                    verified: true 
+                });
+            } catch (e) {
+                console.log("Note: Could not add phone number to Clerk (might already exist):", e);
+            }
+        }
     }
 
     return NextResponse.json({ message: "Profile updated", success: true });

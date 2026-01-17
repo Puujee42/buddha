@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, useMotionTemplate, useMotionValue, AnimatePresence } from "framer-motion";
 import { SignUpButton, SignInButton, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import {
-  Flower, UserPlus, Loader2, ShieldCheck, User, ScrollText, Sparkles, Orbit
+  Flower, UserPlus, Loader2, ShieldCheck, User, ScrollText, Sparkles, Orbit, Phone
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import OverlayNavbar from "../components/Navbar";
@@ -76,6 +76,7 @@ const RoleSelector = ({ role, setRole, content }: any) => (
 export default function SignUpPage() {
   const { t } = useLanguage();
   const [role, setRole] = useState<"client" | "monk">("client");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   // Mouse Torch Effect
   const mouseX = useMotionValue(0);
@@ -186,6 +187,20 @@ export default function SignUpPage() {
           {/* Role Selection */}
           <RoleSelector role={role} setRole={setRole} content={content} />
 
+          {/* Phone Input (Optional/Required based on preference, here optional but encouraged) */}
+          <div className="w-full mb-8 relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Phone className="text-stone-400 group-focus-within:text-amber-500 transition-colors" size={20} />
+            </div>
+            <input
+              type="tel"
+              placeholder={t({ mn: "Утасны дугаар", en: "Phone Number" })}
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="w-full pl-12 pr-4 py-4 bg-white/50 border border-stone-200 rounded-2xl outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-all font-sans text-stone-700 placeholder:text-stone-400"
+            />
+          </div>
+
           {/* Auth Actions */}
           <div className="space-y-4">
             <ClerkLoading>
@@ -196,7 +211,6 @@ export default function SignUpPage() {
               {/* 1. Primary Register Button */}
               <SignUpButton
                 mode="modal"
-                unsafeMetadata={{ role: role }}
                 forceRedirectUrl={role === 'monk' ? "/onboarding/monk" : "/dashboard"}
               >
                 <motion.button

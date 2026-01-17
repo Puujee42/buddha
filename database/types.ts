@@ -7,6 +7,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   avatar?: string;
+  phone?: string;
 
   // Spiritual Stats
   karma: number;
@@ -44,6 +45,7 @@ export interface Monk {
   };
 
   // New Fields
+  phone?: string;
   isSpecial?: boolean; // Admin-controlled special status
   yearsOfExperience: number;
   education: {

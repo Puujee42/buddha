@@ -13,6 +13,7 @@ import {
 import OverlayNavbar from "../components/Navbar";
 import { useTheme } from "next-themes";
 import MonkEditModal from "./MonkEditModal";
+import UserEditModal from "./UserEditModal";
 import ServiceCreateModal from "./ServiceCreateModal";
 
 // --- TYPES ---
@@ -28,6 +29,7 @@ interface User {
   name?: LocalizedString | any; // handling flexible structures seen in code
   email?: string;
   image?: string;
+  phone?: string;
   role?: string;
   monkStatus?: string;
   createdAt: string | Date;
@@ -83,6 +85,7 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [editingMonk, setEditingMonk] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<any>(null);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [wasm, setWasm] = useState<typeof import("rust-modules") | null>(null);
 
@@ -166,6 +169,26 @@ export default function AdminDashboard() {
     } catch (e) {
       console.error(e);
       alert("Error updating monk");
+    }
+  };
+
+  const handleSaveUser = async (id: string, updatedData: any) => {
+    try {
+        const res = await fetch(`/api/users/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData)
+        });
+
+        if (res.ok) {
+            await fetchAdminData();
+            setEditingUser(null);
+        } else {
+            alert("Failed to update user");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error updating user");
     }
   };
 
@@ -490,20 +513,19 @@ export default function AdminDashboard() {
                         {u.role === 'admin' && <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded uppercase font-bold">Админ</span>}
                       </div>
                       <p className="text-xs opacity-50 truncate">{u.email}</p>
+                      {u.phone && <p className="text-[10px] opacity-60 font-bold mt-0.5">{u.phone}</p>}
                       <p className="text-[10px] opacity-30 mt-1">Бүртгүүлсэн: {new Date(u.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {u.role === 'monk' && (
-                      <button
-                        onClick={() => setEditingMonk(u)}
+                    <button
+                        onClick={() => u.role === 'monk' ? setEditingMonk(u) : setEditingUser(u)}
                         className="p-2 hover:bg-amber-500/10 hover:text-amber-500 rounded-lg transition-colors"
                         title="Мэдээллийг засах"
-                      >
+                    >
                         <Edit size={16} />
-                      </button>
-                    )}
+                    </button>
                     <button
                       onClick={() => handleDeleteUser(u._id)}
                       disabled={processingId === u._id || u.role === 'admin'}
@@ -604,6 +626,12 @@ export default function AdminDashboard() {
           monk={editingMonk}
           onClose={() => setEditingMonk(null)}
           onSave={handleSaveMonk}
+        />
+        <UserEditModal
+          isOpen={!!editingUser}
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSave={handleSaveUser}
         />
         <ServiceCreateModal
           isOpen={isServiceModalOpen}
