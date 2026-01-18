@@ -13,6 +13,7 @@ interface UserEditModalProps {
 export default function UserEditModal({ user, isOpen, onClose, onSave }: UserEditModalProps) {
   const [formData, setFormData] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"basic" | "account">("basic");
 
   useEffect(() => {
     if (user) {
@@ -28,6 +29,10 @@ export default function UserEditModal({ user, isOpen, onClose, onSave }: UserEdi
             ...user,
             name,
             phone: user.phone || "",
+            email: user.email || "",
+            karma: user.karma || 0,
+            totalMerits: user.totalMerits || 0,
+            role: user.role || "seeker",
         });
     }
   }, [user]);
@@ -63,37 +68,86 @@ export default function UserEditModal({ user, isOpen, onClose, onSave }: UserEdi
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-[#0C164F] w-full max-w-2xl rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
 
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-white">
+        <div className="p-6 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-white dark:bg-white/5">
           <div>
-            <h2 className="text-2xl font-black font-serif text-stone-800">Хэрэглэгч засах</h2>
-            <p className="text-sm text-stone-500 font-medium">Мэдээллийг шинэчлэх</p>
+            <h2 className="text-2xl font-black font-serif text-amber-600 dark:text-amber-400">Хэрэглэгч засах</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Мэдээллийг шинэчлэх</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-stone-100 rounded-full transition-colors">
-            <X size={24} className="text-stone-500" />
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors">
+            <X size={24} className="text-gray-500 dark:text-gray-400" />
           </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200 dark:border-white/10 px-6 bg-gray-50 dark:bg-black/20">
+          {["basic", "account"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`py-4 px-6 text-sm font-bold uppercase tracking-wider border-b-2 transition-all ${activeTab === tab
+                  ? "border-amber-500 text-amber-600 dark:text-amber-400 bg-white dark:bg-white/5"
+                  : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+            >
+              {{ basic: "Үндсэн", account: "Бүртгэл & Эрх" }[tab]}
+            </button>
+          ))}
         </div>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8">
           <form id="user-edit-form" onSubmit={handleSubmit} className="space-y-6">
 
-            <div className="grid grid-cols-1 gap-6">
+            {/* BASIC INFO */}
+            {activeTab === "basic" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <InputGroup label="Нэр (MN)" value={formData.name?.mn} onChange={(v: string) => handleChange("name", v, "mn")} />
                 <InputGroup label="Name (EN)" value={formData.name?.en} onChange={(v: string) => handleChange("name", v, "en")} />
-                <InputGroup label="Утас (Phone)" value={formData.phone} onChange={(v: string) => handleChange("phone", v)} />
-            </div>
+                
+                <div className="col-span-full">
+                    <InputGroup label="Утас (Phone)" value={formData.phone} onChange={(v: string) => handleChange("phone", v)} />
+                </div>
+
+                <div className="col-span-full">
+                    <InputGroup label="Имэйл (Email)" value={formData.email} onChange={(v: string) => handleChange("email", v)} type="email" />
+                </div>
+              </div>
+            )}
+
+            {/* ACCOUNT INFO */}
+            {activeTab === "account" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <InputGroup label="Karma" value={formData.karma} onChange={(v: string) => handleChange("karma", parseInt(v) || 0)} type="number" />
+                    <InputGroup label="Total Merits" value={formData.totalMerits} onChange={(v: string) => handleChange("totalMerits", parseInt(v) || 0)} type="number" />
+                </div>
+
+                <div className="space-y-1">
+                    <label className="text-xs font-bold uppercase text-gray-700 dark:text-gray-300 block">Үүрэг (Role)</label>
+                    <select 
+                        className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-500 transition-colors text-gray-900 dark:text-gray-100"
+                        value={formData.role || "seeker"}
+                        onChange={(e) => handleChange("role", e.target.value)}
+                    >
+                        <option value="seeker" className="dark:bg-[#0C164F]">Seeker (Хэрэглэгч)</option>
+                        <option value="monk" className="dark:bg-[#0C164F]">Monk (Лам)</option>
+                        <option value="admin" className="dark:bg-[#0C164F]">Admin (Админ)</option>
+                    </select>
+                </div>
+              </div>
+            )}
 
           </form>
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-stone-50">
+        <div className="p-6 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3 bg-gray-50/50 dark:bg-white/5">
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-xl font-bold text-xs uppercase bg-stone-200 text-stone-600 hover:opacity-80 transition-opacity"
+            className="px-6 py-3 rounded-xl font-bold text-xs uppercase bg-gray-200 text-gray-600 dark:bg-white/10 dark:text-white/60 hover:opacity-80 transition-opacity"
           >
             Болих
           </button>
@@ -115,10 +169,10 @@ export default function UserEditModal({ user, isOpen, onClose, onSave }: UserEdi
 function InputGroup({ label, value, onChange, type = "text" }: any) {
   return (
     <div className="space-y-1">
-      <label className="text-xs font-bold uppercase text-stone-700 block">{label}</label>
+      <label className="text-xs font-bold uppercase text-gray-700 dark:text-gray-300 block">{label}</label>
       <input
         type={type}
-        className="w-full bg-white border border-stone-300 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-500 transition-colors"
+        className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-500 transition-colors"
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
       />

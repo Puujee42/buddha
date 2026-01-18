@@ -130,6 +130,8 @@ pub fn process_monks(json_data: &str) -> String {
         name: LanguageContent,
         title: LanguageContent,
         video: Option<String>,
+        #[serde(rename = "monkNumber")]
+        monk_number: Option<u32>,
     }
 
     let monks: Vec<PartialMonk> = match serde_json::from_str(json_data) {
@@ -138,8 +140,9 @@ pub fn process_monks(json_data: &str) -> String {
     };
 
     let mut processed: Vec<MonkOutput> = monks.iter().enumerate().map(|(i, m)| {
-        let name_len = m.name.en.len() as u32;
-        let score = (name_len * 7) % 100;
+        let monk_num = m.monk_number.unwrap_or(99);
+        // Use monk_number for base score, reversed (lower number = higher score)
+        let score = 1000 - monk_num;
         
         MonkOutput {
             id: m.id.clone(),

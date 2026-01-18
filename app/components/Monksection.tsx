@@ -115,6 +115,7 @@ export default function MajesticTarotSection() {
           // Attempt to use Rust Wasm for high-performance sorting/scoring
           // @ts-ignore - Module might not be installed yet
           const wasm = await import("rust-modules");
+          await wasm.default();
           const result = JSON.parse(wasm.process_monks(JSON.stringify(data)));
 
           console.log("Using Rust Wasm for Monk Processing 🦀");
@@ -130,8 +131,9 @@ export default function MajesticTarotSection() {
 
         } catch (wasmError) {
           // JS Fallback logic if Wasm fails or isn't installed
-          // LIMIT TO 3 MONKS FOR PERFORMANCE
-          const limitedData = data.slice(0, 3);
+          // SORT BY monkNumber
+          const sortedData = [...data].sort((a, b) => (a.monkNumber || 99) - (b.monkNumber || 99));
+          const limitedData = sortedData.slice(0, 3);
 
           processedMonks = limitedData.map((m, i) => ({
             id: m._id?.toString() || `temp-${i}`,

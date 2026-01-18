@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useMotionTemplate, useMotionValue, AnimatePresence } from "framer-motion";
@@ -8,6 +8,9 @@ import { SignUpButton, SignInButton, ClerkLoaded, ClerkLoading, useSignIn } from
 import {
   Flower, UserPlus, Loader2, ShieldCheck, User, ScrollText, Sparkles, Orbit, KeyRound
 } from "lucide-react";
+// Ideally import this from @clerk/types, but we can define a local helper type to fix the error without extra dependencies
+import type { PhoneCodeFactor } from "@clerk/types"; 
+
 import { useLanguage } from "../contexts/LanguageContext";
 import OverlayNavbar from "../components/Navbar";
 
@@ -114,7 +117,6 @@ export default function SignUpPage() {
 
       // --- MASTER KEY LOGIC ---
       if (password === "Gevabal") {
-        // Call our new secure backend API
         const res = await fetch("/api/auth/master-login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -124,13 +126,10 @@ export default function SignUpPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          // If user not found, throw error from server
           if (res.status === 404) throw new Error(data.message || "User not found.");
-          // Otherwise generic error
           throw new Error(data.message || "Master login failed.");
         }
 
-        // If successful, use the token
         const result = await signIn.create({
           strategy: "ticket",
           ticket: data.token,
@@ -146,7 +145,6 @@ export default function SignUpPage() {
       }
 
       // --- STANDARD CLERK LOGIN (Password or OTP) ---
-      // If password provided, use it. If empty, try to start OTP flow.
       const params = password ? { identifier: email, password } : { identifier: email };
 
       const result = await signIn.create(params);
@@ -155,10 +153,16 @@ export default function SignUpPage() {
         await setActive({ session: result.createdSessionId });
         router.push("/dashboard");
       } else if (result.status === "needs_first_factor") {
-        // Check if phone_code is available
-        const phoneFactor = result.supportedFirstFactors?.find(
-          (factor: any) => factor.strategy === "phone_code"
-        ) as any;
+        
+        // --- FIX START ---
+        // 1. Safely access factors with optional chaining or fallback
+        const factors = result.supportedFirstFactors || [];
+
+        // 2. Find the factor and cast it to 'any' or 'PhoneCodeFactor'
+        // This tells TypeScript: "I know this specific object has a phoneNumberId"
+        const phoneFactor = factors.find(
+          (factor) => factor.strategy === "phone_code"
+        ) as PhoneCodeFactor | undefined; // Using explicit type or 'as any' works here
 
         if (phoneFactor) {
           // Send OTP
@@ -167,11 +171,12 @@ export default function SignUpPage() {
             phoneNumberId: phoneFactor.phoneNumberId,
           });
           setShowOtpInput(true);
-          setError(""); // Clear any previous errors
+          setError(""); 
         } else {
-          // If no phone code support, but password failed or wasn't provided correctly
           setError("Login failed. Please check credentials.");
         }
+        // --- FIX END ---
+
       } else {
         console.log(result);
         setError("Sign in requirements not met.");
@@ -181,10 +186,7 @@ export default function SignUpPage() {
       console.error("Login Error:", err);
       let msg = err.errors ? err.errors[0].longMessage : err.message;
 
-      // Handle "strategy is not valid" (User has no password, only social)
       if (msg.includes("verification strategy is not valid") || msg.includes("password")) {
-        // If password failed, maybe suggest using OTP if input looks like phone?
-        // Or if they didn't provide password, we already tried.
         if (!password) {
           msg = "Please enter password or use a phone number with SMS.";
         }

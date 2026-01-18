@@ -7,7 +7,7 @@ if ! command -v wasm-pack &> /dev/null; then
 fi
 
 cd rust-modules
-wasm-pack build --target bundler
+wasm-pack build --target web
 
 # Remove .gitignore to allow committing the pkg to git (needed for Vercel)
 rm -f pkg/.gitignore

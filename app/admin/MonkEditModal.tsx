@@ -123,10 +123,6 @@ export default function MonkEditModal({ monk, isOpen, onClose, onSave }: MonkEdi
                 <InputGroup label="Title (EN)" value={formData.title?.en} onChange={(v: string) => handleChange("title", v, "en")} />
 
                 <div className="col-span-full">
-                  <InputGroup label="Утас (Phone)" value={formData.phone} onChange={(v: string) => handleChange("phone", v)} />
-                </div>
-
-                <div className="col-span-full">
                   <InputGroup label="Зураг (URL)" value={formData.image} onChange={(v: string) => handleChange("image", v)} />
                   {formData.image && <img src={formData.image} alt="Preview" className="w-20 h-20 rounded-xl mt-2 object-cover border-2 border-amber-500" />}
                 </div>

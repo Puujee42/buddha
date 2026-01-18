@@ -43,6 +43,7 @@ export interface Monk {
     mn: string;
     en: string;
   };
+  monkNumber?: number; // Order/Display number
 
   // New Fields
   phone?: string;

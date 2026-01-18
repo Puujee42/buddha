@@ -28,7 +28,7 @@ export async function PATCH(request: Request, props: Props) {
     }
 
     // Exclude immutable fields
-    const { _id, clerkId, role, ...updateFields } = body;
+    const { _id, clerkId, ...updateFields } = body;
 
     // We return the updated document to get the correct Clerk ID if we didn't have it
     const result = await db.collection("users").findOneAndUpdate(
