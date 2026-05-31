@@ -1,8 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-export const runtime = 'edge';
-
 const locales = ['mn', 'en'];
 const defaultLocale = 'mn';
 
